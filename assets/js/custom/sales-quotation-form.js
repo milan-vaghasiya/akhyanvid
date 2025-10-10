@@ -1,9 +1,9 @@
-$(document).ready(function(){
-	
+$(document).ready(function(){	
 
-  $(document).on('click', '.saveItem', function () {
+  	$(document).on('click', '.saveItem', function () {
 		var formData = {};
-        $.each($(".itemFormInput"),function() {
+        
+		$.each($(".itemFormInput"),function() {
             formData[$(this).attr("id")] = $(this).val();
         });
         $("#itemForm .error").html("");
@@ -16,10 +16,19 @@ $(document).ready(function(){
 				$(".qty").html("Qty is required.");
 			}
 		}
+		if(formData.item_class == "Service"){
+			if (formData.qty > 100) {
+				$(".qty").html("QTY/Percentage must be less than or equal to 100.");
+			}
+		}
 
         var errorCount = $('#itemForm .error:not(:empty)').length;
 
 		if (errorCount == 0) {
+			if(checkGoodsItemExists()){
+				return false;
+			}
+			
 			formData.id = formData.trans_id;
             var itemData = calculateItem(formData);
             AddRow(itemData);
@@ -40,13 +49,22 @@ $(document).ready(function(){
 					$("#itemForm #item_id").focus();
 				},150);
 			},100);	
-
-         
         }
 	});
 
-   
-	
+	$(document).on('input', '#qty', function () {
+		var item_type = $('#itemForm #item_class').val();
+		if(item_type == "Service"){
+			$('#price').val(1);
+		}
+	});
+
+	$(document).on('input', '#price', function () {
+		var item_type = $('#itemForm #item_class').val();
+		if(item_type == "Service"){
+			$('#qty').val(1);
+		}
+	});
 });
 
 var itemCount = 0;
@@ -71,9 +89,7 @@ function AddRow(data) {
 	var cell = $(row.insertCell(-1));
 	cell.html(countRow);
 	cell.attr("style", "width:5%;");
-
-
-    var idInput = $("<input/>", { type: "hidden", name: "itemData["+itemCount+"][id]", value: data.id });
+    var idInput = $("<input/>", { type: "hidden", name: "itemData["+itemCount+"][id]", value: data.id, "class": "item_type", "data-item_type": data.item_class, "data-item_name": data.item_name });
     var itemIdInput = $("<input/>", { type: "hidden", name: "itemData["+itemCount+"][item_id]", class:"item_id", value: data.item_id });
 	cell = $(row.insertCell(-1));
     cell.html(data.item_name);
@@ -99,7 +115,6 @@ function AddRow(data) {
 	cell = $(row.insertCell(-1));
 	cell.html(data.amount);
 	cell.append(amountInput);
-
 
     //Add Button cell.
 	cell = $(row.insertCell(-1));
@@ -155,7 +170,6 @@ function Remove(button) {
 	claculateColumn();
 }
 
-
 function resItemDetail(response = ""){
     if(response != ""){
         var itemDetail = response.data.itemDetail;
@@ -166,8 +180,7 @@ function resItemDetail(response = ""){
 		$("#itemForm #item_class").val(itemDetail.item_class);
 		if(itemDetail.item_class == "Service"){
 			$("#itemForm #qty").val(1);
-			$('#itemForm #qty').prop('readonly',true);
-
+			// $('#itemForm #qty').prop('readonly',true);
 		}
 
     }else{
@@ -193,3 +206,24 @@ function resSaveQuotation(data,formId){
     }	
 }
 
+function checkGoodsItemExists(){
+	var response = false;
+	var count_item_for_service = 0;
+
+	if($('#item_class').val() == "Goods" && $('#trans_id').val() == ""){
+		var service_items_arr = [];
+		$('#salesQuotationItems .item_type').each(function(){
+			if($(this).data('item_type') == "Service"){
+				service_items_arr.push($(this).data('item_name'));
+				count_item_for_service++;
+			}
+		});
+		var service_items = service_items_arr.join(', ');
+
+		if(count_item_for_service > 0){
+			Swal.fire({ icon: 'error', title: 'You can\'t add this item. First of delete the service items(' + service_items + ') and then you will be able to add this item.' });
+			response = true;
+		}
+	}
+	return response;
+}

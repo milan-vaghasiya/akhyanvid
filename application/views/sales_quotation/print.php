@@ -51,20 +51,33 @@
                             <th class="text-center"  style="width:40px;">PARTICULARS</th>
                             <th style="width:100px;">BRAND</th>
                             <th style="width:80px;">MODEL NO</th>
-                            <th style="width:90px;">QTY </th>
+                            <th style="width:90px;">QTY/PERCENTAGE </th>
                             <th style="width:90px;">RATE </th>
                             <th style="width:60px;">TOTAL</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php
-                            $i=1;$totalAmt = 0;
+                            $i=1; 
+                            $totalAmt = $total_amount_of_goods_product = 0;
+                            
                             if(!empty($dataRow)):
                                 foreach($dataRow as $row):	
+                                    //Calculation for service amount
+                                    $amount = $row->amount;
+
+                                    if ($row->item_class == "Goods") {
+                                        $total_amount_of_goods_product += $row->amount;
+                                    }
+
+                                    if ($row->item_class == "Service" && $row->price == 1 && $total_amount_of_goods_product > 0) {
+                                        $amount = ($total_amount_of_goods_product * $row->qty) / 100;
+                                    }
+
                                     echo '<tr>';
                                         echo '<td class="text-center">'.$i++.'</td>';
                                         if ($row->item_class == "Service") {
-                                            echo '<td colspan="5">' . $row->item_name . '</td>';
+                                            echo '<td colspan="5" class="text-center">' . $row->item_name . '</td>';
                                         } else {
                                             echo '<td class="text-center">' . $row->item_name . '</td>';
                                             echo '<td>' . $row->make_brand . '</td>';
@@ -72,10 +85,10 @@
                                             echo '<td class="text-center">' . sprintf('%.2f', $row->qty) . '</td>';
                                             echo '<td class="text-right">' . sprintf('%.2f', $row->price) . '</td>';
                                         }
-                                            echo '<td class="text-right">' . moneyFormatIndia($row->amount) . '</td>';
-                                            echo '</tr>';
+                                        echo '<td class="text-right">' . moneyFormatIndia($amount) . '</td>';
+                                        echo '</tr>';
                                     
-                                    $totalAmt += $row->amount;
+                                    $totalAmt += $amount;
                                 endforeach;
                             endif;
                         ?>

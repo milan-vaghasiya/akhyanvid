@@ -67,7 +67,7 @@ class permission extends MY_Controller{
     }
 
     public function dashboardPermission(){
-        $this->data['empList'] = $this->employee->getEmployeeList();
+        $this->data['empList'] = $this->employee->getEmployeeList(['all'=>1]);
         $this->data['dashboardPermission'] = $this->permission->getDashboardWidget();
         $this->load->view($this->dashboardPermission,$this->data);
     }

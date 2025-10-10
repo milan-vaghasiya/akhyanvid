@@ -52,6 +52,7 @@ function getSalesDtHeader($page){
     $data['customerComplaints'][] = ["name"=>"#","class"=>"text-center no_filter noExport","sortable"=>FALSE]; 
     $data['customerComplaints'][] = ["name"=>"Date"];
     $data['customerComplaints'][] = ["name"=>"Project Name"];
+    $data['customerComplaints'][] = ["name"=>"Voice Note"];
     $data['customerComplaints'][] = ["name"=>"Remarks"];
 	
     return tableHeader($data[$page]);
@@ -63,7 +64,7 @@ function getSalesQuotationData($data){
 
     $editButton = '<a class="btn btn-success btn-edit permission-modify" href="'.base_url('salesQuotation/edit/'.encodeURL(['trans_number'=>$data->trans_number])).'" datatip="Edit" flow="down" ><i class="mdi mdi-square-edit-outline"></i></a>';
 
-    $deleteParam = "{'postData':{'trans_number' : ".$data->trans_number."},'message' : 'Sales Quotation'}";
+    $deleteParam = "{'postData':{'trans_number' : '".encodeURL($data->trans_number)."'},'message' : 'Sales Quotation'}";
     $deleteButton = '<a class="btn btn-danger btn-delete permission-remove" href="javascript:void(0)" onclick="trash('.$deleteParam.');" datatip="Remove" flow="down"><i class="mdi mdi-trash-can-outline"></i></a>';
    
     $printBtn = '<a class="btn btn-success btn-edit " href="'.base_url('salesQuotation/printQuotation/'.encodeURL(['trans_number'=>$data->trans_number])).'" target="_blank" datatip="Print" flow="down"><i class="fas fa-print" ></i></a>';
@@ -226,7 +227,7 @@ function getCustomerComplaintsData($data){
     }
 	
     $action = getActionButton($download.$solution.$editButton.$deleteButton);
-	return [$action,$data->sr_no,formatDate($data->date),$data->project_name,$data->remark];
+	return [$action,$data->sr_no,formatDate($data->date),$data->project_name,$data->voice_note,$data->remark];
 }
 
 ?>

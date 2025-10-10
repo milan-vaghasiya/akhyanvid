@@ -36,8 +36,8 @@
                                         <div class="col-md-3 form-group ">
                                             <label for="project_type">Project Type</label>
                                             <select name="project_type" id="project_type" class="form-control basic-select2">
-                                                <option value="1" <?=(!empty($dataRow) && $dataRow->project_type == "1") ? "selected" : "";?>>Automation</option>
-                                                <option value="2" <?=(!empty($dataRow) && $dataRow->project_type == "2") ? "selected" : "";?>>Theater</option>
+                                                <option value="1" <?=(!empty($dataRow->project_type) && $dataRow->project_type == "1") ? "selected" : "";?>>Automation</option>
+                                                <option value="2" <?=(!empty($dataRow->project_type) && $dataRow->project_type == "2") ? "selected" : "";?>>Theater</option>
                                             </select>
                                         </div>
 
@@ -67,7 +67,7 @@
                                                 </select>
                                             </div>
                                             <div class="col-md-2 form-group">
-                                                <label for="qty">Quantity</label>
+                                                <label for="qty">QTY/Percentage</label>
                                                 <input type="text" id="qty" class="form-control floatOnly req itemFormInput" value="0">
                                             </div>
                                                                                        
@@ -92,7 +92,7 @@
                                                          <tr>
                                                             <th style="width:5%;">#</th>
                                                             <th>Item Name</th>
-                                                            <th>Qty</th>
+                                                            <th>Qty/Percentage</th>
                                                             <th>Price</th>
                                                             <th>Amount </th>
                                                             <th class="text-center" style="width:10%;">Action</th>

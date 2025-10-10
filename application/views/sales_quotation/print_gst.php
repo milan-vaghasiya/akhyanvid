@@ -59,17 +59,29 @@
                                             <th class="text-center" style="width:40px;">PARTICULARS</th>
                                             <th style="width:100px;">BRAND</th>
                                             <th style="width:80px;">MODEL NO</th>
-                                            <th style="width:90px;">QTY</th>
+                                            <th style="width:90px;">QTY/PERCENTAGE</th>
                                             <th style="width:90px;">RATE</th>
                                             <th style="width:60px;">TOTAL</th>
                                         </tr>
                                     </thead>';
 
-                                    $srn = 1;$totalAmt =0;$maxGst = 0;
+                                    $srn = 1;
+                                    $totalAmt = $total_amount_of_goods_product = $maxGst = 0;                                    
                                     foreach($items as $row1):	 
                                         if ($row1->gst_per > $maxGst) {
                                             $maxGst = $row1->gst_per;
                                         }
+                                        //Calculation for service amount
+                                        $amount = $row1->amount;
+
+                                        if ($row1->item_class == "Goods") {
+                                            $total_amount_of_goods_product += $row1->amount;
+                                        }
+
+                                        if ($row1->item_class == "Service" && $row1->price == 1 && $total_amount_of_goods_product > 0) {
+                                            $amount = ($total_amount_of_goods_product * $row1->qty) / 100;
+                                        }
+
                                         echo '<tr>';
                                         echo '<td class="text-center">' . $srn++ . '</td>';
                                           if ($row1->item_class == "Service") {
@@ -81,9 +93,9 @@
                                             echo '<td class="text-center">' .  $row1->qty . '</td>';
                                             echo '<td class="text-right">' .  $row1->price . '</td>';
                                         }
-                                            echo '<td class="text-right">' . moneyFormatIndia($row1->amount) . '</td>';
+                                            echo '<td class="text-right">' . moneyFormatIndia($amount) . '</td>';
                                             echo '</tr>';
-                                        $totalAmt += $row1->amount;
+                                        $totalAmt += $amount;
                                     endforeach;
 
                                     // GST calculation based on max GST of the

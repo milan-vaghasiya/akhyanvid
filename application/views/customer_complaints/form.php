@@ -29,6 +29,11 @@
             </div>
 
             <div class="col-md-12 form-group">
+                <label for="voice_note">Voice Note</label>
+                <input type="text" id="voice_note" name="voice_note" class=" form-control" placeholder="Voice Note" value="<?=(!empty($dataRow->voice_note))?$dataRow->voice_note:""?>" />	
+			</div>
+
+            <div class="col-md-12 form-group">
                 <label for="remark">Remark</label>
                 <textarea name="remark" id="remark" class="form-control "><?=(!empty($dataRow->remark))?$dataRow->remark:""?></textarea>
             </div>

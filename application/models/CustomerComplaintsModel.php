@@ -12,6 +12,7 @@ class CustomerComplaintsModel extends MasterModel{
         $data['searchCol'][] = "";
         $data['searchCol'][] = "DATE_FORMAT(customer_complaint.trans_date,'%d-%m-%Y')";
         $data['searchCol'][] = "project_info.project_name";
+        $data['searchCol'][] = "customer_complaint.voice_note";
         $data['searchCol'][] = "customer_complaint.remark";
 
         $columns =array(); foreach($data['searchCol'] as $row): $columns[] = $row; endforeach;

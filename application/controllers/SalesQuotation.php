@@ -70,6 +70,7 @@ class SalesQuotation extends MY_Controller{
 
     public function delete(){
         $data = $this->input->post();
+        $data['trans_number'] = decodeURL($data['trans_number']);
         if(empty($data['trans_number'])):
             $this->printJson(['status'=>0,'message'=>'Somthing went wrong...Please try again.']);
         else:
