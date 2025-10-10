@@ -9,79 +9,20 @@ function getConfigDtHeader($page){
     $data['terms'][] = ["name"=>"Title"];
     $data['terms'][] = ["name"=>"Type"];
     $data['terms'][] = ["name"=>"Conditions"];
+	
+	/* Select Option Header */
+    $data['selectOption'][] = ["name"=>"Action","class"=>"text-center no_filter noExport","sortable"=>FALSE];
+    $data['selectOption'][] = ["name"=>"#","class"=>"text-center no_filter","sortable"=>FALSE]; 
+    $data['selectOption'][] = ["name"=>"Option"];
+	$data['selectOption'][] = ["name"=>"Remark"];
+	
+    /* Work Instructions Header */
+    $data['workInstructions'][] = ["name"=>"Action","class"=>"text-center no_filter noExport","sortable"=>FALSE];
+    $data['workInstructions'][] = ["name"=>"#","class"=>"text-center no_filter","sortable"=>FALSE]; 
+    $data['workInstructions'][] = ["name"=>"Work Title"];
+    $data['workInstructions'][] = ["name"=>"Description"];
+    $data['workInstructions'][] = ["name"=>"Notes"];
 
-    /* Transport Header*/
-    $data['transport'][] = ["name"=>"Action","class"=>"text-center no_filter noExport","sortable"=>FALSE];
-	$data['transport'][] = ["name"=>"#","class"=>"text-center no_filter","sortable"=>FALSE];
-    $data['transport'][] = ["name"=>"Transport Name"];
-    $data['transport'][] = ["name"=>"Transport ID"];
-    $data['transport'][] = ["name"=>"Address"];
-
-    /* HSN Master header */
-    $data['hsnMaster'][] = ["name"=>"Action","class"=>"text-center no_filter noExport","sortable"=>FALSE];
-	$data['hsnMaster'][] = ["name"=>"#","class"=>"text-center no_filter","sortable"=>FALSE];
-    $data['hsnMaster'][] = ["name"=>"HSN"];
-    $data['hsnMaster'][] = ["name"=>"CGST"];
-    $data['hsnMaster'][] = ["name"=>"SGST"];
-    $data['hsnMaster'][] = ["name"=>"IGST"];
-    $data['hsnMaster'][] = ["name"=>"Description"];
-
-    /* Material Grade header */
-    $data['materialGrade'][] = ["name"=>"Action","class"=>"text-center no_filter noExport","sortable"=>FALSE];
-	$data['materialGrade'][] = ["name"=>"#","class"=>"text-center no_filter","sortable"=>FALSE];
-    $data['materialGrade'][] = ["name"=>"Material Grade"];
-    $data['materialGrade'][] = ["name"=>"Standard"];
-    $data['materialGrade'][] = ["name"=>"Colour Code"];
-
-    /* Scrap Group Header*/
-    $data['scrapGroup'][] = ["name"=>"Action","class"=>"text-center no_filter noExport","sortable"=>FALSE];
-	$data['scrapGroup'][] = ["name"=>"#","class"=>"text-center no_filter","sortable"=>FALSE];
-    $data['scrapGroup'][] = ["name"=>"Scrap Group Name"];
-    $data['scrapGroup'][] = ["name"=>"Unit Name"];
-
-    /* Vehicle Type header */
-    $data['vehicleType'][] = ["name"=>"Action","class"=>"text-center no_filter noExport","sortable"=>FALSE];
-	$data['vehicleType'][] = ["name"=>"#","class"=>"text-center no_filter","sortable"=>FALSE];
-    $data['vehicleType'][] = ["name"=>"Vehicle Type"];
-    $data['vehicleType'][] = ["name"=>"Remark"];
-
-    /* Tax Master Header */
-    $data['taxMaster'][] = ["name"=>"Action","class"=>"text-center no_filter noExport","sortable"=>FALSE];
-	$data['taxMaster'][] = ["name"=>"#","class"=>"text-center no_filter","sortable"=>FALSE];
-    $data['taxMaster'][] = ["name" => "Tax Name"];
-    $data['taxMaster'][] = ["name" => "Tax Type"];
-    $data['taxMaster'][] = ["name" => "Calcu. Type"];
-    $data['taxMaster'][] = ["name" => "Ledger Name"];
-    $data['taxMaster'][] = ["name" => "Is Active"];
-    $data['taxMaster'][] = ["name" => "Add/Deduct"];
-
-    /* Expense Master Header */
-    $data['expenseMaster'][] = ["name"=>"Action","class"=>"text-center no_filter noExport","sortable"=>FALSE];
-	$data['expenseMaster'][] = ["name"=>"#","class"=>"text-center no_filter","sortable"=>FALSE];
-    $data['expenseMaster'][] = ["name" => "Exp. Name"];
-    $data['expenseMaster'][] = ["name" => "Entry Name"];
-    $data['expenseMaster'][] = ["name" => "Sequence"];
-    $data['expenseMaster'][] = ["name" => "Calcu. Type"];
-    $data['expenseMaster'][] = ["name" => "Ledger Name"];
-    $data['expenseMaster'][] = ["name" => "Is Active"];
-    $data['expenseMaster'][] = ["name" => "Add/Deduct"];
-
-    /* Tax Class Header */
-    $data['taxClass'][] = ["name"=>"Action","class"=>"text-center no_filter noExport","sortable"=>FALSE];
-	$data['taxClass'][] = ["name"=>"#","class"=>"text-center no_filter","sortable"=>FALSE];
-    $data['taxClass'][] = ["name" => "Class Name"];
-    $data['taxClass'][] = ["name" => "Type"];
-    $data['taxClass'][] = ["name" => "Ledger Name"];
-    $data['taxClass'][] = ["name" => "Is Active"];
-
-    /* Group Master Header */
-    $data['groupMaster'][] = ["name"=>"Action","class"=>"text-center no_filter noExport","sortable"=>FALSE];
-	$data['groupMaster'][] = ["name"=>"#","class"=>"text-center no_filter","sortable"=>FALSE];
-    $data['groupMaster'][] = ["name" => "Group Code"];
-    $data['groupMaster'][] = ["name" => "Group Name"];
-    $data['groupMaster'][] = ["name" => "Perent Group Name"];
-    $data['groupMaster'][] = ["name" => "Nature"];
-    $data['groupMaster'][] = ["name" => "Effect IN"];
 
     return tableHeader($data[$page]);
 }
@@ -96,132 +37,31 @@ function getTermsData($data){
     $deleteButton = '<a class="btn btn-danger btn-delete permission-remove" href="javascript:void(0)" onclick="trash('.$deleteParam.');" datatip="Remove" flow="down"><i class="mdi mdi-trash-can-outline"></i></a>';
 	
 	$action = getActionButton($editButton.$deleteButton);
-    return [$action,$data->sr_no,$data->title,str_replace(',',', ',$data->type),$data->conditions];
+    return [$action,$data->sr_no,$data->title,$data->type,$data->conditions];
 }
 
-/* Transport Data */
-function getTransportData($data){
-    $deleteParam = "{'postData':{'id' : ".$data->id."},'message' : 'Transport'}";
-    $editParam = "{'postData':{'id' : ".$data->id."}, 'modal_id' : 'bs-right-md-modal', 'form_id' : 'editTransport', 'title' : 'Update Transport','call_function':'edit'}";
+/* Select Option Table Data */
+function getSelectOptionData($data){
+    $deleteParam = "{'postData':{'id' : ".$data->id."},'message' : 'Option'}";
+    $editParam = "{'postData':{'id' : ".$data->id."},'modal_id' : 'bs-right-md-modal', 'form_id' : 'editOption', 'title' : 'Update Option'}";
 
-    $editButton = '<a class="btn btn-success btn-edit permission-modify" href="javascript:void(0)" datatip="Edit" flow="down" onclick="modalAction('.$editParam.');"><i class="mdi mdi-square-edit-outline"></i></a>';
-
+    $editButton = '<a class="btn btn-success btn-edit permission-modify" href="javascript:void(0)" datatip="Edit" flow="down" onclick="modalAction('.$editParam.');"><i class="mdi mdi-square-edit-outline" ></i></a>';
     $deleteButton = '<a class="btn btn-danger btn-delete permission-remove" href="javascript:void(0)" onclick="trash('.$deleteParam.');" datatip="Remove" flow="down"><i class="mdi mdi-trash-can-outline"></i></a>';
-
-	$action = getActionButton($editButton.$deleteButton);
-    return [$action,$data->sr_no,$data->transport_name,$data->transport_id,$data->address];
-}
-
-/* HSN Master Table Data */
-function getHSNMasterData($data){
-    $deleteParam = "{'postData':{'id' : ".$data->id."},'message' : 'HSN Master'}";
-    $editParam = "{'postData':{'id' : ".$data->id."}, 'modal_id' : 'bs-right-md-modal', 'form_id' : 'editHsnMaster', 'title' : 'Update HSN Master','call_function':'edit'}";
-
-    $editButton = '<a class="btn btn-success btn-edit permission-modify" href="javascript:void(0)" datatip="Edit" flow="down" onclick="modalAction('.$editParam.');"><i class="mdi mdi-square-edit-outline"></i></a>';
-
-    $deleteButton = '<a class="btn btn-danger btn-delete permission-remove" href="javascript:void(0)" onclick="trash('.$deleteParam.');" datatip="Remove" flow="down"><i class="mdi mdi-trash-can-outline"></i></a>';
-
-    
-    $updateGstParam = "{'postData':{'id' : ".$data->id."}, 'modal_id' : 'bs-right-md-modal', 'form_id' : 'updateMasterDetail', 'title' : 'Update Master Detail','call_function':'updateMasterDetail','fnsave' : 'saveUpdateMasterDetail','js_store_fn':'confirmStore'}";
-    $updateGstButton = '<a class="btn btn-primary btn-edit permission-modify" href="javascript:void(0)" datatip="Update Master Detail" flow="down" onclick="modalAction('.$updateGstParam.');"><i class="fa fa-pencil-square"></i></a>';
-	
-	$action = getActionButton($updateGstButton.$editButton.$deleteButton);
-    return [$action,$data->sr_no,$data->hsn,$data->cgst,$data->sgst,$data->igst,$data->description];
-}
-
-/* Material Grade Table Data */
-function getMaterialData($data){
-    $deleteParam = "{'postData':{'id' : ".$data->id."},'message' : 'Material Grade'}";
-    $editParam = "{'postData':{'id' : ".$data->id."}, 'modal_id' : 'bs-right-md-modal', 'form_id' : 'editMaterialGrade', 'title' : 'Update Material Grade','call_function':'edit'}";
-
-    $editButton = '<a class="btn btn-success btn-edit" href="javascript:void(0)" datatip="Edit" flow="down" onclick="modalAction('.$editParam.');"><i class="mdi mdi-square-edit-outline"></i></a>';
-    $deleteButton = '<a class="btn btn-danger btn-delete" href="javascript:void(0)" onclick="trash('.$deleteParam.');" datatip="Remove" flow="down"><i class="mdi mdi-trash-can-outline"></i></a>';
-
-	$action = getActionButton($editButton.$deleteButton);
-    return [$action,$data->sr_no,$data->material_grade,$data->standard,$data->color_code];
-}
-
-/* Scrap Group Data */
-function getScrapGroupData($data){
-    $deleteParam = "{'postData':{'id' : ".$data->id."},'message' : 'Scrap Group'}";
-    $editParam = "{'postData':{'id' : ".$data->id."}, 'modal_id' : 'bs-right-md-modal', 'form_id' : 'editScrap', 'title' : 'Update Scrap Group','call_function':'edit'}";
-
-    $editButton = '<a class="btn btn-success btn-edit permission-modify" href="javascript:void(0)" datatip="Edit" flow="down" onclick="modalAction('.$editParam.');"><i class="mdi mdi-square-edit-outline"></i></a>';
-    $deleteButton = '<a class="btn btn-danger btn-delete permission-remove" href="javascript:void(0)" onclick="trash('.$deleteParam.');" datatip="Remove" flow="down"><i class="mdi mdi-trash-can-outline"></i></a>';
-
-	$action = getActionButton($editButton.$deleteButton);
-    return [$action,$data->sr_no,$data->item_name,$data->unit_name];
-}
-
-/* Vehicle Type Data */
-function getVehicleTypeData($data){
-    $deleteParam = "{'postData':{'id' : ".$data->id."},'message' : 'Vehicle Type'}";
-    $editParam = "{'postData':{'id' : ".$data->id."}, 'modal_id' : 'bs-right-md-modal', 'form_id' : 'editVehicleType', 'title' : 'Update Vehicle Type','call_function':'edit'}";
-
-    $editButton = '<a class="btn btn-success btn-edit" href="javascript:void(0)" datatip="Edit" flow="down" onclick="modalAction('.$editParam.');"><i class="mdi mdi-square-edit-outline"></i></a>';
-    $deleteButton = '<a class="btn btn-danger btn-delete" href="javascript:void(0)" onclick="trash('.$deleteParam.');" datatip="Remove" flow="down"><i class="mdi mdi-trash-can-outline"></i></a>';
 	
 	$action = getActionButton($editButton.$deleteButton);
-    return [$action,$data->sr_no,$data->vehicle_type,$data->remark];
+    return [$action,$data->sr_no,$data->label,$data->remark];
 }
 
-/* Tax Master Table Data */
-function getTaxMasterData($data){
-    $deleteParam = "{'postData':{'id' : ".$data->id."},'message' : 'Tax'}";
-    $editParam = "{'postData':{'id' : ".$data->id."}, 'modal_id' : 'bs-right-lg-modal', 'form_id' : 'editTax', 'title' : 'Update Tax','call_function':'edit'}";
-    
-    $editButton = '<a class="btn btn-success btn-edit permission-modify" href="javascript:void(0)" datatip="Edit" flow="down" onclick="modalAction('.$editParam.');"><i class="mdi mdi-square-edit-outline"></i></a>';
-    $deleteButton = '<a class="btn btn-danger btn-delete permission-remove" href="javascript:void(0)" onclick="trash('.$deleteParam.');" datatip="Remove" flow="down"><i class="mdi mdi-trash-can-outline"></i></a>';
-    $deleteButton = "";
+/* Work Instructions Table Data */
+function getWorkInstructionsData($data){
+    $editParam = "{'postData':{'id' : '".$data->id."'},'modal_id' : 'bs-right-md-modal', 'form_id' : 'addWorkInstructions', 'title' : 'Update Work Instructions', 'fnsave' : 'save'}";
 
-    $action = getActionButton($editButton.$deleteButton);    
+    $editButton = '<a class="btn btn-success btn-edit permission-modify" href="javascript:void(0)" datatip="Edit" flow="down" onclick="modalAction('.$editParam.');"><i class="mdi mdi-square-edit-outline" ></i></a>';
 
-    return [$action,$data->sr_no,$data->name,$data->tax_type_name,$data->calc_type_name,$data->acc_name,$data->is_active_name,$data->add_or_deduct_name];
+	
+	$action = getActionButton($editButton);
+    return [$action,$data->sr_no,$data->work_title,$data->description,$data->notes];
 }
 
-/* Expense Master Table Data */
-function getExpenseMasterData($data){
-    $deleteParam = "{'postData':{'id' : ".$data->id."},'message' : 'Expense'}";
-    $editParam = "{'postData':{'id' : ".$data->id."}, 'modal_id' : 'bs-right-lg-modal', 'form_id' : 'editExpense', 'title' : 'Update Expense','call_function':'edit'}";
-    
 
-    $editButton = '<a class="btn btn-success btn-edit permission-modify" href="javascript:void(0)" datatip="Edit" flow="down" onclick="modalAction('.$editParam.');"><i class="mdi mdi-square-edit-outline"></i></a>';
-    $deleteButton = '<a class="btn btn-danger btn-delete permission-remove" href="javascript:void(0)" onclick="trash('.$deleteParam.');" datatip="Remove" flow="down"><i class="mdi mdi-trash-can-outline"></i></a>';
-
-    $action = getActionButton($editButton.$deleteButton);    
-
-    return [$action,$data->sr_no,$data->exp_name,$data->entry_name,$data->seq,$data->calc_type_name,$data->party_name,$data->is_active_name,$data->add_or_deduct_name];
-}
-
-/* Tax Class Table Data */
-function getTaxClassData($data){
-    $deleteParam = "{'postData':{'id' : ".$data->id."},'message' : 'Tax Class'}";
-    $editParam = "{'postData':{'id' : ".$data->id."}, 'modal_id' : 'bs-right-lg-modal', 'form_id' : 'editTaxClass', 'title' : 'Update Tax Class','call_function':'edit'}";
-    
-
-    $editButton = '<a class="btn btn-success btn-edit permission-modify" href="javascript:void(0)" datatip="Edit" flow="down" onclick="modalAction('.$editParam.');"><i class="mdi mdi-square-edit-outline"></i></a>';
-    $deleteButton = '<a class="btn btn-danger btn-delete permission-remove" href="javascript:void(0)" onclick="trash('.$deleteParam.');" datatip="Remove" flow="down"><i class="mdi mdi-trash-can-outline"></i></a>';
-
-    $action = getActionButton($editButton.$deleteButton);    
-
-    return [$action,$data->sr_no,$data->tax_class_name,$data->sp_type_name,$data->sp_acc_name,$data->is_active_name];
-}
-
-/* Group Master Table data */
-function getGroupMasterData($data){
-    $deleteParam = "{'postData':{'id' : ".$data->id."},'message' : 'Group'}";
-    $editParam = "{'postData':{'id' : ".$data->id."}, 'modal_id' : 'bs-right-md-modal', 'form_id' : 'editGroup', 'title' : 'Update Group','call_function':'edit'}";
-    
-
-    $editButton = '<a class="btn btn-success btn-edit permission-modify" href="javascript:void(0)" datatip="Edit" flow="down" onclick="modalAction('.$editParam.');"><i class="mdi mdi-square-edit-outline"></i></a>';
-    $deleteButton = '<a class="btn btn-danger btn-delete permission-remove" href="javascript:void(0)" onclick="trash('.$deleteParam.');" datatip="Remove" flow="down"><i class="mdi mdi-trash-can-outline"></i></a>';
-
-    if(!empty($data->is_default)):
-        $editButton = $deleteButton = "";
-    endif;
-
-    $action = getActionButton($editButton.$deleteButton);    
-
-    return [$action,$data->sr_no,$data->group_code,$data->name,$data->perent_group_name,$data->nature,$data->bs_type_name];
-}
 ?>

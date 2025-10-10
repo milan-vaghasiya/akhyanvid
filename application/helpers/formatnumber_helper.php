@@ -332,6 +332,16 @@ function secondsToTime($seconds = 0,$format = "H:i:s") {
 	endif;
 }
 
+function s2his($seconds) {
+	$t = round($seconds);
+	return sprintf('%02d:%02d:%02d', ($t/3600),($t/60%60), $t%60);
+}
+
+function s2hi($seconds) {
+	$t = round($seconds);
+	return sprintf('%02d:%02d', ($t/3600),($t/60%60));
+}
+
 function addTimeToDate($date,$time,$dateFormat='Y-m-d H:i:s',$type="H"){
 	$newDate = '';
 	switch($type){
@@ -387,9 +397,9 @@ function date_sortA( $a, $b ) {return strtotime($a) - strtotime($b);}
 function date_sortD( $a, $b ) {return strtotime($b) - strtotime($a);}
 
 function encodeURL($url){return urlencode(base64_encode(json_encode($url)));}
-function decodeURL($url){return json_decode(base64_decode(urldecode($url)));}	
+function decodeURL($url){return json_decode(base64_decode(urldecode($url)));}
 
-function moneyFormatIndia($num) {return preg_replace("/(\d+?)(?=(\d\d)+(\d)(?!\d))(\.\d+)?/i", "$1,", $num);}
+function moneyFormatIndia($num) {$num = sprintf("%0.3f",floatVal($num)); return preg_replace("/(\d+?)(?=(\d\d)+(\d)(?!\d))(\.\d+)?/i", "$1,", $num);}
 
 function n2a($num){$alphabet = range('A', 'Z');array_unshift($alphabet , '');return $alphabet[(int)$num];}
 
@@ -414,12 +424,11 @@ function getFinDates($date){
 	return array_values($fdates);
 }
 
-function n2y($value,$statYear = "2024") {
-	$alphabet = range('A', 'Z'); return (!is_numeric($value)) ? (intVal(array_search($value, $alphabet)) + $statYear) : $alphabet[intVal($value)-$statYear] ;
-}
+function n2y($value) {$alphabet = range('A', 'Z'); return (!is_numeric($value)) ? (intVal(array_search($value, $alphabet)) + 2023) : $alphabet[intVal($value)-2023] ;}
 
 function n2m($value) {$alphabet = range('A', 'Z'); return (!is_numeric($value)) ? (intVal(array_search($value, $alphabet))) : $alphabet[intVal($value)-1] ;}
 
+/* Validate Vehicale Number */
 function isVehicleNumber($Number){
 	$pattern = "/^[a-zA-Z]{2}[0-9]{2}[a-zA-Z]{1,2}[0-9]{3,4}$/i";
 	if (preg_match($pattern, $Number)){
@@ -435,6 +444,7 @@ function TO_STRING($string){return trim(ltrim((preg_replace('/[0-9]+/', '', $str
 
 function STR_BTW_CHAR($str,$btw){preg_match_all('#\\'.$btw[0].'(.*?)\\'.$btw[1].'#', $str, $match);return ((!empty($match[1])) ? $match[1] : '');}
 
+/* Get Count of Day in Month */
 function countDayInMonth($dayName,$date=""){    
     $date = (!empty($date))?date("Y-m",strtotime($date)):date("Y-m");
     $days = date("t",strtotime($date));
@@ -461,51 +471,6 @@ function findClosestDate($array, $date){
     $closest = key($interval);
 
     return $array[$closest];
-}
-
-function numberFormatIndia($num) {
-	return preg_replace("/(\d+?)(?=(\d\d)+(\d)(?!\d))(\.\d+)?/i", "$1,", round($num,2));
-
-	/* if(is_string($num) == true){
-		$num = floatVal($num);
-	}
-
-	// Check if the number is negative
-    $negative = false;
-    if ($num < 0) {
-        $negative = true;
-		$num = abs($num);
-    }
-	
-	$decimal = "";$number="";
-	if(is_float($num) == true){ 
-		$number = explode(".",$num); $num = $number[0]; $decimal = (isset($number[1]))?".".$number[1]:".00"; 
-	}
-	
-	$explrestunits = "" ;
-	if(strlen($num)>3) {
-		$lastthree = substr($num, strlen($num)-3, strlen($num));
-		$restunits = substr($num, 0, strlen($num)-3); // extracts the last three digits
-		$restunits = (strlen($restunits)%2 == 1)?"0".$restunits:$restunits; // explodes the remaining digits in 2's formats, adds a zero in the beginning to maintain the 2's grouping.
-		$expunit = str_split($restunits, 2);
-		for($i=0; $i<sizeof($expunit); $i++) {
-			// creates each of the 2's group and adds a comma to the end
-			if($i==0) {
-				$explrestunits .= (int)$expunit[$i].","; // if is first value , convert into integer
-			} else {
-				$explrestunits .= $expunit[$i].",";
-			}
-		}
-		$thecash = $explrestunits.$lastthree.$decimal;
-	} else {
-		$thecash = $num.$decimal;
-	}
-
-	// Prepend the negative sign if the number was negative
-    if ($negative) {
-        $thecash = '-' . $thecash;
-    }
-	return $thecash; // writes the final format where $currency is the currency symbol. */
 }
 
 /* 
@@ -568,28 +533,49 @@ function getPartyListOption($partyList,$partyId = 0){
 	return $options;
 }
 
-function getItemListOption($itemList,$itemId = 0){
-	$options = '';
-	foreach($itemList as $row):
-		$selected = (!empty($itemId) && $itemId == $row->id)?"selected":"";
-		$itemName = (!empty($row->item_code))?"[ ".$row->item_code." ] ".$row->item_name : $row->item_name;
-		$options .= '<option value="'.$row->id.'" data-location_id="'.$row->location_id.'" '.$selected.'>'.$itemName.'</option>';
-	endforeach;
+/* Get Item List Options */
+function getItemListOption($itemList,$itemId = 0,$categoryGroup = 0){
+	if(!empty($categoryGroup)):
+		$groupedCategory = array_reduce($itemList, function($itemData, $row) {
+			$itemData[$row->category_name][] = $row;
+			return $itemData;
+		}, []);
+
+		$options = '';
+		foreach ($groupedCategory as $category => $item):
+			$options .= '<optgroup label="' . $category . '">';
+			foreach ($item as $row):
+				$selected = (!empty($itemId) && $itemId == $row->id)?"selected":"";
+				$itemName = (!empty($row->item_code))?"[ ".$row->item_code." ] ".$row->item_name : $row->item_name;
+				$options .= '<option value="'.$row->id.'" '.$selected.'>'.$itemName.'</option>';
+			endforeach;
+			$options .= '</optgroup>';
+		endforeach;
+	else:
+		$options = '';
+		foreach($itemList as $row):
+			$selected = (!empty($itemId) && $itemId == $row->id)?"selected":"";
+			$itemName = (!empty($row->item_code))?"[ ".$row->item_code." ] ".$row->item_name : $row->item_name;
+			$options .= '<option value="'.$row->id.'" '.$selected.'>'.$itemName.'</option>';
+		endforeach;
+	endif;
 
 	return $options;
 }
 
+/* Get Item Unit List Options */
 function getItemUnitListOption($unitList,$unit_id = 0){
 	$options = '';
 	foreach($unitList as $row):
-		$selected = (!empty($unit_id) && $unit_id == $row->id)?"selected":"";
+		$selected = (!empty($unit_id) && $unit_id == $row->unit_name)?"selected":"";
 		//$options .= '<option value="'.$row->id.'" '.$selected.'>'.$row->unit_name.'</option>';
-		$options .= '<option value="'.$row->id.'" data-unit="'.$row->unit_name.'" data-description="'.$row->description.'" '.$selected.'>[' . $row->unit_name . '] ' . $row->description . '</option>';
+		$options .= '<option value="'.$row->unit_name.'" data-unit="'.$row->unit_name.'" data-description="'.$row->description.'" '.$selected.'>[' . $row->unit_name . '] ' . $row->description . '</option>';
 	endforeach;
 
 	return $options;
 }
 
+/* Get HSN Code List Options */
 function getHsnCodeListOption($hsnCodeList,$hsn = ""){
 	$options = '';
 	foreach($hsnCodeList as $row):
@@ -620,12 +606,57 @@ function getLocationListOption($locationList,$locationId = 0){
 	return $options;
 }
 
+/* Get Tax Class Options */
+function getTaxClassListOption($taxClassList,$tax_class_id = 0){
+	$options = '<option value="">Select Type</option>';
+	foreach($taxClassList as $row):
+		$selected = (!empty($tax_class_id) && $tax_class_id == $row->id)?"selected":(($row->is_defualt == 1)?"selected":"");
+		$options .= '<option value="'.$row->id.'" data-gst_type="'.$row->gst_type.'" data-sp_acc_id="'.$row->sp_acc_id.'" data-tax_class="'.$row->tax_class.'" '.$selected.'>'.$row->tax_class_name.'</option>';
+	endforeach;
+
+	return $options;
+}
+
 /* Get Sales / Purchase Account Options */
 function getSpAccListOption($accounts,$acc_id = 0){
 	$options = '<option value="">Select Type</option>';
 	foreach($accounts as $row):
 		$selected = (!empty($acc_id) && $acc_id == $row->id)?"selected":"";
 		$options .= '<option value="'.$row->id.'" data-tax_class="'.$row->system_code.'" '.$selected.'>'.$row->party_name.'</option>';
+	endforeach;
+
+	return $options;
+}
+
+/* Brand Options */
+function getBrandListOption($brandList,$brand = "",$value_type = 0){
+	$options = '';
+	foreach($brandList as $row):
+		$value = ($value_type == 1)?$row->brand_name:$row->id;
+		$selected = (!empty($brand) && $brand == $value)?"selected":"";
+		$options .= '<option value="'.$value.'" '.$selected.'>'.$row->brand_name.'</option>';
+	endforeach;
+
+	return $options;
+}
+
+/* Get Empoyee List Options */
+function getEmployeeListOption($employeeList,$emp_id = 0){
+	$options = '';
+	foreach($employeeList as $row):
+		$selected = (!empty($emp_id) && $emp_id == $row->id)?"selected":"";
+		$options .= '<option value="'.$row->id.'" '.$selected.'>'.$row->emp_name.'</option>';
+	endforeach;
+
+	return $options;
+}
+
+/* Get Company List Options */
+function getCompanyListOptions($companyList,$company_id = ""){
+	$options = '';
+	foreach($companyList as $row):
+		$selected = (!empty($company_id) && in_array($row->id,explode(",",$company_id)))?"selected":"";
+		$options .= '<option value="'.$row->id.'" data-state_code="'.$row->company_state_code.'" '.$selected.'>'.$row->company_code.'</option>';
 	endforeach;
 
 	return $options;
@@ -642,140 +673,196 @@ function getTDSClassListOptions($tdsClassList,$tds_class_id = 0){
 	return $options;
 }
 
-/* Get Tax Class Options */
-function getTaxClassListOption($taxClassList,$tax_class_id = 0){
-	$options = '<option value="">Select Type</option>';
-	foreach($taxClassList as $row):
-		$selected = (!empty($tax_class_id) && $tax_class_id == $row->id)?"selected":(($row->is_defualt == 1)?"selected":"");
-		$options .= '<option value="'.$row->id.'" data-gst_type="'.$row->gst_type.'" data-sp_acc_id="'.$row->sp_acc_id.'" data-tax_class="'.$row->tax_class.'" '.$selected.'>'.$row->tax_class_name.'</option>';
-	endforeach;
+/* Get Month List Between Dates */
+function getMonthList($startDate, $endDate, $format = 'M - Y') {
+    // Convert input strings to DateTime objects
+    $start = new DateTime($startDate);
+    $end = new DateTime($endDate);
+    // Set the end date to the last day of the end month to include the whole month
+    $end->modify('last day of this month');
 
-	return $options;
+    // Create a DatePeriod object with a 1 month interval
+    $interval = new DateInterval('P1M');
+    $datePeriod = new DatePeriod($start, $interval, $end);
+
+    // Create an array to hold the list of months
+    $months = array();
+
+    // Loop through the DatePeriod object to get each month
+    foreach ($datePeriod as $date) {
+        $months[$date->format('Y-m')] = $date->format($format);
+    }
+
+    return $months;
 }
 
-/* Get Year Prefix */
-function getYearPrefix($format,$date=""){
-	if(empty($date)){$date = date('Y-m-d');}
-	$Y=intval(date('Y',strtotime($date)));
-	$y=intval(date('y',strtotime($date)));
-	$m=intval(date('m',strtotime($date)));
-	if($format == 'NUMERIC_YEAR'){return $Y;} // 2024
-	if($format == 'ALPHA_YEAR'){return n2y(date('Y',strtotime($date)),'2024');} // A 
-	if($format == 'SHORT_YEAR'){ return ($m < 4) ? ($y - 1)."-".$y : $y."-".($y + 1) ; } // 24-25
-	if($format == 'LONG_YEAR'){ return ( $m < 4) ? ($Y - 1)."-".$y : $Y."-".($y + 1) ; } // 2024-25
+/* Get Date List Between Dates */
+function getDateList($startDate, $endDate, $format = "Y-m-d") {
+    // Convert input strings to DateTime objects
+    $start = new DateTime($startDate);
+    $end = new DateTime($endDate);
+    // Add one day to the end date to make sure it is inclusive
+    $end->modify('+1 day');
+
+    // Create a DatePeriod object with a 1 day interval
+    $interval = new DateInterval('P1D');
+    $datePeriod = new DatePeriod($start, $interval, $end);
+
+    // Create an array to hold the list of dates
+    $dates = array();
+
+    // Loop through the DatePeriod object to get each date
+    foreach ($datePeriod as $date) {
+        $dates[] = $date->format($format);
+    }
+
+    return $dates;
 }
 
+/* Get Quarter List Between Dates */
+function getQuarters($startDate, $endDate) {
+    $quarters = [];
+    $currentDate = strtotime($startDate);
+    $endDate = strtotime($endDate);
+	$todayDate = getFyDate();
+    
+	$i=1;
+    while ($currentDate <= $endDate):
+        $quarterStart = date("Y-m-d", $currentDate);
+        $quarterEnd = date("Y-m-d", strtotime("+2 months", strtotime("+1 month", $currentDate)) - 1);
+        
+        if (strtotime($quarterEnd) > $endDate):
+            $quarterEnd = date("Y-m-d", $endDate);
+		endif;
 
-function buildTree($data, $currentParent,$lvl_str = '',$lvl = 1,$itmLevel = [])
+		$currentQuarter = 0;
+		if($quarterStart < $todayDate && $quarterEnd > $todayDate):
+			$currentQuarter = 1;
+		endif;
+
+        $quarters["Q".$i] = ["start" => $quarterStart, "end" => $quarterEnd, 'current' => $currentQuarter];
+        
+        $currentDate = strtotime("+3 months", $currentDate);
+		$i++;
+    endwhile;
+
+    return $quarters;
+}
+
+/* Convert Short Numbert */
+function convertToShortNumber($num) {
+	$num = floatval($num);
+    if($num < 1000):
+        return ['value' => $num, 'format' => '', 'format_text' => '-'];
+	endif;
+
+    $suffixes = ['', 'k', 'L', 'Cr'];
+    $suffixesText = ['' => '-', 'k' => 'Thousands', 'L' => 'Lakhs', 'Cr' => 'Crores'];
+    $value = floatval($num);
+    $base = 1000;
+    $suffixIndex = 0;
+
+    while($value >= $base && $suffixIndex < count($suffixes) - 1):
+        $value /= $base;
+        $suffixIndex++;
+        if($suffixIndex == 1):
+            $base = 100;
+        else:
+            $base = 100;
+		endif;
+    endwhile;
+
+    // Format the number to two decimal place if it is not an integer
+    $value = ($value - floor($value)) > 0 ? number_format($value, 2) : $value;
+
+	return ['value' => $value, 'format' => $suffixes[$suffixIndex], 'format_text' => $suffixesText[$suffixes[$suffixIndex]]];
+}
+
+function getWeekOffs1($year, $month, $weekOffDays = [7]) {
+    $weekOffs = [];
+    
+    // Create a DateTime object for the first day of the given month
+    $startDate = new DateTime("$year-$month-01");
+    
+    // Get the last day of the month
+    $endDate = new DateTime("$year-$month-" . $startDate->format('t'));
+    
+    // Iterate through each day of the month
+    while ($startDate <= $endDate) {
+        if (in_array($startDate->format('N'), $weekOffDays)) { // 'N' (1 = Monday, 7 = Sunday)
+            $weekOffs[] = $startDate->format('Y-m-d');
+        }
+        $startDate->modify('+1 day');
+    }
+
+    return $weekOffs;
+}
+
+function getWeekOffs($startDate, $endDate, $weekOffDays = [7]) {
+    $weekOffs = [];
+    $start = new DateTime($startDate);
+    $end = new DateTime($endDate);
+    $end->modify('+1 day'); // Include the end date in the range
+
+    $interval = new DateInterval('P1D'); // 1-day interval
+    $dateRange = new DatePeriod($start, $interval, $end);
+
+    foreach ($dateRange as $date) {
+        if (in_array($date->format('N'), $weekOffDays)) { // 'N' (1=Monday, ..., 7=Sunday)
+            $weekOffs[] = $date->format('Y-m-d');
+        }
+    }
+
+    return $weekOffs;
+}
+
+/* Get Distance in Km/Miles from Lat Long */
+function getDistanceOpt($fromLatLong,$toLatLong,$unit='K')
 {
-	foreach ($data as $key => &$item) {
-		$rowBg = '';
-		if(!isset($itmLevel[$item['parent_id']]['lvl']))
-		{
-			$itmLevel[$item['parent_id']]['lvl'] = $lvl;
-			$itmLevel[$item['parent_id']]['lvl_str'] = $lvl_str.'.1';
-			
-			$itmLevel[$item['parent_id'].'@'.$itmLevel[$item['parent_id']]['lvl']] =1;
-			
-			$lvl++;
-		}
-		else
-		{
-			if(isset($itmLevel[$item['parent_id']]['lvl'])){
-				$itmLevel[$item['parent_id'].'@'.$itmLevel[$item['parent_id']]['lvl']]++;
-			}
-		}
-		$itmLevel[$item['parent_id']]['lvl_str'] = $lvl_str.'.'.$itmLevel[$item['parent_id'].'@'.$itmLevel[$item['parent_id']]['lvl']];
-		
-		$pd = (!empty($itmLevel[$item['parent_id']]['lvl']) ? ($itmLevel[$item['parent_id']]['lvl'] * 20) : 0);
-		
-		
-		echo '<tr class="'.$rowBg.'">';
-			echo '<td>'.$itmLevel[$item['parent_id']]['lvl_str'].'</td>';
-			echo '<td class="text-left" style="padding-left:'.$pd.'px!important;">'.$item['text'].'</td>';
-			echo '<td class="text-right">'.$item['qty'].'</td>';
-		echo '</tr>';
-		
-		
-		if (isset($item['nodes'])) {
-			$currentParent = $item['id'];
-			buildTree($item['nodes'], $currentParent,$itmLevel[$item['parent_id']]['lvl_str'],$lvl,$itmLevel);
-		}
-	}
+    $response = 0;
+    $from = explode(',',$fromLatLong);
+    $to = explode(',',$toLatLong);
+    if ((!empty($from)) AND (!empty($to)) AND ($from[0] == $to[0]) && ($from[1] == $to[1])) { return 0; }
+    else
+    {
+        $rad = M_PI / 180;
+        $theta = floatval($from[1]) - floatVal($to[1]);
+        $dist = sin($from[0] * $rad) * sin($to[0] * $rad) +  cos($from[0] * $rad) * cos($to[0] * $rad) * cos($theta * $rad);
+    
+        $km = acos($dist) / $rad * 60 *  1.853;
+        
+        if (strtoupper($unit) == "K") {$response = $km;}
+        if (strtoupper($unit) == "M") {$response = ($km * 0.62137119 );}
+    }
+    return round($response,2);
 }
 
-function buildTreeView($data, $currentParent)
-{
-	foreach ($data as $key => &$item) {
-		echo '<ul>';
-		echo '<li>';
-			echo '<div class="listree-submenu-heading">' . $item['parent_id'] . '@' . $item['id'] . '@' . $item['text'] . '</div>';
-		echo '</li>';
+function base64ToPng($base64_string,$file_path){
+	if(!empty($base64_string) AND !empty($file_path))
+	{
+		if (strpos($base64_string, 'base64,') !== false) {$base64_string = explode('base64,', $base64_string)[1];}else{return false;}
 		
-		if (isset($item['nodes'])) {
-			$currentParent = $item['id'];
-			buildTree($item['nodes'], $currentParent);
-		}
-
-		echo '</ul>';
+		$image_data = base64_decode($base64_string);
+		
+		file_put_contents($file_path, $image_data);
+		
+		return true;
 	}
+	else{return false;}
 }
 
-function buildTreeForCost($data, $currentParent,$lvl_str = '',$lvl = 1,$itmLevel = [])
-{
-	foreach ($data as $key => &$item) {
-		$rowBg = '';
-		if(!isset($itmLevel[$item['parent_id']]['lvl']))
-		{
-			$itmLevel[$item['parent_id']]['lvl'] = $lvl;
-			$itmLevel[$item['parent_id']]['lvl_str'] = $lvl_str.'.1';
-			
-			$itmLevel[$item['parent_id'].'@'.$itmLevel[$item['parent_id']]['lvl']] =1;
-			
-			$lvl++;
-		}
-		else
-		{
-			if(isset($itmLevel[$item['parent_id']]['lvl'])){
-				$itmLevel[$item['parent_id'].'@'.$itmLevel[$item['parent_id']]['lvl']]++;
-			}
-		}
-		$itmLevel[$item['parent_id']]['lvl_str'] = $lvl_str.'.'.$itmLevel[$item['parent_id'].'@'.$itmLevel[$item['parent_id']]['lvl']];
-		
-		$pd = (!empty($itmLevel[$item['parent_id']]['lvl']) ? ($itmLevel[$item['parent_id']]['lvl'] * 20) : 0);
-		$gross_weight="";$net_weight="";$scrap_rate="";$final_rate = 0;
-		$purchaseCost =  0;
-        $process_cost =(!empty($item['process_cost']))?$item['process_cost']*$item['qty']:0;
-		if($item['item_type'] == 3){
-			$gross_weight =(!empty($item['qty']))?$item['qty']:0;
-			$net_weight =(!empty($item['net_weight']))?$item['net_weight']:0;
-			$scrap_rate =(!empty($item['scrap_rate']))?$item['scrap_rate']:0;
-			$total_mt_rate = $gross_weight*$item['purchase_price'];
-			$scrap_rate = $scrap_rate * ($gross_weight - $net_weight);
-			$final_rate = $total_mt_rate - $scrap_rate;
-		}else{
-			$purchaseCost =  (!empty($item['purchase_price']))?$item['purchase_price']*$item['qty']:0;
-		}
-        $amount = $purchaseCost + $process_cost+$final_rate;
-		echo '<tr class="'.$rowBg.'">';
-			echo '<td>'.$itmLevel[$item['parent_id']]['lvl_str'].'</td>';
-			echo '<td class="text-left" style="padding-left:'.$pd.'px!important;">'.$item['text'].'</td>';
-			echo '<td class="text-right">'.$item['qty'].'</td>';
-			echo '<td class="text-right">'.$purchaseCost.'</td>';
-			echo '<td class="text-right">'.$process_cost.'</td>';
-			echo '<td class="text-right">'.$net_weight.'</td>';
-			echo '<td class="text-right">'.$gross_weight.'</td>';
-			echo '<td class="text-right">'.$scrap_rate.'</td>';
-			echo '<td class="text-right">'.$amount.'</td>';
-		echo '</tr>';
-		
-		
-		if (isset($item['nodes'])) {
-			$currentParent = $item['id'];
-			buildTreeForCost($item['nodes'], $currentParent,$itmLevel[$item['parent_id']]['lvl_str'],$lvl,$itmLevel);
-		}
-	}
+// Task Manager
+function truncateWithEllipsis($string, $maxLength=0) {
+    if (!empty($maxLength) AND strlen($string) > $maxLength) { return substr($string, 0, $maxLength - 3) . '...'; }
+    return $string;
 }
 
+function getShortNameByFirstLetter($str){
+	$shortName = '';
+	$words = explode(" ", $str);
+	foreach ($words as $word) {if (strlen($word) > 0) {$shortName .= $word[0];}}
+	
+	return $shortName;
+}
 
 ?>

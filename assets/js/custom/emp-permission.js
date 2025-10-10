@@ -39,6 +39,35 @@ $(document).ready(function(){
             }
         });
     });
+
+    $(document).on('change','#dashboard_emp_id',function(){
+        var emp_id = $(this).val();
+        $(".permissionIdReset").val("");
+        $(".chk-col-success").prop("checked",false);
+
+        $(".error").html("");
+        $(this).val(emp_id);
+        initSelect2();
+
+        $.ajax({
+            type: "POST",   
+            url: base_url + controller + '/editDashboardPermission',   
+            data: {emp_id:emp_id},
+            dataType:"json"
+        }).done(function(response){
+            var permission = response.empPermission;
+            if(permission.length > 0){
+                $.each(permission,function(key, row) {
+                    $("#empDashboardPermission #permission_"+row.widget_id).val(row.id);
+                    if(row.is_read == 1){
+                        $("#empDashboardPermission #widget_"+row.widget_id).prop("checked",true);
+                    }else{
+                        $("#empDashboardPermission #widget_"+row.widget_id).prop("checked",false);
+                    }
+                }); 
+            }
+        });
+    });
 });
 
 function resPermission(data,formId){
@@ -56,10 +85,27 @@ function resPermission(data,formId){
     }
 }
 
+function resDashboardPermission(data,formId){
+    if(data.status==1){
+        $(".permissionIdReset").val("");
+        $(".chk-col-success").prop("checked",false);
+        $("#dashboard_emp_id").val("");initSelect2();
+
+		Swal.fire( 'Success', data.message, 'success' );
+    }else{
+        if(typeof data.message === "object"){
+            $(".error").html("");
+            $.each( data.message, function( key, value ) { $("."+key).html(value); });
+        }else{
+			Swal.fire( 'Sorry...!', data.message, 'error' );
+        }			
+    }
+}
+
 function resCopyPermission(data,formId){
     if(data.status==1){
         $('#'+formId)[0].reset();
-        colseModal(formId);
+        closeModal(formId);
 		Swal.fire( 'Success', data.message, 'success' );
     }else{
         if(typeof data.message === "object"){

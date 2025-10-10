@@ -12,7 +12,7 @@
                 </div>
             </div>
             <div class="modal-footer">
-                <button type="button" class="btn btn-success btn-save tc_save" data-bs-dismiss="modal"><i class="fa fa-check"></i> Save</button>
+                <button type="button" class="btn btn-success tc_save" data-bs-dismiss="modal"><i class="fa fa-check"></i> Save Terms</button>
             </div>
         </div>
     </div>

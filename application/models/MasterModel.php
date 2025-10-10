@@ -1,6 +1,188 @@
 <?php /* Master Modal Ver. : 2  */
 class MasterModel extends CI_Model{
+/*** Mapping Conditions ***/
+	public function mapConditions($data){
+		if(isset($data['select'])):
+            if(!empty($data['select'])):
+                $this->db->select($data['select']);
+            endif;
+        endif;
 
+        if(isset($data['join'])):
+            if(!empty($data['join'])):
+                foreach($data['join'] as $key=>$value):
+                    $this->db->join($key,$value);
+                endforeach;
+            endif;
+        endif;
+
+        if(isset($data['leftJoin'])):
+            if(!empty($data['leftJoin'])):
+                foreach($data['leftJoin'] as $key=>$value):
+                    $this->db->join($key,$value,'left',false);
+                endforeach;
+            endif;
+        endif;
+
+        if(isset($data['where'])):
+            if(!empty($data['where'])):
+                foreach($data['where'] as $key=>$value):
+                    $this->db->where($key,$value);
+                endforeach;
+            endif;            
+        endif;
+
+        if(isset($data['where_or'])):
+            if(!empty($data['where_or'])):
+                $i=1;
+                $this->db->group_start();
+                foreach($data['where_or'] as $key=>$value):
+                    if($i == 1):
+                        $this->db->where($key,$value);
+                    else:
+                        $this->db->or_where($key,$value);
+                    endif;
+                    $i++;
+                endforeach;
+                $this->db->group_end();
+            endif;
+        endif;
+        
+        if(isset($data['whereFalse'])):
+            if(!empty($data['whereFalse'])):
+                foreach($data['whereFalse'] as $key=>$value):
+                    $this->db->where($key,$value,false); 
+                endforeach;
+            endif;            
+        endif;
+        
+        if(isset($data['customWhere'])):
+            if(!empty($data['customWhere'])):
+                foreach($data['customWhere'] as $value):
+                    $this->db->where($value);
+                endforeach;
+            endif;
+        endif;
+
+        if(isset($data['where_in'])):
+            if(!empty($data['where_in'])):
+                foreach($data['where_in'] as $key=>$value):
+                    $this->db->where_in($key,$value,false);
+                endforeach;
+            endif;
+        endif;
+
+        if(isset($data['where_not_in'])):
+            if(!empty($data['where_not_in'])):
+                foreach($data['where_not_in'] as $key=>$value):
+                    $this->db->where_not_in($key,$value,false);
+                endforeach;
+            endif;
+        endif;
+
+        if (isset($data['having'])) :
+			if (!empty($data['having'])) :
+				foreach ($data['having'] as $value) :
+					$this->db->having($value);
+				endforeach;
+			endif;
+		endif;
+
+        if(isset($data['like'])):
+            if(!empty($data['like'])):
+                $i=1;
+                $this->db->group_start();
+                foreach($data['like'] as $key=>$value):
+                    if($i == 1):
+                        $this->db->like($key,$value,'both',false);
+                    else:
+                        $this->db->or_like($key,$value,'both',false);
+                    endif;
+                    $i++;
+                endforeach;
+                $this->db->group_end();
+            endif;
+        endif;
+
+        if(isset($data['columnSearch'])):
+            if(!empty($data['columnSearch'])):                
+                $this->db->group_start();
+                foreach($data['columnSearch'] as $key=>$value):
+                    $this->db->like($key,$value);
+                endforeach;
+                $this->db->group_end();
+            endif;
+        endif;
+
+        if(isset($data['order_by'])):
+            if(!empty($data['order_by'])):
+                foreach($data['order_by'] as $key=>$value):
+                    $this->db->order_by($key,$value);
+                endforeach;
+            endif;
+        endif;
+
+        if(isset($data['order_by_field'])):
+            if(!empty($data['order_by_field'])):
+                foreach($data['order_by_field'] as $key=>$value):
+                    $this->db->order_by("FIELD(".$key.", ".implode(",",$value).")", '', false);
+                endforeach;
+            endif;
+        endif;
+
+        if(isset($data['group_by'])):
+            if(!empty($data['group_by'])):
+                foreach($data['group_by'] as $key=>$value):
+                    $this->db->group_by($value);
+                endforeach;
+            endif;
+        endif;
+
+		if(isset($data['limit'])):
+            if(!empty($data['limit'])):
+                $this->db->limit($data['limit']);
+            endif;
+        endif;
+
+        if(isset($data['start']) && isset($data['length'])):
+            if(!empty($data['length'])):
+                $this->db->limit($data['length'],$data['start']);
+            endif;
+        endif;
+	}
+
+    /* Get All Rows */
+	public function getData($param,$selectType = "rows"){
+		
+		$this->mapConditions($param);
+		
+		if(isset($param['all'])):
+            if(!empty($param['all'])):
+                foreach($param['all'] as $key=>$value):
+                    $this->db->where_in($key,$value,false);
+                endforeach;
+            endif;
+        else:
+            $this->db->where($param['tableName'].'.is_delete',0);
+        endif;
+        
+		
+		if($selectType == "rows"):
+			return $this->db->get($param['tableName'])->result();
+		endif;
+		
+		if($selectType == "row"):
+			return $this->db->get($param['tableName'])->row();
+		endif;
+		
+		if($selectType == "numRows"):
+			return $this->db->get($param['tableName'])->num_rows();
+		endif;
+		
+        //print_r($this->db->last_query());
+        return $result;
+	}
+    
     /* Get Paging Rows */
     public function pagingRows($data){
         $draw = $data['draw'];
@@ -54,9 +236,6 @@ class MasterModel extends CI_Model{
                 endif;
             endif;
             $this->db->where($data['tableName'].'.is_delete',0);
-            // if(!isset($data['cm_id'])):
-            //     $this->db->where_in($data['tableName'].'.cm_id',[$this->cm_id,0]);
-            // endif;
     
             if(isset($data['where_in'])):
                 if(!empty($data['where_in'])):
@@ -88,7 +267,7 @@ class MasterModel extends CI_Model{
                         $this->db->group_by($value);
                     endforeach;
                 endif;
-            endif;			
+            endif;
     		
             $totalRecords = $this->db->get($data['tableName'])->num_rows();
             //print_r($this->db->last_query());
@@ -145,9 +324,6 @@ class MasterModel extends CI_Model{
                 endif;
             endif;
             $this->db->where($data['tableName'].'.is_delete',0);
-            // if(!isset($data['cm_id'])):
-            //     $this->db->where_in($data['tableName'].'.cm_id',[$this->cm_id,0]);
-            // endif;
     
             if(isset($data['where_in'])):
                 if(!empty($data['where_in'])):
@@ -180,13 +356,13 @@ class MasterModel extends CI_Model{
                     if(!empty($data['searchCol'])):
                         $this->db->group_start();
     						foreach($data['searchCol'] as $key=>$value):
-    						    if(!empty($value)):
+    						    if(!empty($value)){
         							if($key == 0):
         								$this->db->like($value,str_replace(" ", "%", $searchValue),'both',false);
         							else:
         								$this->db->or_like($value,str_replace(" ", "%", $searchValue),'both',false);
         							endif;
-    						    endif;
+    						    }
     						endforeach;
                         $this->db->group_end();
                     endif;
@@ -197,11 +373,10 @@ class MasterModel extends CI_Model{
     		if(isset($data['searchCol'])):
     			if(!empty($data['searchCol'])):
     				foreach($data['searchCol'] as $key=>$value):
-    					if(!empty($value)):
+    					if(!empty($value)){
     						$csearch = $data['columns'][$key]['search']['value'];
-    						if(!empty($csearch))
-                                $this->db->like($value,$csearch);
-                        endif;
+    						if(!empty($csearch)){$this->db->like($value,$csearch);}
+    					}
     				endforeach;
     			endif;
     		endif;
@@ -269,9 +444,6 @@ class MasterModel extends CI_Model{
             endif;
 
             $this->db->where($data['tableName'].'.is_delete',0);
-            // if(!isset($data['cm_id'])):
-            //     $this->db->where_in($data['tableName'].'.cm_id',[$this->cm_id,0]);
-            // endif;
     
             if(isset($data['where_in'])):
                 if(!empty($data['where_in'])):
@@ -296,13 +468,13 @@ class MasterModel extends CI_Model{
                     if(!empty($data['searchCol'])):
                         $this->db->group_start();
                         foreach($data['searchCol'] as $key=>$value):
-                            if(!empty($value)):
+                            if(!empty($value)){
                                 if($key == 0):
                                     $this->db->like($value,str_replace(" ", "%", $searchValue),'both',false);
                                 else:
                                     $this->db->or_like($value,str_replace(" ", "%", $searchValue),'both',false);
                                 endif;
-                            endif;
+                            }
                         endforeach;
                         $this->db->group_end();
                     endif;
@@ -313,11 +485,10 @@ class MasterModel extends CI_Model{
     		if(isset($data['searchCol'])):
     			if(!empty($data['searchCol'])):
     				foreach($data['searchCol'] as $key=>$value):
-    					if(!empty($value)):
+    					if(!empty($value)){
     						$csearch = $data['columns'][$key]['search']['value'];
-    						if(!empty($csearch))
-                                $this->db->like($value,$csearch);
-                        endif;
+    						if(!empty($csearch)){$this->db->like($value,$csearch);}
+    					}
     				endforeach;
     			endif;
     		endif;
@@ -325,6 +496,7 @@ class MasterModel extends CI_Model{
             if(isset($data['order_by'])):
                 if(!empty($data['order_by'])):
                     foreach($data['order_by'] as $key=>$value):
+                        $key = str_replace(["DATE_FORMAT(",",'%d-%m-%Y')"],"",$key);
                         $this->db->order_by($key,$value);
                     endforeach;
                 endif;
@@ -382,7 +554,7 @@ class MasterModel extends CI_Model{
         if(isset($data['leftJoin'])):
             if(!empty($data['leftJoin'])):
                 foreach($data['leftJoin'] as $key=>$value):
-                    $this->db->join($key,$value,'left');
+                    $this->db->join($key,$value,'left',false);
                 endforeach;
             endif;
         endif;
@@ -507,10 +679,7 @@ class MasterModel extends CI_Model{
             $this->db->where($data['tableName'].'.is_delete',0);
         endif;
         
-        // if(!isset($data['cm_id'])):
-        //     $this->db->where_in($data['tableName'].'.cm_id',[$this->cm_id,0]);
-        // endif;
-		
+        //$this->db->where($data['tableName'].'.is_delete',0);
         $result = $this->db->get($data['tableName'])->result();
         //print_r($this->db->last_query());
         return $result;
@@ -535,7 +704,7 @@ class MasterModel extends CI_Model{
         if(isset($data['leftJoin'])):
             if(!empty($data['leftJoin'])):
                 foreach($data['leftJoin'] as $key=>$value):
-                    $this->db->join($key,$value,'left');
+                    $this->db->join($key,$value,'left',false);
                 endforeach;
             endif;
         endif;
@@ -555,11 +724,7 @@ class MasterModel extends CI_Model{
                 endforeach;
             endif;
         endif;
-
         $this->db->where($data['tableName'].'.is_delete',0);
-        // if(!isset($data['cm_id'])):
-        //     $this->db->where_in($data['tableName'].'.cm_id',[$this->cm_id,0]);
-        // endif;
 
         if(isset($data['where_in'])):
             if(!empty($data['where_in'])):
@@ -621,7 +786,7 @@ class MasterModel extends CI_Model{
             if(!empty($data['limit'])):
                 $this->db->limit($data['limit']);
             endif;
-        endif;		
+        endif;
 		
 		$result = $this->db->get($data['tableName'])->row();
  		//print_r($this->db->last_query());
@@ -669,9 +834,6 @@ class MasterModel extends CI_Model{
         endif;
         
         $this->db->where($data['tableName'].'.is_delete',0);
-        // if(!isset($data['cm_id'])):
-        //     $this->db->where_in($data['tableName'].'.cm_id',[$this->cm_id,0]);
-        // endif;
 
         if(isset($data['where_in'])):
             if(!empty($data['where_in'])):
@@ -734,7 +896,7 @@ class MasterModel extends CI_Model{
                 return $this->db->get($data['tableName'])->num_rows();            
             if($data['resultType'] == "resultRows")
                 return $this->db->get($data['tableName'])->result();
-        endif;	
+        endif;
 
         $result =  $this->db->get($data['tableName'])->row();
 		// print_r($this->db->last_query());
@@ -746,7 +908,6 @@ class MasterModel extends CI_Model{
         $id = $data['id'];
         unset($data['id']);
         if(empty($id)):
-			// $data['cm_id'] = (isset($data['cm_id']))?$data['cm_id']:$this->cm_id;
             $data['created_by'] = (isset($data['created_by']))?$data['created_by']:$this->loginId;
             $data['created_at'] = date("Y-m-d H:i:s");
 
@@ -776,10 +937,6 @@ class MasterModel extends CI_Model{
                 $this->db->where($key,$value);
             endforeach;
         endif;
-
-        // $data['cm_id'] = (isset($data['cm_id']))?$data['cm_id']:$this->cm_id;
-        // $this->db->where('cm_id',$data['cm_id']);
-
         $this->db->update($tableName,$data);
         return ['status'=>1,'message'=>$msg." updated Successfully.",'insert_id'=>-1];
     }
@@ -802,15 +959,11 @@ class MasterModel extends CI_Model{
                 endforeach;
             endif;
         endif;
-
-        // $data['cm_id'] = (isset($data['cm_id']))?$data['cm_id']:$this->cm_id;
-        // $this->db->where('cm_id',$data['cm_id']);
-
         $this->db->update($tableName,$data);
         return ['status'=>1,'message'=>"Record updated Successfully.",'insert_id'=>-1];
     }
 
-    /* Set Deleteed Flage */
+    /* Set Deleted Flage */
     public function trash($tableName,$where,$msg = "Record"){
         $data['updated_by'] = $this->loginId;
         $data['updated_at'] = date("Y-m-d H:i:s");
@@ -821,10 +974,6 @@ class MasterModel extends CI_Model{
                 $this->db->where($key,$value);
             endforeach;
         endif;
-
-        // $data['cm_id'] = (isset($data['cm_id']))?$data['cm_id']:$this->cm_id;
-        // $this->db->where('cm_id',$data['cm_id']);
-
         $this->db->update($tableName,$data);
         return ['status'=>1,'message'=>$msg." deleted Successfully."];
     }
@@ -836,86 +985,94 @@ class MasterModel extends CI_Model{
                 $this->db->where($key,$value);
             endforeach;
         endif;
-        
-        // $cm_id = (isset($where['cm_id']))?$where['cm_id']:$this->cm_id;
-        // $this->db->where('cm_id',$cm_id);
-
         $this->db->delete($tableName);
         return ['status'=>1,'message'=>$msg." deleted Successfully."];
     }  
     
     /* Custom Set OR Update Row */
     public function setValue($data){
-        if(isset($data['where'])):
-            if(!empty($data['where'])):
-                foreach($data['where'] as $key=>$value):
-                    $this->db->where($key,$value);
-                endforeach;
-            endif;            
-        endif;
+		if(!empty($data['where'])):
+			if(isset($data['where'])):
+				if(!empty($data['where'])):
+					foreach($data['where'] as $key=>$value):
+						$this->db->where($key,$value);
+					endforeach;
+				endif;            
+			endif;
 
-        if(isset($data['where_in'])):
-            if(!empty($data['where_in'])):
-                foreach($data['where_in'] as $key=>$value):
-                    $this->db->where_in($key,$value,false);
-                endforeach;
+            if(isset($data['where_in'])):
+                if(!empty($data['where_in'])):
+                    foreach($data['where_in'] as $key=>$value):
+                        $this->db->where_in($key,$value,false);
+                    endforeach;
+                endif;
             endif;
-        endif;
 
-        if(isset($data['where_not_in'])):
-            if(!empty($data['where_not_in'])):
-                foreach($data['where_not_in'] as $key=>$value):
-                    $this->db->where_not_in($key,$value,false);
-                endforeach;
+            if(isset($data['where_not_in'])):
+                if(!empty($data['where_not_in'])):
+                    foreach($data['where_not_in'] as $key=>$value):
+                        $this->db->where_not_in($key,$value,false);
+                    endforeach;
+                endif;
             endif;
-        endif;
 
-        if(isset($data['order_by'])):
-            if(!empty($data['order_by'])):
-                foreach($data['order_by'] as $key=>$value):
-                    $this->db->order_by($key,$value);
-                endforeach;
+            if(isset($data['order_by'])):
+                if(!empty($data['order_by'])):
+                    foreach($data['order_by'] as $key=>$value):
+                        $this->db->order_by($key,$value);
+                    endforeach;
+                endif;
             endif;
-        endif;
-        
-        if(isset($data['set'])):
-            if(!empty($data['set'])):
-                foreach($data['set'] as $key=>$value):
-                    $v = explode(',',$value);
-                    $setVal = "`".$v[0]."` ".$v[1];
-                    $this->db->set($key, $setVal, FALSE);
-                endforeach;
-            endif;            
-        endif;
+			
+			if(isset($data['set'])):
+				if(!empty($data['set'])):
+					foreach($data['set'] as $key=>$value):
+						$v = explode(',',$value);
+						$setVal = "`".$v[0]."` ".$v[1];
+						$this->db->set($key, $setVal, FALSE);
+					endforeach;
+				endif;            
+			endif;
 
-        if(isset($data['set_value'])):
-            if(!empty($data['set_value'])):
-                foreach($data['set_value'] as $key=>$value):
-                    $this->db->set($key, $value, FALSE);
-                endforeach;
-            endif;            
-        endif;
+            if(isset($data['set_value'])):
+				if(!empty($data['set_value'])):
+					foreach($data['set_value'] as $key=>$value):
+						$this->db->set($key, $value, FALSE);
+					endforeach;
+				endif;            
+			endif;
 
-        if(isset($data['update'])):
-            if(!empty($data['update'])):
-                foreach($data['update'] as $key=>$value):
-                    $this->db->set($key, $value, FALSE);
-                endforeach;
-            endif;            
+            if(isset($data['update'])):
+				if(!empty($data['update'])):
+					foreach($data['update'] as $key=>$value):
+						$this->db->set($key, $value, FALSE);
+					endforeach;
+				endif;            
+			endif;
+            
+            $this->db->update($data['tableName']);
+            return ['status'=>1,'message'=>"Record updated Successfully.",'qry'=>$this->db->last_query()];
         endif;
-
-        // $data['cm_id'] = (isset($data['cm_id']))?$data['cm_id']:$this->cm_id;
-        // $this->db->where('cm_id',$data['cm_id']);
-        
-        $this->db->update($data['tableName']);
-        return ['status'=>1,'message'=>"Record updated Successfully.",'qry'=>$this->db->last_query()];        
+		return ['status'=>0,'message'=>"Record updated Successfully.",'qry'=>"Query not fired"];
     }
 
 	/* Print Executed Query */
-    public function printQuery(){  print_r($this->db->last_query());exit; }	
+    public function printQuery(){ print_r($this->db->last_query());exit; }	
+
+    /* Company List */
+    public function getCompanyList($cm_ids=array()){
+        $data['tableName'] = 'company_info';
+        $data['select'] = "company_info.id,company_info.company_code,company_info.company_name,company_info.company_gst_no,company_info.company_pincode,bstate.gst_statecode as company_state_code";
+
+        $data['leftJoin']['states as bstate'] = "company_info.company_state_id = bstate.id";
+
+        $data['where_in']['company_info.id'] = (!empty($cm_ids))?$cm_ids:$this->cm_ids;
+
+        return $this->rows($data);
+    }
 
 	/* Company Information */
-	public function getCompanyInfo($cm_id=1){
+	public function getCompanyInfo($id = 1){
 		$data['tableName'] = 'company_info';
         $data['select'] = "company_info.*,bcountry.name as company_country, bstate.name as company_state, bstate.gst_statecode as company_state_code, bcity.name as company_city, dcountry.name as delivery_country, dstate.name as delivery_state, dstate.gst_statecode as delivery_state_code, dcity.name as delivery_city";
 
@@ -927,8 +1084,7 @@ class MasterModel extends CI_Model{
         $data['leftJoin']['states as dstate'] = "company_info.delivery_state_id = dstate.id";
         $data['leftJoin']['cities as dcity'] = "company_info.delivery_city_id = dcity.id";
 
-		// $data['where']['company_info.id'] = $this->cm_id;
-		
+		$data['where']['company_info.id'] = (!empty($id))?explode(",",$id)[0]:1;
 		return $this->row($data);
 	}
 
@@ -950,26 +1106,10 @@ class MasterModel extends CI_Model{
     }
 
     /* Accounting Settings */
-    public function getAccountSettings(){
-        $queryData['tableName'] = 'account_setting';
-        // $queryData['cm_id'] = $this->cm_id;
-		return $this->row($queryData);
-    }
-
-    /* General Settings */
-    public function getGeneralSettings(){
-        $queryData = array();
-        $queryData['tableName'] = "sub_menu_master";
-        $queryData['select'] = "sub_menu_master.id,sub_menu_master.vou_name_long,sub_menu_master.auto_start_no,sub_menu_master.vou_prefix,menu_master.menu_name";
-        $queryData['leftJoin']['menu_master'] =  "menu_master.id = sub_menu_master.menu_id";
-
-        $queryData['where_in']['sub_menu_master.vou_name_short'] = ["'SOrd'","'POrd'","'GI'","'Sale'","'Purc'","'PckList'","'BCRct'","'Senq'","'Squot'","'GExp'","'GInc'","'Jrnl'","'C.N.'","'D.N.'","'COMINV'","'CUSTINV'","'DChl'","'BCGSTPmt'"];
-
-        $queryData['order_by']['menu_master.menu_seq'] = "ASC";
-        $queryData['order_by']['sub_menu_master.sub_menu_seq'] = "ASC";
-
-        $result = $this->rows($queryData);
-        return $result;
+    public function getAccountSettings($id = 1){
+        $data['tableName'] = 'account_setting';
+        $data['where']['account_setting.id'] = $id;
+		return $this->row($data);
     }
 
     /* Save Comapny Settings */
@@ -977,11 +1117,7 @@ class MasterModel extends CI_Model{
         try{
             $this->db->trans_begin();
 
-            $this->store('account_setting',$postData['account_setting']);
-
-            foreach($postData['settings'] as $row):
-                $result = $this->store('sub_menu_master',$row,'Company Settings');
-            endforeach;
+            $result = $this->store('account_setting',$postData['account_setting'],'Settings');
 
             if ($this->db->trans_status() !== FALSE):
                 $this->db->trans_commit();
@@ -993,6 +1129,8 @@ class MasterModel extends CI_Model{
         }	
     }
 
+
+
     /* 
     *   Created BY : Milan Chauhan
     *   Created AT : 05-05-2023
@@ -1001,63 +1139,63 @@ class MasterModel extends CI_Model{
     *       CONDITION TYPE includs where,where_in and where_not_in
     */
     public function checkUsage($postData){
-        $notCheckInTable = ['admin','defualt_expense_master','defualt_group_master','defualt_item_category','defualt_location_master','	defualt_menu_master','defualt_party_master','defualt_sub_menu_master','defualt_tax_master','defualt_unit_master'];
 
-        $res = 0;
         if(!empty($postData['columnName'])):
             $columnName = implode("','",$postData['columnName']);
-            $result = $this->db->query("SELECT DISTINCT TABLE_NAME,COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_NAME IN ('$columnName') AND TABLE_SCHEMA='".MASTER_DB."'")->result();
+            $ignoreTable = (!empty($postData['ignoreTable']) ? implode("','",$postData['ignoreTable']) : '');
             
+            $result = $this->db->query("SELECT DISTINCT TABLE_NAME,COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_NAME IN ('$columnName') AND TABLE_NAME NOT IN ('$ignoreTable')  AND TABLE_SCHEMA='".MASTER_DB."'")->result();
+            
+            // $result = $this->db->query("SELECT DISTINCT TABLE_NAME,COLUMN_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_NAME IN ('$columnName') AND TABLE_SCHEMA='".MASTER_DB."'")->result();
+            //print_r($result);exit;
+            $res = 0;
             foreach($result as $row):
-                if(!in_array($row->TABLE_NAME,$notCheckInTable)):
-                    
-                    $queryData = array();
-                    $queryData['tableName'] = $row->TABLE_NAME;
+                $queryData = array();
+                $queryData['tableName'] = $row->TABLE_NAME;
 
-                    if(empty($postData['notCheckCol'])):
+                if(empty($postData['notCheckCol'])):
+                    $queryData['where'][$row->COLUMN_NAME] = $postData['value'];
+                else:
+                    if(!in_array($row->COLUMN_NAME,$postData['notCheckCol'])):
                         $queryData['where'][$row->COLUMN_NAME] = $postData['value'];
-                    else:
-                        if(!in_array($row->COLUMN_NAME,$postData['notCheckCol'])):
-                            $queryData['where'][$row->COLUMN_NAME] = $postData['value'];
-                        endif;
                     endif;
-
-                    if(isset($postData['table_condition']) && !empty($postData['table_condition'])):
-                        if(array_key_exists($row->TABLE_NAME, $postData['table_condition'])):
-
-                            if(!empty($postData['table_condition'][$row->TABLE_NAME]['where']) && array_key_exists($row->COLUMN_NAME, $data['table_condition'][$row->TABLE_NAME]['where'])):
-                                foreach($postData['table_condition'][$row->TABLE_NAME]['where'][$row->COLUMN_NAME] as $key=>$value):
-                                    $queryData['where'][$key] = $value;
-                                endforeach;
-                            endif;
-
-                            if(!empty($postData['table_condition'][$row->TABLE_NAME]['where_in']) && array_key_exists($row->COLUMN_NAME, $postData['table_condition'][$row->TABLE_NAME]['where_in'])):
-                                foreach($postData['table_condition'][$row->TABLE_NAME]['where_in'][$row->COLUMN_NAME] as $key=>$value):
-                                    $queryData['where_in'][$key] = $value;
-                                endforeach;
-                            endif;
-
-                            if(!empty($postData['table_condition'][$row->TABLE_NAME]['where_not_in']) && array_key_exists($row->COLUMN_NAME, $postData['table_condition'][$row->TABLE_NAME]['where_not_in'])):
-                                foreach($postData['table_condition'][$row->TABLE_NAME]['where_not_in'][$row->COLUMN_NAME] as $key=>$value):
-                                    $queryData['where_not_in'][$key] = $value;
-                                endforeach;
-                            endif;
-
-                            if(!empty($postData['table_condition'][$row->TABLE_NAME]['customWhere']) && array_key_exists($row->COLUMN_NAME, $postData['table_condition'][$row->TABLE_NAME]['customWhere'])):
-                                foreach($postData['table_condition'][$row->TABLE_NAME]['customWhere'][$row->COLUMN_NAME] as $key=>$value):
-                                    $queryData['customWhere'][] = $value;
-                                endforeach;
-                            endif;
-                        endif;
-                    endif;
-
-                    $queryData['resultType'] = "numRows";
-                    $res = $this->specificRow($queryData);
-
-                    if($res > 0): break; endif;
                 endif;
+
+                if(isset($postData['table_condition']) && !empty($postData['table_condition'])):
+                    if(array_key_exists($row->TABLE_NAME, $postData['table_condition'])):
+
+                        if(!empty($postData['table_condition'][$row->TABLE_NAME]['where']) && array_key_exists($row->COLUMN_NAME, $data['table_condition'][$row->TABLE_NAME]['where'])):
+                            foreach($postData['table_condition'][$row->TABLE_NAME]['where'][$row->COLUMN_NAME] as $key=>$value):
+                                $queryData['where'][$key] = $value;
+                            endforeach;
+                        endif;
+
+                        if(!empty($postData['table_condition'][$row->TABLE_NAME]['where_in']) && array_key_exists($row->COLUMN_NAME, $postData['table_condition'][$row->TABLE_NAME]['where_in'])):
+                            foreach($postData['table_condition'][$row->TABLE_NAME]['where_in'][$row->COLUMN_NAME] as $key=>$value):
+                                $queryData['where_in'][$key] = $value;
+                            endforeach;
+                        endif;
+
+                        if(!empty($postData['table_condition'][$row->TABLE_NAME]['where_not_in']) && array_key_exists($row->COLUMN_NAME, $postData['table_condition'][$row->TABLE_NAME]['where_not_in'])):
+                            foreach($postData['table_condition'][$row->TABLE_NAME]['where_not_in'][$row->COLUMN_NAME] as $key=>$value):
+                                $queryData['where_not_in'][$key] = $value;
+                            endforeach;
+                        endif;
+
+                        if(!empty($postData['table_condition'][$row->TABLE_NAME]['customWhere']) && array_key_exists($row->COLUMN_NAME, $postData['table_condition'][$row->TABLE_NAME]['customWhere'])):
+                            foreach($postData['table_condition'][$row->TABLE_NAME]['customWhere'][$row->COLUMN_NAME] as $key=>$value):
+                                $queryData['customWhere'][] = $value;
+                            endforeach;
+                        endif;
+                    endif;
+                endif;
+
+                $queryData['resultType'] = "numRows";
+                $res = $this->specificRow($queryData);
+
+                if($res > 0): /* print_r($row->TABLE_NAME); */ break; endif;
             endforeach;
-            
+            //print_r($res);exit;
             if($res > 0): return true; endif;
         endif;
         return false;
@@ -1084,49 +1222,94 @@ class MasterModel extends CI_Model{
         $result = $this->row($queryData);
 
         if(!empty($result->count)):
-            return ['status'=>0,'message' => 'Entry Ref. Found. You can not delete it. Entry/Vou. Name : '.$result->entry_ref];
+            return ['status'=>0,'message' => 'Entry Ref. Found. You can not delete it. Vou Name : '.$result->entry_ref];
         endif;
 
         return ['status'=>1,'message' => 'Entry Ref. not found.'];
     }
 
-    /* Get Numbers of Rows */
-    public function numRows($data, $deleteCheck = 1)
-    {
-        if (!empty($data['where'])) :
-            foreach ($data['where'] as $key => $value) :
-                $this->db->where($key, $value);
-            endforeach;
+    public function notify($data){
+        /* $result = array();
+        if(!empty($data['controller'])): // if modual permission then get fcm token from database and send notification
+            $this->db->select("emp.web_push_token,emp.app_push_token");
+
+            $this->db->join("sub_menu_master as sm","sm.id = smp.sub_menu_id AND sm.is_delete = 0","left");
+            $this->db->join("employee_master as emp","emp.id = smp.emp_id AND emp.is_active = 1 AND emp.is_delete = 0","left");
+
+            $this->db->where_in("sm.sub_controller_name",$data['controller']);
+            $this->db->where('smp.is_read',1);
+
+            $this->db->group_start();
+                $this->db->where('emp.web_push_token !=',"");
+                $this->db->or_where('emp.app_push_token !=',"");
+            $this->db->group_end();
+
+            $this->db->where('emp.id != ',$this->loginId);
+            $this->db->where('smp.is_delete',0);
+            $result = $this->db->get('sub_menu_permission as smp')->result();
+        elseif(!empty($data['emp_ids'])): // send notification to any specific user's (user id array)
+            $this->db->select("web_push_token,app_push_token");
+        
+            $this->db->group_start();
+                $this->db->where('web_push_token !=',"");
+                $this->db->or_where('app_push_token !=',"");
+            $this->db->group_end();
+            
+            //$this->db->where('id != ',$this->loginId);
+            $this->db->where_in('id',$data['emp_ids']);
+            $this->db->where('is_delete',0);
+            $this->db->where('is_active',1);
+            $result = $this->db->get('employee_master')->result();
         endif;
         
-        if (isset($data['where_in'])) :
-            if (!empty($data['where_in'])) :
-                foreach ($data['where_in'] as $key => $value) :
-                    $this->db->where_in($key, $value);
-                endforeach;
+        $token = array();
+        foreach($result as $row):
+            if(!empty($row->web_push_token)):
+                $token[] = $row->web_push_token;
             endif;
+            
+            if(!empty($row->app_push_token)):
+                $token[] = $row->app_push_token;
+            endif;
+        endforeach;
+
+        $result = array();
+        if(!empty($token)):
+            $data['pushToken'] = $token;
+            $result = $this->notification->sendMultipalNotification($data);
         endif;
 
-        if (!empty($deleteCheck)) {
-            $this->db->where($data['tableName'] . '.is_delete', 0);
-        }
-        return $this->db->get($data['tableName'])->num_rows();
+        $logData = [
+            'log_date' => date("Y-m-d H:i:s"),
+            'notification_data' => json_encode($data),
+            'notification_response' => json_encode($result),
+            'created_by' => (isset($this->loginId))?$this->loginId:0,
+            'created_at' => date("Y-m-d H:i:s"),
+            'updated_by' => (isset($this->loginId))?$this->loginId:0,
+            'updated_at' => date("Y-m-d H:i:s")
+        ];
+        $this->db->insert('notification_log',$logData);
+
+        return $result; */
+
+        return true;
     }
 
-    public function getMasterSettings(){
-        $queryData['tableName'] = 'master_setting';
-		return $this->row($queryData);
-    }
-
-    public function saveMasterSettings($postData){
+    /* Save Location Log in */
+    public function saveLocationLog($postData){
         try{
             $this->db->trans_begin();
-            $this->store('master_setting',$postData);
+            $postData['id'] = '';
+            $postData['created_by'] = $this->loginId;
+            $postData['created_at'] = date("Y-m-d H:i:s");
+            
+            $result = $this->store('location_log',$postData,'Location Log');
+
             if ($this->db->trans_status() !== FALSE):
                 $this->db->trans_commit();
                 return $result;
             endif;
-        }catch(\Throwable $e){
+        }catch(\Exception $e){
             $this->db->trans_rollback();
             return ['status'=>2,'message'=>"somthing is wrong. Error : ".$e->getMessage()];
         }	

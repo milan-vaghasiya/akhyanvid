@@ -30,7 +30,7 @@
 
                     foreach ($expenseList as $row) :
 
-                        $expPer = 0;
+                        $expPer = (empty($invExpenseData) && $row->calc_type > 1)?floatval($row->def_per):0;
                         $expAmt = 0;
                         $perFiledName = $row->map_code . "_per";
                         $amtFiledName = $row->map_code . "_amount";
@@ -40,7 +40,7 @@
                         endif;
 
                         $options = '';
-                        $options = '<select class="form-control select2" name="'.(($row->map_code != "roff")?'expenseData[' . $row->map_code . '_acc_id]':"round_off_acc_id").'" id="' . $row->map_code . '_acc_id">';
+                        $options = '<select class="form-control basic-select2" name="'.(($row->map_code != "roff")?'expenseData[' . $row->map_code . '_acc_id]':"round_off_acc_id").'" id="' . $row->map_code . '_acc_id">';
 
                         foreach ($ledgerList as $ledgerRow) :
                             if ($ledgerRow->group_code != "DT") :
@@ -81,6 +81,8 @@
                                 $calculateSummaryPer = "";
                                 $calculateSummaryAmt = "calculateSummary";
                             endif;
+
+
 
                             $beforExp .= "<input type='" . $perBoxType . "' name='expenseData[" . $row->map_code . "_per]' id='" . $row->map_code . "_per' data-row='" . json_encode($row) . "' value='" . $expPer . "' class='form-control " . $calculateSummaryPer . " floatOnly'> ";
 
@@ -125,7 +127,7 @@
 
                     foreach ($taxList as $taxRow) :
                         $options = '';
-                        $options = '<select class="form-control select2" name="' . $taxRow->map_code . '_acc_id" id="' . $taxRow->map_code . '_acc_id">';
+                        $options = '<select class="form-control basic-select2" name="' . $taxRow->map_code . '_acc_id" id="' . $taxRow->map_code . '_acc_id">';
 
                         foreach ($ledgerList as $ledgerRow) :
                             if ($ledgerRow->group_code == "DT") :

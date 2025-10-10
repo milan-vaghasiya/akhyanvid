@@ -4,8 +4,7 @@ class ItemCategoryModel extends MasterModel{
 
     public function getDTRows($data){
         $data['tableName'] = $this->itemCategory;
-        $data['select'] = "item_category.*,IFNULL(pc.category_name,'NA') as parent_category_name,(CASE WHEN item_category.final_category = 1 THEN 'YES' ELSE 'NO' END) as is_final_text,(CASE WHEN item_category.batch_stock = 1 THEN 'Batch Wise' WHEN item_category.batch_stock = 2 THEN 'Serial Wise' ELSE 'None' END) as stock_type_text,(CASE WHEN item_category.is_return = 1 THEN 'YES' ELSE 'NO' END) as is_returnable_text";
-
+        $data['select'] = "item_category.*,IFNULL(pc.category_name,'NA') as parent_category_name,(CASE WHEN item_category.final_category = 1 THEN 'YES' ELSE 'NO' END) as is_final_text";
         $data['leftJoin']['item_category as pc'] = 'pc.id = item_category.ref_id';
 
         if(empty($data['parent_id'])):
@@ -15,14 +14,15 @@ class ItemCategoryModel extends MasterModel{
             $data['where']['item_category.ref_id'] = $data['parent_id'];
         endif;
 
-        $data['order_by']['category_level'] = 'ASC';
+        $data['order_by']['CAST(item_category.category_level as UNSIGNED)'] = 'ASC';
 
         $data['searchCol'][] = "";
         $data['searchCol'][] = "";
         $data['searchCol'][] = "item_category.category_name";
         $data['searchCol'][] = "pc.category_name";
-        $data['searchCol'][] = "(CASE WHEN item_category.final_category = 1 THEN 'YES' ELSE 'NO' END)";
-        
+        $data['searchCol'][] = "(CASE WHEN item_category.final_category = 1 THEN 'YES' WHEN item_category.final_category = 0 THEN 'NO' ELSE '' END)";
+        $data['searchCol'][] = "item_category.remark";
+
 		$columns =array(); foreach($data['searchCol'] as $row): $columns[] = $row; endforeach;
 		if(isset($data['order'])){$data['order_by'][$columns[$data['order'][0]['column']]] = $data['order'][0]['dir'];}
 		return $this->pagingRows($data);
@@ -40,22 +40,20 @@ class ItemCategoryModel extends MasterModel{
         endif;
 
         if(!empty($data['category_type'])):
-            $queryData['where_in']['category_type'] = $data['category_type'];
+            $queryData['where']['category_type'] = $data['category_type'];
+        endif;
+
+        if(!empty($data['category_ids'])):
+            $queryData['where_in']['id'] = $data['category_ids'];
         endif;
 
         $queryData['order_by']['category_level'] = 'ASC';
         return $this->rows($queryData);
     }
 
-    //12-04-2024
     public function getCategory($data){
         $queryData['tableName'] = $this->itemCategory;
-        if(!empty($data['id'])){
-            $queryData['where']['id'] = $data['id'];
-        }
-        if(!empty($data['category_name'])){
-            $data['where']['category_name'] = $data['category_name'];
-        }
+        $queryData['where']['id'] = $data['id'];
         return $this->row($queryData);
     }
 

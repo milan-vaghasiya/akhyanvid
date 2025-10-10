@@ -1,36 +1,21 @@
 <?php
-class Migration extends MY_Controller{
+class Migration extends CI_Controller{
     public function __construct(){
         parent::__construct();
     }
 
-    public function addColumnInTable(){
-        $result = $this->db->query("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'tradeez' AND TABLE_NAME NOT IN ( SELECT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_NAME = 'cm_id' AND TABLE_SCHEMA = 'tradeez' )")->result();
+    /* public function addColumnInTable(){
+        $result = $this->db->query("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'ascent' AND TABLE_NAME NOT IN ( SELECT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_NAME = 'updated_at' AND TABLE_SCHEMA = 'ascent' )")->result();
+
 
         foreach($result as $row):
-            $this->db->query("ALTER TABLE ".$row->TABLE_NAME." ADD `cm_id` INT NOT NULL DEFAULT '0' AFTER `is_delete`;");
+            if(!in_array($row->TABLE_NAME,["instrument"])):
+                $this->db->query("ALTER TABLE ".$row->TABLE_NAME." ADD `updated_at` INT NOT NULL DEFAULT '0' AFTER `updated_by`;");
+            endif;
         endforeach;
 
         echo "success";exit;
-    }
-
-    public function deleteColumnInTable(){
-        try{
-            $this->db->trans_begin();
-            $result = $this->db->query("SELECT TABLE_NAME FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_SCHEMA = 'u399487905_jsk'   AND TABLE_NAME  IN ( SELECT TABLE_NAME FROM INFORMATION_SCHEMA.COLUMNS WHERE COLUMN_NAME = 'cm_id' AND TABLE_SCHEMA = 'u399487905_jsk' )")->result();
-            foreach($result as $row):
-                    $this->db->query("ALTER TABLE ".$row->TABLE_NAME." DROP COLUMN cm_id;");
-            endforeach;
-
-            if($this->db->trans_status() !== FALSE):
-                $this->db->trans_commit();
-                echo "Success.";
-            endif;
-        }catch(\Throwable $e){
-            $this->db->trans_rollback();
-            echo $e->getMessage();exit;
-        }
-    }
+    } */
 
     public function defualtLedger(){
         $accounts = [
@@ -246,78 +231,39 @@ class Migration extends MY_Controller{
         }
     }
 
-    /* Miracel Data Import Start */
-    public function createParty(){
+    /* public function importItemMaster(){
         try{
             $this->db->trans_begin();
 
-            $this->db->select("id,vou_type,party_name,gst_no,city_name");
-            $this->db->where('party_name !=',"");
-            $this->db->where('party_id',0);
-            $result = $this->db->get('miracel_data')->result();
-            
+            $this->db->select("kuber_item_master.*,(CASE WHEN item_type_name IN ('Finish Product','Semi Finish') THEN 1 WHEN item_type_name = 'Raw Material' THEN 3 WHEN item_type_name = 'Packing' THEN 2 ELSE 0 END) as item_type,(CASE WHEN item_type_name = 'Finish Product' THEN 12 WHEN item_type_name = 'Semi Finish' THEN 41 WHEN item_type_name = 'Raw Material' THEN 37 WHEN item_type_name = 'Packing' THEN 18 ELSE 0 END) as category_id,(CASE WHEN unit_name = 'Box' THEN 6 WHEN unit_name = 'Bunch' THEN 8 WHEN unit_name = 'Kg' THEN 21 WHEN unit_name = 'Nog.' THEN 25 WHEN unit_name = 'pouche' THEN 26 ELSE 0 END) as unit_id");
+            $this->db->where('import_status',0);
+            $this->db->where_not_in("item_type_name",["Wastage","Machinery"]);
+            $result = $this->db->get('kuber_item_master')->result();
+
+            $i=1;
             foreach($result as $row):
-                $this->db->reset_query();
-                $this->db->select('id,city_id,state_id,country_id');
-                $this->db->where('REPLACE(LOWER(party_name)," ","") = ',str_replace(" ","",strtolower($row->party_name)));
-                $partyData = $this->db->get('party_master')->row();
-                if(!empty($partyData)):
-                    $this->db->reset_query();
-                    $this->db->where('id',$row->id);
-                    $this->db->update('miracel_data',['party_id'=>$partyData->id,'city_id'=>$partyData->city_id,'state_id'=>$partyData->state_id,'country_id'=>$partyData->country_id]);
-                else:
-                    $partyCategory = ($row->vou_type == "SALES")?1:2;
-                    $code = $this->party->getPartyCode($partyCategory);
-                    $prefix = "AE";
-                    if($partyCategory == 1):
-                        $prefix = "C";
-                    elseif($partyCategory == 2):
-                        $prefix = "S";
-                    elseif($partyCategory == 3):
-                        $prefix = "V";
-                    endif;
+                $itemData = [
+                    'item_name' => $row->item_name,
+                    'item_code' => $row->item_code,
+                    'hsn_code' => "",
+                    'gst_per' => $row->gst_per,
+                    'unit_id' => $row->unit_id,
+                    'category_id' => $row->category_id,
+                    'item_type' => $row->item_type,
+                    'price' => $row->price,
+                    'mrp' => $row->mrp,
+                    'description' => $row->description
+                ];
 
-                    $party_code = $prefix.sprintf("%03d",$code);
+                $this->db->insert('item_master',$itemData);
 
-                    $this->db->reset_query();
-                    $this->db->select('id as city_id,state_id,country_id');
-                    $this->db->where('REPLACE(LOWER(cities.name)," ","") = ',str_replace(" ","",strtolower($row->city_name)));
-                    $cityData = $this->db->get('cities')->row();
-
-                    $postData = [
-                        'party_category' => $partyCategory,
-                        'party_type' => 1,
-                        'party_code' => $party_code,
-                        'party_name' => $row->party_name,
-                        'registration_type' => (!empty($row->gst_no))?1:4,
-                        'gstin' => $row->gst_no,
-                        'currency' => "INR",
-                        'country_id' => (!empty($cityData))?$cityData->country_id:0,
-                        'state_id' => (!empty($cityData))?$cityData->state_id:0,
-                        'city_id' => (!empty($cityData))?$cityData->city_id:0,
-                        'supplied_types' => 1
-                    ];
-
-                    $groupCode = ($partyCategory == 1) ? "SD" : "SC";
-                    $groupData = $this->party->getGroupOnGroupCode($groupCode, true);
-                    $postData['group_id'] = $groupData->id;
-                    $postData['group_name'] = $groupData->name;
-                    $postData['group_code'] = $groupData->group_code;
-
-                    //print_r($postData);print_r("<hr>");
-                    $this->db->reset_query();
-                    $this->db->insert('party_master',$postData);
-
-                    $this->db->reset_query();
-                    $this->db->where('id',$row->id);
-                    $this->db->update('miracel_data',['party_id'=>$this->db->insert_id(),'city_id'=>$postData['city_id'],'state_id'=>$postData['state_id'],'country_id'=>$postData['country_id']]);
-                endif;
+                $this->db->where('id',$row->id)->update('kuber_item_master',['import_status'=>1]);
+                $i++;
             endforeach;
-            
 
             if($this->db->trans_status() !== FALSE):
                 $this->db->trans_commit();
-                echo "Party Migration Success.";
+                echo "Item Master import Successfully. no. of items : ".$i;
             endif;
         }catch(\Throwable $e){
             $this->db->trans_rollback();
@@ -325,757 +271,487 @@ class Migration extends MY_Controller{
         }
     }
 
-    public function updatePartyGstinDetails(){
+    public function importPartyMaster(){
         try{
             $this->db->trans_begin();
 
-            $this->db->select("id,gstin,party_address,party_pincode,delivery_address,delivery_pincode");
-            $this->db->where_in('party_category',[1,2,3]);
+            $this->db->select("kuber_party_master.*,group_master.group_code,group_master.name as group_name,group_master.id as group_id,cities.id as city_id,cities.state_id,cities.country_id");
+            $this->db->join('group_master','group_master.group_code = kuber_party_master.group_code','left');
+            $this->db->join('cities','(LOWER(cities.name) = LOWER(kuber_party_master.city_name))','left',false);
+            $this->db->where('kuber_party_master.import_status',0);
+            $this->db->where_in("kuber_party_master.group_code",["SD","SC"]);
+            $this->db->limit(500, 6000);
+            $result = $this->db->get('kuber_party_master')->result();
+
+            //print_r($this->db->last_query());exit;
+
+            $i=1;
+            foreach($result as $row):
+                $party_address = [];
+                if(!empty($row->address1)): $party_address[] = $row->address1; endif; 
+                if(!empty($row->address2)): $party_address[] = $row->address2; endif; 
+                if(!empty($row->address3)): $party_address[] = $row->address3; endif; 
+
+                if(!empty($party_address)):
+                    $party_address = implode(", ",$party_address);
+                else:
+                    $party_address = "";
+                endif;
+                //print_r($row->address1);print_r("<hr>");
+
+                $row->city_id = (!empty($row->city_id))?$row->city_id:0;
+                $row->state_id = (!empty($row->state_id))?$row->state_id:0;
+                $row->country_id = (!empty($row->country_id))?$row->country_id:0;
+
+                if($row->group_code == "SD"):
+                    $row->party_category = 1;
+                elseif($row->group_code == "SC"):
+                    $row->party_category = 2;
+                else:
+                    $row->party_category = 4;
+                endif;
+
+                $partyData = [
+                    'count' => $i,
+                    'party_code' => $row->party_code,
+                    'party_name' => $row->party_name,
+                    'party_category' => $row->party_category,
+                    'contact_person' => $row->contact_person,
+                    'party_mobile' => $row->party_mobile,
+                    'party_email' => $row->party_email,
+                    'credit_days' => $row->credit_days,
+                    'gstin' => $row->gstin,
+                    'pan_no' => $row->pan_no,
+                    'group_id' => $row->group_id,
+                    'group_name' => $row->group_name,
+                    'group_code' => $row->group_code,
+                    'party_address' => $party_address,
+                    'party_pincode' => $row->party_pincode,
+                    'city_id' => $row->city_id,
+                    'state_id' => $row->state_id,
+                    'country_id' => $row->country_id,
+                    'opening_balance' => $row->opening_balance
+                ];
+
+                print_r($partyData);print_r("<hr>");
+                //$this->db->insert('party_master',$partyData);
+
+                //$this->db->where('id',$row->id)->update('kuber_party_master',['import_status'=>1]);
+                $i++;
+            endforeach;
+
+            if($this->db->trans_status() !== FALSE):
+                $this->db->trans_commit();
+                echo "Party Master import Successfully. no. of items : ".$i;
+            endif;
+        }catch(\Throwable $e){
+            $this->db->trans_rollback();
+            echo $e->getMessage();exit;
+        }
+    }
+
+    public function kuberPartyMaster(){
+        try{
+            $this->db->trans_begin();
+            
+            $postData = $this->input->post();
+
+            $i=1;
+            foreach($postData['data'] as $row):
+                $row = (object) $row; 
+                $partyData = [
+                    'party_code' => "",
+                    'party_name' => $row->AccountName,
+                    'contact_person' => $row->ContactPerson,
+                    'party_mobile' => $row->MobileNo,
+                    'party_email' => $row->Email,
+                    'credit_days' => $row->CreditDays,
+                    'gstin' => $row->GSTIN,
+                    'pan_no' => $row->PANno,
+                    'group_name' => $row->AccountGroup,
+                    'group_code' => $row->AccountGroupType,
+                    'address1' => $row->AddressLine1,
+                    'address2' => $row->AddressLine2,
+                    'address3' => $row->AddressLine3,
+                    'party_pincode' => $row->Pincode,
+                    'city_name' => $row->CityName,
+                    'opening_balance' => $row->closingBalance
+                ];
+
+                $this->db->insert('kuber_party_master',$partyData);
+                $i++;
+            endforeach;
+
+            if($this->db->trans_status() !== FALSE):
+                $this->db->trans_commit();
+                echo "Party Master import Successfully. no. of party : ".$i;
+            endif;
+        }catch(\Throwable $e){
+            $this->db->trans_rollback();
+            echo $e->getMessage();exit;
+        }
+    } */
+
+    /* public function importItemMaster(){
+        try{
+            $this->db->trans_begin();
+
+            $this->db->select("items.*,item_category.id as category_id,item_master.id as item_id,unit_master.id as unit_id,ps.id as packing_standard_id");
+            $this->db->join("item_category","item_category.category_name = items.category_name","left");
+            $this->db->join("item_master","item_master.item_name = items.item_name AND item_master.category_id = item_category.id","left");
+            $this->db->join("unit_master","unit_master.unit_name = items.unit_name","left");
+            $this->db->join("packing_standard as ps","CONCAT('[ ',ROUND(ps.packing_qty,0),' - ',ps.packing_unit,' ] ',ps.packing_in) = items.packing_std","left");
+            $this->db->where('items.import_status',0);
+            $result = $this->db->get('items')->result();
+
+            $i=1;
+            foreach($result as $row):
+                $itemData = [
+                    'item_name' => $row->item_name,
+                    'item_code' => $row->item_code,
+                    'full_name' => $row->item_code.' - '.$row->item_name,
+                    'item_type' => 1,
+                    'hsn_code' => $row->hsn_code,
+                    'gst_per' => $row->gst_per,
+                    'unit_id' => $row->unit_id,
+                    'category_id' => $row->category_id,
+                    'packing_standard' => $row->packing_standard_id
+                ];
+
+                $this->db->where('hsn',$row->hsn_code);
+                $hsnData = $this->db->get('hsn_master')->row();
+                if(empty($hsnData)):
+                    $hsnCodeData = [
+                        'type' => "HSN",
+                        'hsn' => $row->hsn_code,
+                        'cgst' => round(($row->gst_per/2),2),
+                        'sgst' => round(($row->gst_per/2),2),
+                        'igst' => round($row->gst_per,2),
+                        'gst_per' => round($row->gst_per,2),
+                    ];
+
+                    $this->db->insert("hsn_master",$hsnCodeData);
+                endif;
+
+                if(empty($row->item_id)):
+                    $this->db->insert('item_master',$itemData);
+
+                    $this->db->where('id',$row->id)->update('items',['import_status'=>$this->db->insert_id()]);
+                else:
+                    $this->db->where('id',$row->item_id);
+                    $this->db->update('item_master',$itemData);
+
+                    $this->db->where('id',$row->id)->update('items',['import_status'=>$row->item_id]);
+                endif;
+                $i++;
+            endforeach;
+
+            if($this->db->trans_status() !== FALSE):
+                $this->db->trans_commit();
+                echo "Item Master import Successfully. no. of items : ".$i;
+            endif;
+        }catch(\Throwable $e){
+            $this->db->trans_rollback();
+            echo $e->getMessage();exit;
+        }
+    } */
+
+    /* NYN Migration/migrateOpBalancePartyData */
+    /* public function migrateOpBalancePartyData(){
+        try{
+            $this->db->trans_begin();
+            
+            $this->db->reset_query();
             $this->db->where('is_delete',0);
-            $result = $this->db->get('party_master')->result();
-
-            foreach($result as $row):
-                /*$this->db->where('main_ref_id',$row->id);
-                $this->db->where('table_name','party_master');
-                $this->db->where('description','PARTY GST DETAIL');
-                $this->db->where('t_col_1','');
-                $this->db->update('trans_details',['is_delete'=>1]);*/
-
-                $this->db->select('id');
-                $this->db->where('main_ref_id',$row->id);
-                $this->db->where('table_name','party_master');
-                $this->db->where('description','PARTY GST DETAIL');
-                $this->db->where('t_col_1',$row->gstin);
-                $gstDetails = $this->db->get('trans_details')->row();
-
-                $postData = [
-                    'main_ref_id' =>  $row->id,
-                    'table_name' => 'party_master',
-                    'description' => "PARTY GST DETAIL",
-                    't_col_1' => $row->gstin,
-                    't_col_2' => $row->party_address,
-                    't_col_3' => $row->party_pincode,
-                    't_col_4' => $row->delivery_address,
-                    't_col_5' => $row->delivery_pincode
-                ];
-
-                if(!empty($gstDetails)):
-                    $this->db->where('id',$gstDetails->id);
-                    $this->db->update('trans_details',$postData);
-                else:
-                    $this->db->insert('trans_details',$postData);
-                endif;
-            endforeach;
-
-            if($this->db->trans_status() !== FALSE):
-                $this->db->trans_commit();
-                echo "Party GST Details Migration Success.";
-            endif;
-        }catch(\Throwable $e){
-            $this->db->trans_rollback();
-            echo $e->getMessage();exit;
-        }
-    }
-
-    public function createItem(){
-        try{
-            $this->db->trans_begin();
-
-            $this->db->select("id,vou_type,item_name,gst_per,price");
-            $this->db->where('item_name !=',"");
-            $this->db->where('item_id',0);
-            $result = $this->db->get('miracel_data')->result();
+            $this->db->where('party_id',0);
+            $opData = $this->db->get('opening_balance')->result();
             
-            foreach($result as $row):
-                $this->db->reset_query();
-                $this->db->select('id,item_name,gst_per');
-                $this->db->where('REPLACE(LOWER(item_name)," ","") = ',str_replace(" ","",strtolower($row->item_name)));
-                $itemData = $this->db->get('item_master')->row();
-
-                if(!empty($itemData)):
-                    $this->db->reset_query();
-                    $this->db->where('id',$row->id);
-                    $this->db->update('miracel_data',['item_id'=>$itemData->id]);
-
-                    $this->db->where('id',$itemData->id);
-                    $this->db->update('item_master',['price' => $row->price,'gst_per' => $row->gst_per]);
-                else:
-                    $item_type = ($row->vou_type == "SALES")?1:3;
-
-                    $postData = [
-                        'item_type' => $item_type,
-                        'item_code' => "",
-                        'item_name' => $row->item_name,
-                        'category_id' => ($row->vou_type == "SALES")?12:37,
-                        'unit_id' => 27,
-                        'price' => $row->price,
-                        'gst_per' => $row->gst_per,
-                        'order_category' => "IMPORT"
-                    ];
-
-                    //print_r($postData);print_r("<hr>");
-                    $this->db->reset_query();
-                    $this->db->insert('item_master',$postData);
-
-                    $this->db->reset_query();
-                    $this->db->where('id',$row->id);
-                    $this->db->update('miracel_data',['item_id'=>$this->db->insert_id()]);
-                endif;
-            endforeach;
-            
-
-            if($this->db->trans_status() !== FALSE):
-                $this->db->trans_commit();
-                echo "Item Migration Success.";
-            endif;
-        }catch(\Throwable $e){
-            $this->db->trans_rollback();
-            echo $e->getMessage();exit;
-        }
-    }
-
-    public function createSalesInvoice(){
-        try{
-            $this->db->trans_begin();
-
-            $this->db->select("*");
-            $this->db->where('vou_type',"SALES");
-            $this->db->where('status',0);
-            $this->db->order_by('id','ASC');
-            $result = $this->db->get('miracel_data')->result();
-
-            $i=0;$j=0;$postData = array();
-            foreach($result as $row):
-                if(!empty($row->bill_no)):
-                    ++$i;
-
-                    $trans_no = explode("/",$row->bill_no)[1];
-                    if(empty($row->gst_no)):
-                        $gst_type = 1;
-                        $tax_class = "SALESGSTACC";
-                        $sp_acc_id = 2;
-                        $state_code = 24;
-                    else:
-                        if(substr($row->gst_no,0,2) == 24):
-                            $gst_type = 1;
-                            $tax_class = "SALESGSTACC";
-                            $sp_acc_id = 2;
-                            $state_code = substr($row->gst_no,0,2);
-                        else:
-                            $gst_type = 2;
-                            $tax_class = "SALESIGSTACC";
-                            $sp_acc_id = 3;
-                            $state_code = substr($row->gst_no,0,2);
-                        endif;
-                    endif;
-
-                    $postData[$i]['entry_type'] = 32;
-                    $postData[$i]['trans_prefix'] = "GT/2023/";
-                    $postData[$i]['trans_no'] = $trans_no;
-                    $postData[$i]['doc_no'] = "";
-                    $postData[$i]['doc_date'] = null;
-                    $postData[$i]['party_name'] = $row->party_name;
-                    $postData[$i]['gst_type'] = $gst_type;
-                    $postData[$i]['party_state_code'] = $state_code;
-                    $postData[$i]['tax_class'] = $tax_class;
-                    $postData[$i]['trans_number'] = "GT/2023/".$trans_no;
-                    $postData[$i]['trans_date'] = date("Y-m-d",strtotime(str_replace("/","-",$row->bill_date)));
-                    $postData[$i]['party_id'] = $row->party_id;
-                    $postData[$i]['gstin'] = $row->gst_no;
-                    $postData[$i]['memo_type'] = strtoupper($row->memo_type);
-                    $postData[$i]['sp_acc_id'] = $sp_acc_id;
-                    $postData[$i]['apply_round'] = 1;
-                    $postData[$i]['masterDetails'] = [
-                        't_col_1' => "",
-                        't_col_2' => "",
-                        't_col_3' => "",
-                        'i_col_1' => 100
-                    ];
-                    $postData[$i]['remark'] = "IMPORT ".$row->bill_no;
-                    $postData[$i]['vou_name_l'] = "Sales Invoice";
-                    $postData[$i]['vou_name_s'] = "Sale";
-                endif;
-
-                $this->db->select('item_master.*,unit_master.unit_name');
-                $this->db->join('unit_master','unit_master.id = item_master.unit_id','left');
-                $this->db->where('item_master.id',$row->item_id);
-                $itemData = $this->db->get('item_master')->row();
-
-                $postData[$i]['itemData'][$j]['md_id'] = $row->id;
-                $postData[$i]['itemData'][$j]['item_id'] = $row->item_id;
-                $postData[$i]['itemData'][$j]['item_name'] = $row->item_name;
-                $postData[$i]['itemData'][$j]['item_type'] = $itemData->item_type;
-                $postData[$i]['itemData'][$j]['stock_eff'] = 0;
-                $postData[$i]['itemData'][$j]['p_or_m'] = -1;
-                $postData[$i]['itemData'][$j]['hsn_code'] = "";
-                $postData[$i]['itemData'][$j]['qty'] = $row->qty;
-                $postData[$i]['itemData'][$j]['packing_qty'] = 1;
-                $postData[$i]['itemData'][$j]['unit_id'] = $itemData->unit_id;
-                $postData[$i]['itemData'][$j]['unit_name'] = $itemData->unit_name;
-                $postData[$i]['itemData'][$j]['price'] = $row->price;
-                $postData[$i]['itemData'][$j]['org_price'] = $row->price;
-                $postData[$i]['itemData'][$j]['disc_per'] = 0;
-                $postData[$i]['itemData'][$j]['disc_amount'] = 0;
-                $postData[$i]['itemData'][$j]['cgst_per'] = round(($row->gst_per/2),2);
-                $postData[$i]['itemData'][$j]['cgst_amount'] = round(($row->gst_amount/2),2);
-                $postData[$i]['itemData'][$j]['sgst_per'] = round(($row->gst_per/2),2);
-                $postData[$i]['itemData'][$j]['sgst_amount'] = round(($row->gst_amount/2),2);
-                $postData[$i]['itemData'][$j]['gst_per'] = $row->gst_per;
-                $postData[$i]['itemData'][$j]['gst_amount'] = $row->gst_amount;
-                $postData[$i]['itemData'][$j]['igst_per'] = $row->gst_per;
-                $postData[$i]['itemData'][$j]['igst_amount'] = $row->gst_amount;
-                $postData[$i]['itemData'][$j]['amount'] = $row->amount;
-                $postData[$i]['itemData'][$j]['taxable_amount'] = $row->amount;
-                $postData[$i]['itemData'][$j]['net_amount'] = $row->amount + $row->gst_amount;
-                $postData[$i]['itemData'][$j]['item_remark'] = "IMPORT";
-
-                $j++;
-            endforeach;
-
-            /* foreach($postData as $row):
-                //print_r($row);print_r("<hr>");
-                $row['id'] = "";
-                $itemData = $row['itemData']; 
-                $masterDetails = $row['masterDetails']; unset($row['itemData'],$row['masterDetails']);
-
-                $row['opp_acc_id'] = $row['party_id'];
-                $row['ledger_eff'] = 1;
-                $row['gstin'] = (!empty($row['gstin']))?$row['gstin']:"URP";
-                
-                $accType = getSystemCode($row['vou_name_s'],false);
-                if(!empty($accType)):
-                    $spAcc = $this->party->getParty(['system_code'=>$accType]);
-                    $row['vou_acc_id'] = (!empty($spAcc))?$spAcc->id:0;
-                else:
-                    $row['vou_acc_id'] = 0;
-                endif;
-
-                $row['total_amount'] = array_sum(array_column($itemData,'amount'));
-                $row['taxable_amount'] = array_sum(array_column($itemData,'taxable_amount'));
-                $row['cgst_acc_id'] = 13;
-                $row['cgst_per'] = 0;
-                $row['cgst_amount'] = ($row['gst_type'] == 1)?array_sum(array_column($itemData,'cgst_amount')):0;
-                $row['sgst_acc_id'] = 14;
-                $row['sgst_per'] = 0;
-                $row['sgst_amount'] = ($row['gst_type'] == 1)?array_sum(array_column($itemData,'sgst_amount')):0;
-                $row['igst_acc_id'] = 15;
-                $row['igst_per'] = 0;
-                $row['igst_amount'] = ($row['gst_type'] == 2)?array_sum(array_column($itemData,'igst_amount')):0;
-                $row['gst_amount'] = $row['igst_amount'] + $row['cgst_amount'] + $row['sgst_amount'];
-                $row['net_amount'] = array_sum(array_column($itemData,'net_amount'));
-                $row['round_off_acc_id'] = 41;
-                $row['round_off_amount'] = round((round($row['net_amount'],0,PHP_ROUND_HALF_UP) - $row['net_amount']),2);
-                $row['net_amount'] = $row['net_amount'] + $row['round_off_amount'];
-
-                $result = $this->masterModel->store("trans_main",$row,'Sales Invoice');
-
-                if(!empty($masterDetails)):
-                    $masterDetails['id'] = "";
-                    $masterDetails['main_ref_id'] = $result['id'];
-                    $masterDetails['table_name'] = "trans_main";
-                    $masterDetails['description'] = "SI MASTER DETAILS";
-                    $this->masterModel->store("trans_details",$masterDetails);
-                endif;
-
-                
-                foreach($itemData as $item):
-                    $md_id = $item['md_id']; unset($item['md_id']);
-                    $item['id'] = "";
-                    $item['entry_type'] = $row['entry_type'];
-                    $item['trans_main_id'] = $result['id'];
-                    $item['is_delete'] = 0;
-
-                    $itemTrans = $this->masterModel->store("trans_child",$item);
-
-                    $setData = array();
-                    $setData['tableName'] = "miracel_data";
-                    $setData['where']['id'] = $md_id;
-                    $setData['update']['status'] = $itemTrans['id'];
-                    $this->masterModel->setValue($setData);
-                endforeach;
-
-                $row['id'] = $result['id'];
-                $this->transMainModel->ledgerEffects($row,array());
-            endforeach; */
-            //exit;
-
-            if($this->db->trans_status() !== FALSE):
-                //$this->db->trans_commit();
-                $this->db->trans_rollback();
-                echo "Sales Invoice Migration Success.";
-            endif;
-        }catch(\Throwable $e){
-            $this->db->trans_rollback();
-            echo $e->getMessage();exit;
-        }
-
-    }
-
-    public function createPurchaseInvoice(){
-        try{
-            $this->db->trans_begin();
-
-            $this->db->select("*");
-            $this->db->where('vou_type',"PURCHASE");
-            $this->db->where('status',0);
-            $this->db->order_by('id','ASC');
-            $result = $this->db->get('miracel_data')->result();
-
-            $i=0;$j=0;$postData = array();
-            foreach($result as $row):
-                if(!empty($row->bill_no)):
-                    ++$i;
-
-                    if(empty($row->gst_no)):
-                        $gst_type = 1;
-                        $tax_class = "PURGSTACC";
-                        $sp_acc_id = 20;
-                        $state_code = 24;
-                    else:
-                        if(substr($row->gst_no,0,2) == 24):
-                            $gst_type = 1;
-                            $tax_class = "PURGSTACC";
-                            $sp_acc_id = 20;
-                            $state_code = substr($row->gst_no,0,2);
-                        else:
-                            $gst_type = 2;
-                            $tax_class = "PURIGSTACC";
-                            $sp_acc_id = 21;
-                            $state_code = substr($row->gst_no,0,2);
-                        endif;
-                    endif;
-
-                    $postData[$i]['entry_type'] = 33;
-                    $postData[$i]['trans_prefix'] = "PUR/2023/";
-                    $postData[$i]['trans_no'] = $i;
-                    $postData[$i]['doc_no'] = "PUR/2023/".$i;
-                    $postData[$i]['doc_date'] = date("Y-m-d");
-                    $postData[$i]['party_name'] = $row->party_name;
-                    $postData[$i]['gst_type'] = $gst_type;
-                    $postData[$i]['party_state_code'] = $state_code;
-                    $postData[$i]['tax_class'] = $tax_class;
-                    $postData[$i]['trans_number'] = $row->bill_no;
-                    $postData[$i]['trans_date'] = date("Y-m-d",strtotime(str_replace("/","-",$row->bill_date)));
-                    $postData[$i]['party_id'] = $row->party_id;
-                    $postData[$i]['gstin'] = $row->gst_no;
-                    $postData[$i]['memo_type'] = strtoupper($row->memo_type);
-                    $postData[$i]['sp_acc_id'] = $sp_acc_id;
-                    $postData[$i]['itc'] = "Inputs";
-                    $postData[$i]['apply_round'] = 1;
-                    $postData[$i]['remark'] = "IMPORT ".$row->bill_no;
-                    $postData[$i]['vou_name_l'] = "Purchase Invoice";
-                    $postData[$i]['vou_name_s'] = "Purc";
-                endif;
-
-                $this->db->select('item_master.*,unit_master.unit_name');
-                $this->db->join('unit_master','unit_master.id = item_master.unit_id','left');
-                $this->db->where('item_master.id',$row->item_id);
-                $itemData = $this->db->get('item_master')->row();
-
-                $postData[$i]['itemData'][$j]['md_id'] = $row->id;
-                $postData[$i]['itemData'][$j]['item_id'] = $row->item_id;
-                $postData[$i]['itemData'][$j]['item_name'] = $row->item_name;
-                $postData[$i]['itemData'][$j]['item_type'] = $itemData->item_type;
-                $postData[$i]['itemData'][$j]['stock_eff'] = 0;
-                $postData[$i]['itemData'][$j]['p_or_m'] = 1;
-                $postData[$i]['itemData'][$j]['hsn_code'] = "";
-                $postData[$i]['itemData'][$j]['qty'] = $row->qty;
-                $postData[$i]['itemData'][$j]['unit_id'] = $itemData->unit_id;
-                $postData[$i]['itemData'][$j]['unit_name'] = $itemData->unit_name;
-                $postData[$i]['itemData'][$j]['price'] = $row->price;
-                $postData[$i]['itemData'][$j]['disc_per'] = 0;
-                $postData[$i]['itemData'][$j]['disc_amount'] = 0;
-                $postData[$i]['itemData'][$j]['cgst_per'] = round(($row->gst_per/2),2);
-                $postData[$i]['itemData'][$j]['cgst_amount'] = round(($row->gst_amount/2),2);
-                $postData[$i]['itemData'][$j]['sgst_per'] = round(($row->gst_per/2),2);
-                $postData[$i]['itemData'][$j]['sgst_amount'] = round(($row->gst_amount/2),2);
-                $postData[$i]['itemData'][$j]['gst_per'] = $row->gst_per;
-                $postData[$i]['itemData'][$j]['gst_amount'] = $row->gst_amount;
-                $postData[$i]['itemData'][$j]['igst_per'] = $row->gst_per;
-                $postData[$i]['itemData'][$j]['igst_amount'] = $row->gst_amount;
-                $postData[$i]['itemData'][$j]['amount'] = $row->amount;
-                $postData[$i]['itemData'][$j]['taxable_amount'] = $row->amount;
-                $postData[$i]['itemData'][$j]['net_amount'] = $row->amount + $row->gst_amount;
-                $postData[$i]['itemData'][$j]['item_remark'] = "IMPORT";
-
-                $j++;
-            endforeach;
-
-            /* foreach($postData as $row):
-                //print_r($row);print_r("<hr>");
-                $row['id'] = "";
-                $itemData = $row['itemData']; 
-                $masterDetails = (isset($row['masterDetails']))?$row['masterDetails']:array(); 
-                unset($row['itemData'],$row['masterDetails']);
-
-                $row['opp_acc_id'] = $row['party_id'];
-                $row['ledger_eff'] = 1;
-                $row['gstin'] = (!empty($row['gstin']))?$row['gstin']:"URP";
-                
-                $accType = getSystemCode($row['vou_name_s'],false);
-                if(!empty($accType)):
-                    $spAcc = $this->party->getParty(['system_code'=>$accType]);
-                    $row['vou_acc_id'] = (!empty($spAcc))?$spAcc->id:0;
-                else:
-                    $row['vou_acc_id'] = 0;
-                endif;
-
-                $row['total_amount'] = array_sum(array_column($itemData,'amount'));
-                $row['taxable_amount'] = array_sum(array_column($itemData,'taxable_amount'));
-                $row['cgst_acc_id'] = 13;
-                $row['cgst_per'] = 0;
-                $row['cgst_amount'] = ($row['gst_type'] == 1)?array_sum(array_column($itemData,'cgst_amount')):0;
-                $row['sgst_acc_id'] = 14;
-                $row['sgst_per'] = 0;
-                $row['sgst_amount'] = ($row['gst_type'] == 1)?array_sum(array_column($itemData,'sgst_amount')):0;
-                $row['igst_acc_id'] = 15;
-                $row['igst_per'] = 0;
-                $row['igst_amount'] = ($row['gst_type'] == 2)?array_sum(array_column($itemData,'igst_amount')):0;
-                $row['gst_amount'] = $row['igst_amount'] + $row['cgst_amount'] + $row['sgst_amount'];
-                $row['net_amount'] = array_sum(array_column($itemData,'net_amount'));
-                $row['round_off_acc_id'] = 41;
-                $row['round_off_amount'] = round((round($row['net_amount'],0,PHP_ROUND_HALF_UP) - $row['net_amount']),2);
-                $row['net_amount'] = $row['net_amount'] + $row['round_off_amount'];
-
-                $result = $this->masterModel->store("trans_main",$row,'Sales Invoice');
-
-                if(!empty($masterDetails)):
-                    $masterDetails['id'] = "";
-                    $masterDetails['main_ref_id'] = $result['id'];
-                    $masterDetails['table_name'] = "trans_main";
-                    $masterDetails['description'] = "PURINV MASTER DETAILS";
-                    $this->masterModel->store("trans_details",$masterDetails);
-                endif;
-
-                
-                foreach($itemData as $item):
-                    $md_id = $item['md_id']; unset($item['md_id']);
-                    $item['id'] = "";
-                    $item['entry_type'] = $row['entry_type'];
-                    $item['trans_main_id'] = $result['id'];
-                    $item['is_delete'] = 0;
-
-                    $itemTrans = $this->masterModel->store("trans_child",$item);
-
-                    $setData = array();
-                    $setData['tableName'] = "miracel_data";
-                    $setData['where']['id'] = $md_id;
-                    $setData['update']['status'] = $itemTrans['id'];
-                    $this->masterModel->setValue($setData);
-                endforeach;
-
-                $row['id'] = $result['id'];
-                $this->transMainModel->ledgerEffects($row,array());
-            endforeach; */
-            exit;
-
-            if($this->db->trans_status() !== FALSE):
-                //$this->db->trans_commit();
-                $this->db->trans_rollback();
-                echo "Purchase Invoice Migration Success.";
-            endif;
-        }catch(\Throwable $e){
-            $this->db->trans_rollback();
-            echo $e->getMessage();exit;
-        }
-    }
-    /* Miracel Data Import End */
-
-    public function executeQuery(){
-        $result = $this->db->query("");
-        return $result;
-    }
-
-	//NYN-15062024 Migration/migratePartyDetails
-	public function migratePartyDetails(){
-		    try{
-            $this->db->trans_begin();
-            
-            $this->db->reset_query();
-            $this->db->where('party_category !=',4);
-            $partyData = $this->db->get('party_master')->result();
-            
-            $i=1;
-            foreach($partyData as $row):
-			
-				$updateData=[];
-				if(!empty($row->country)){
-					$this->db->reset_query();
-					$this->db->where('name',$row->country);
-					$country = $this->db->get('countries')->row();
-					$updateData['country_id'] = (!empty($country->id) ? $country->id : 0);
-					
-					if(!empty($row->city) && !empty($country->id)){
-						$this->db->reset_query();
-						$this->db->where('country_id',$country->id);
-						$this->db->where('name',$row->state);
-						$state = $this->db->get('states')->row();
-						$updateData['state_id'] = (!empty($state->id) ? $state->id : 0);
-					}
-					
-					if(!empty($row->city) && !empty($country->id) && !empty($state->id)){
-						$this->db->reset_query();
-						$this->db->where('country_id',$country->id);
-						$this->db->where('state_id',$state->id);
-						$this->db->where('name',$row->city);
-						$city = $this->db->get('cities')->row();
-						$updateData['city_id'] = (!empty($city->id) ? $city->id : 0);
-					}
-				}
-                
-                $this->db->reset_query();
-                $this->db->where('id',$row->id);
-                $this->db->update('party_master',$updateData);
-				
-				//print_r($updateData); echo "<hr>";
-				
-                $i++;
-            endforeach;
-            exit;
-            if($this->db->trans_status() !== FALSE):
-                //$this->db->trans_commit();
-                echo "Instrument Name Migration Success.".$i;
-            endif;
-        }catch(\Exception $e){
-            $this->db->trans_rollback();
-            echo $e->getMessage();exit;
-        }
-	}
-
-	//NYN-05042025 Migration/migratePartyGSTDetails
-	public function migratePartyGSTDetails(){
-		    try{
-            $this->db->trans_begin();
-            
-            $this->db->reset_query();
-            $this->db->where('party_category !=',4);
-            $partyData = $this->db->get('party_master')->result();
-            
-            $i=1;
-            foreach($partyData as $row):
-				$this->db->reset_query();
-                $this->db->where('main_ref_id',$row->id);
-                $this->db->where('table_name','party_master');
-                $this->db->where('description','PARTY GST DETAIL');
-                $this->db->where('is_delete',0);
-                $gstData = $this->db->get('trans_details')->row();
-                $ledgerAmount = (!empty($ledgerTrans->ledger_amount))?$ledgerTrans->ledger_amount:0;
-				
-				$postData = [
-					'id' => (!empty($gstData))?$gstData->id:"",
-					'main_ref_id' =>  $row->id,
-					'table_name' => 'party_master',
-					'description' => "PARTY GST DETAIL",
-					't_col_1' => $row->gstin,
-					't_col_2' => $row->party_address,
-					't_col_3' => $row->party_pincode,
-					't_col_4' => $row->delivery_address,
-					't_col_5' => $row->delivery_pincode
-				];
-				if(!empty($postData['id'])):
-                    $this->db->where('id',$postData['id']); unset($postData['id']);
-                    $this->db->update('trans_details',$postData);
-                else:
-                    $this->db->insert('trans_details',$postData);
-                endif;
-				
-				print_r('<pre>'); print_r($this->db->last_query()); echo "<hr>";
-				
-                $i++;
-            endforeach;
-            exit;
-            if($this->db->trans_status() !== FALSE):
-                //$this->db->trans_commit();
-                echo "Party GST Migration Success.".$i;
-            endif;
-        }catch(\Exception $e){
-            $this->db->trans_rollback();
-            echo $e->getMessage();exit;
-        }
-	}
-
-	//NYN-29052025 Migration/migrateBom
-	public function migrateBom(){
-		try{
-            $this->db->trans_begin();
-            
-            $this->db->reset_query();
-			$this->db->where('fg_id !=',0);
-			$this->db->where('rm_id',0);
-            $kitData = $this->db->get('item_kit_temp')->result();
-            
-            $i=1;
-            foreach($kitData as $row):
-			
-				$updateData=[];
-				
-				/*$this->db->reset_query();
-				$this->db->where('category_name',$row->fg_category);
-				$this->db->where('category_type',1);
-				$fgcatData = $this->db->get('item_category')->row();
-				$updateData['fg_category_id'] = (!empty($fgcatData->id) ? $fgcatData->id : 0);
-				
-				$this->db->reset_query();
-				$this->db->where('item_name',$row->fg_name);
-				$this->db->where('item_type',1);
-				$this->db->where('category_id',$updateData['fg_category_id']);
-				$fgData = $this->db->get('item_master')->row();
-				$updateData['fg_id'] = (!empty($fgData->id) ? $fgData->id : 0);*/
-				
-				/*$this->db->reset_query();
-				$this->db->where('category_name',$row->rm_category);
-				$this->db->where('category_type !=',1);
-				$rmcatData = $this->db->get('item_category')->row();
-				$updateData['rm_category_id'] = (!empty($rmcatData->id) ? $rmcatData->id : 0);*/
-				
-				$this->db->reset_query();
-				$this->db->where('item_name',$row->rm_name);
-				$this->db->where('item_type !=',1);
-				//$this->db->where('category_id',$updateData['rm_category_id']);
-				$rmData = $this->db->get('item_master')->row();
-				$updateData['rm_id'] = (!empty($rmData->id) ? $rmData->id : 0);
-                
-                $this->db->reset_query();
-                $this->db->where('id',$row->id);
-                $this->db->update('item_kit_temp',$updateData);
-				
-                $i++;
-            endforeach;
-            //exit;
-            if($this->db->trans_status() !== FALSE):
-                $this->db->trans_commit();
-                echo "Temp Kit Migration Success.".$i;
-            endif;
-        }catch(\Exception $e){
-            $this->db->trans_rollback();
-            echo $e->getMessage();exit;
-        }
-	}
-
-	//NYN-29052025 Migration/migrateItemKit
-	public function migrateItemKit(){
-		try{
-            $this->db->trans_begin();
-            
-            $this->db->reset_query();
-			$this->db->where('fg_id !=',0);
-			$this->db->where('rm_id !=',0);
-			$this->db->where('status',0);
-            $kitData = $this->db->get('item_kit_temp')->result();
-            
-            $i=1;
-            foreach($kitData as $row):
-			
-				$this->db->reset_query();
-				$insertData = [
-                    'item_id' => $row->fg_id,
-                    'process_id' => $row->process_id,
-                    'ref_item_id' => $row->rm_id,
-                    'qty' => $row->bom_qty,
-                    'created_by' => $this->loginId,
-                    'created_at' => date('Y-m-d H:i:s')
-                ];
-                $this->db->insert('item_kit', $insertData);
-				
-				//status
-				$this->db->reset_query();
-                $this->db->where('id',$row->id);
-                $this->db->update('item_kit_temp',['status'=>1]);
-				
-                $i++;
-            endforeach;
-
-            if($this->db->trans_status() !== FALSE):
-                $this->db->trans_commit();
-                echo "Temp Kit Migration Success.".$i;
-            endif;
-        }catch(\Exception $e){
-            $this->db->trans_rollback();
-            echo $e->getMessage();exit;
-        }
-	}
-	
-	//NYN-16092025 Migration/migrateTempStock
-	public function migrateTempStock(){
-		try{
-            $this->db->trans_begin();
-            
-            $this->db->reset_query();
-			$this->db->where('item_id',0);
-            $opData = $this->db->get('temp_stock')->result();
-            
-            $i=1;
+			$i=0;
             foreach($opData as $row):
-			
-				$this->db->reset_query();
-				//$this->db->where(trim('item_name'),trim($row->item_name));
-				$this->db->where("item_name LIKE '%".trim($row->item_name)."%'");
-				$this->db->where('is_delete',0);
-				$fgData = $this->db->get('item_master')->row();
-				$updateData['item_id'] = (!empty($fgData->id) ? $fgData->id : 0);
-				
-				if(!empty($updateData['item_id'])){
+                $this->db->reset_query();
+			    $this->db->where('is_delete',0);
+			    $this->db->where('party_category !=',4);
+                $this->db->where('party_name',trim($row->party_name));
+                $partyData = $this->db->get('party_master')->row();
+                
+                if(!empty($partyData->id)):
+                    $updateData = [
+						'party_id' => $partyData->id,
+						'system_code' => $partyData->system_code,
+						'group_id' => $partyData->group_id
+					];
 					$this->db->reset_query();
-					$this->db->where('id',$row->id);
-					$this->db->update('temp_stock',$updateData);
+                    $this->db->where('id',$row->id);
+                    $this->db->update('opening_balance',$updateData);
 					
 					$i++;
-				}
-            endforeach;
-			exit;
-            if($this->db->trans_status() !== FALSE):
-                ///$this->db->trans_commit();
-                echo "Temp Stock Item ID Migration Success.".$i;
-            endif;
-        }catch(\Exception $e){
-            $this->db->trans_rollback();
-            echo $e->getMessage();exit;
-        }
-	}
-
-	//NYN-16092025 Migration/migrateTempStockTrans
-	public function migrateTempStockTrans(){
-		try{
-            $this->db->trans_begin();
-            
-            $this->db->reset_query();
-			$this->db->where('status',0);
-            $opData = $this->db->get('temp_stock')->result();
-            
-            $i=1;
-            foreach($opData as $row):
-			
-				$this->db->reset_query();
-				$insertData = [
-                    'trans_type' => 'OPS',
-                    'trans_date' => date('Y-m-d'),
-                    'item_id' => $row->item_id,
-                    'location_id' => $row->location_id,
-                    'p_or_m' => 1,
-                    'qty' => $row->stock_qty,
-                    'remark' => 'NBT16092025',
-                    'created_by' => 0,
-                    'created_at' => date('Y-m-d H:i:s')
-                ];
-                $this->db->insert('stock_trans', $insertData);
-				
-				$this->db->reset_query();
-				$this->db->where('id',$row->id);
-				$this->db->update('temp_stock',['status'=>1]);
-				
-				$i++;
-            endforeach;
-			exit;
+                endif;
+            endforeach; 
+            exit;
             if($this->db->trans_status() !== FALSE):
                 //$this->db->trans_commit();
-                echo "Temp Stock Migration Success.".$i;
+                echo "Opening Balance PartyData Migrate Successfully. ".$i;
             endif;
         }catch(\Exception $e){
             $this->db->trans_rollback();
             echo $e->getMessage();exit;
         }
-	}
+    } */
 
-	
+    /* public function migrateBillWise(){
+        try{
+            $this->db->trans_begin();
+
+            $this->db->reset_query();
+            $this->db->where('op_balance <>', 0);
+            $this->db->where('is_delete',0);
+            $opBalanceData = $this->db->get('party_balance')->result();
+
+            foreach($opBalanceData as $row):
+                //Save Bill Wise New Reference
+				$transBillWiseData = [
+                    'id'=>"",
+                    'entry_type'=>0,
+                    'trans_main_id'=>0,
+                    'trans_date'=>"2024-04-01",
+                    'trans_number'=>"OpBal",
+                    'party_id'=>$row->party_id,
+                    'amount'=>abs($row->op_balance),
+                    'c_or_d'=>(($row->op_balance > 0)?"CR":"DR"),
+                    'p_or_m'=>(($row->op_balance > 0)?1:-1),
+                    'ref_type'=>1,
+                    'cm_id'=>$row->cm_id
+                ];
+
+				$this->db->insert("trans_billwise",$transBillWiseData);
+            endforeach;
+
+            $this->db->reset_query();
+            $this->db->where('is_delete',0);
+            $this->db->where_in('vou_name_s',["Purc","Sale","C.N.","D.N.","GExp","GInc","BCRct","BCPmt"]);
+            $transactions = $this->db->get('trans_main')->result();
+
+            foreach($transactions as $row):
+                //Save Bill Wise New Reference
+				$transBillWiseData = [
+                    'id'=>"",
+                    'entry_type'=>$row->entry_type,
+                    'trans_main_id'=>$row->id,
+                    'trans_date'=>$row->trans_date,
+                    'trans_number'=>$row->trans_number,
+                    'party_id'=>$row->party_id,
+                    'amount'=>$row->net_amount,
+                    'ref_type'=>1,
+                    'cm_id'=>$row->cm_id
+                ];
+
+                $cord = getCrDrEff($row->vou_name_s);
+                if(in_array($row->vou_name_s,["BCRct","BCPmt"])):
+                    $transBillWiseData['c_or_d'] = $cord['opp_type'];                    
+                    $transBillWiseData['amount'] = ($row->round_off_amount <> 0)?($row->net_amount + $row->round_off_amount):$row->net_amount;
+                else:
+                    $transBillWiseData['c_or_d'] = $cord['vou_type'];
+                    $transBillWiseData['amount'] = ($row->tds_amount <> 0)?($row->net_amount - abs($row->tds_amount)):$row->net_amount;
+                endif;
+
+                $transBillWiseData['p_or_m'] = ($transBillWiseData['c_or_d'] == "DR")?-1:1;
+
+				$this->db->insert("trans_billwise",$transBillWiseData);
+            endforeach;
+
+            if($this->db->trans_status() !== FALSE):
+                $this->db->trans_commit();
+                //$this->db->trans_rollback();
+                echo "Bill Wise new ref. added Successfully.";
+            endif;
+        }catch(\Throwable $e){
+            $this->db->trans_rollback();
+            echo $e->getMessage();exit;
+        }
+    } */
+
+    /* public function removeStock(){
+        try{
+            $this->db->trans_begin();
+
+            $this->db->select("item_id, SUM(qty * p_or_m) as qty, SUM(strip_qty * p_or_m) as strip_qty, SUM(total_box * p_or_m) as total_box, unique_id, batch_no,  location_id, cm_id");
+            $this->db->where('is_delete',0);
+            $this->db->group_by("item_id,unique_id,batch_no,location_id,cm_id");
+            $this->db->having("SUM(stock_transaction.qty * stock_transaction.p_or_m) > 0");
+            $this->db->order_by('item_id');
+            $result = $this->db->get("stock_transaction")->result();
+
+            foreach($result as $row):
+                //print_r($row);print_r('<hr>');
+
+                $stData = [
+                    'id' => '',
+                    'entry_type' => 999,
+                    'unique_id' => $row->unique_id,
+                    'ref_date' => date("Y-m-d"),
+                    'main_ref_id' => 0,
+                    'location_id' => $row->location_id,
+                    'batch_no' => $row->batch_no,
+                    'item_id' => $row->item_id,
+                    'p_or_m' => -1,
+                    'total_box' => $row->total_box,
+                    'strip_qty' => $row->strip_qty,
+                    'qty' => $row->qty,
+                    'cm_id' => $row->cm_id,
+                    'remark' => 'MIGRATION',
+                ];
+                //print_r($stData);print_r('<hr>');
+
+                $this->db->insert("stock_transaction",$stData);
+            endforeach;
+
+            if($this->db->trans_status() !== FALSE):
+                //$this->db->trans_commit();
+                $this->db->trans_rollback();
+                echo "Stock Removed Successfully.";
+            endif;
+        }catch(\Throwable $e){
+            $this->db->trans_rollback();
+            echo $e->getMessage();exit;
+        }
+    } */
+
+    /* public function migrateStock(){
+        try{
+            $this->db->trans_begin();
+
+            $this->db->select("stock_transaction.item_id, ROUND(SUM(stock_transaction.qty * stock_transaction.p_or_m),3) as qty, ROUND(SUM(stock_transaction.strip_qty * stock_transaction.p_or_m),2) as strip_qty, ROUND(SUM(stock_transaction.total_box * stock_transaction.p_or_m),2) as total_box, stock_transaction.unique_id, stock_transaction.batch_no,  stock_transaction.location_id, stock_transaction.cm_id");
+            $this->db->join('item_master','item_master.id = stock_transaction.item_id','left');
+            $this->db->where('stock_transaction.is_delete',0);
+            $this->db->where('stock_transaction.cm_id',2);
+            $this->db->where_in('item_master.item_type',[4]);
+            $this->db->group_by("stock_transaction.item_id,stock_transaction.unique_id,stock_transaction.batch_no,stock_transaction.location_id,cm_id");
+            $this->db->having("SUM(stock_transaction.qty * stock_transaction.p_or_m) <> 0");
+            $this->db->order_by('stock_transaction.item_id');
+            $result = $this->db->get("stock_transaction")->result();
+
+            foreach($result as $row):
+                $p_or_m = (floatval($row->qty) > 0)?-1:1;
+                $stData = [
+                    'id' => '',
+                    'entry_type' => 999,
+                    'ref_no' => 'MIGRATION',
+                    'unique_id' => $row->unique_id,
+                    'ref_date' => "2024-04-01",//date("Y-m-d"),
+                    'main_ref_id' => 0,
+                    'location_id' => $row->location_id,
+                    'batch_no' => $row->batch_no,
+                    'item_id' => $row->item_id,
+                    'p_or_m' => $p_or_m,
+                    'total_box' => abs($row->total_box),
+                    'strip_qty' => abs($row->strip_qty),
+                    'qty' => abs($row->qty),
+                    'cm_id' => $row->cm_id,
+                    'remark' => 'MIGRATION',
+                ];
+
+                $this->db->insert("stock_transaction",$stData);
+            endforeach;
+
+            if($this->db->trans_status() !== FALSE):
+                //$this->db->trans_commit();
+                $this->db->trans_rollback();
+                echo "Stock migrated Successfully.";
+            endif;
+        }catch(\Throwable $e){
+            $this->db->trans_rollback();
+            echo $e->getMessage();exit;
+        }
+    } */
+
+    /* public function invoiceStockMigrate(){
+        try{
+            $this->db->trans_begin();
+
+            $this->db->select('trans_main.entry_type,trans_child.cm_id,trans_main.trans_date,trans_main.trans_number,trans_child.trans_main_id,trans_child.id,trans_main.party_id,trans_child.item_id,trans_child.qty,trans_child.strip_qty,trans_child.total_box,trans_child.price,trans_child.org_price');
+            $this->db->join('trans_main','trans_main.id = trans_child.trans_main_id','left');
+            $this->db->where('trans_main.trans_status !=',3);
+            $this->db->where('trans_main.entry_type',32);
+            $this->db->where('trans_child.ref_id >',0);
+            $this->db->where('trans_child.stock_eff',0);
+            $this->db->where('trans_child.is_delete',0);
+            $result = $this->db->get("trans_child")->result();
+
+            foreach($result as $row):
+                $stockData = [
+                    'id' => "",
+                    'entry_type' => $row->entry_type,
+                    'unique_id' => $row->cm_id,
+                    'ref_date' => $row->trans_date,
+                    'ref_no' => $row->trans_number,
+                    'main_ref_id' => $row->trans_main_id,
+                    'child_ref_id' => $row->id,
+                    'location_id' => 18,
+                    'batch_no' => "GB",
+                    'party_id' => $row->party_id,
+                    'item_id' => $row->item_id,
+                    'p_or_m' => -1,
+                    'qty' => $row->qty,
+                    'strip_qty' => $row->strip_qty,
+                    'total_box' => $row->total_box,
+                    'price' => $row->price,
+                    'mrp' => $row->org_price,
+                    'cm_id' => $row->cm_id
+                ];
+
+                $this->db->insert("stock_transaction",$stockData);
+
+                $this->db->where('id',$row->id)->update('trans_child',['stock_eff'=>1]);
+            endforeach;            
+
+            if($this->db->trans_status() !== FALSE):
+                //$this->db->trans_commit();
+                $this->db->trans_rollback();
+                echo "Stock migrated Successfully.";
+            endif;
+        }catch(\Throwable $e){
+            $this->db->trans_rollback();
+            echo $e->getMessage();exit;
+        }
+    } */
+
+    public function semiFinishMigration(){
+        try{
+            $this->db->trans_begin();
+
+            $this->db->select('id,entry_type');
+            $this->db->where_in('item_id',[430,431,432,434,435,436,437,438,439,440,441,442,443,444,445,446,447,448,452]);
+            $this->db->where('ref_no IS NULL');
+            $this->db->where('cm_id',2);
+            $result = $this->db->get('stock_transaction')->result();
+
+            foreach($result as $row):
+                $this->db->select('GROUP_CONCAT(id) as id');
+                $this->db->where('main_ref_id',$row->id);
+                $this->db->where('entry_type',$row->entry_type);
+                $this->db->where('cm_id',2);
+                $this->db->group_by('main_ref_id');
+                $bomItem = $this->db->get('stock_transaction')->row();
+
+                /* print_r($row);
+                print_r("<br>*****************************<br>");
+                print_r($bomItem);
+                print_r("<br>*****************************<br>");
+                print_r("<hr>"); */
+                $this->db->where_in('id',[$bomItem->id])->delete('stock_transaction');
+
+                $this->db->where('id',$row->id)->delete('stock_transaction');
+            endforeach;
+
+            if($this->db->trans_status() !== FALSE):
+                $this->db->trans_commit();
+                //$this->db->trans_rollback();
+                echo "Stock migrated Successfully.";
+            endif;
+        }catch(\Throwable $e){
+            $this->db->trans_rollback();
+            echo $e->getMessage();exit;
+        }
+    }
 }
 ?>

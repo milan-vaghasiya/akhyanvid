@@ -9,6 +9,7 @@ class TermsModel extends MasterModel{
         $data['searchCol'][] = "";
         $data['searchCol'][] = "";
         $data['searchCol'][] = "title";
+        $data['searchCol'][] = "type";
         $data['searchCol'][] = "conditions";
 
 		$columns =array(); foreach($data['searchCol'] as $row): $columns[] = $row; endforeach;
@@ -65,10 +66,11 @@ class TermsModel extends MasterModel{
         }	
     }
 
-public function getTermsList($data=array()){
+	public function getTermsList($data=array()){
         $queryData['tableName'] = $this->terms;
         if(!empty($data['type'])):
-            $queryData['where']['find_in_set("'.$data['type'].'",type) > '] = 0;
+            //$queryData['where']['find_in_set("'.$data['type'].'",type) > '] = 0;
+			$queryData['where']['type'] = $data['type'];
         endif;
         return $this->row($queryData);
     }

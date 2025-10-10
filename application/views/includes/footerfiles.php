@@ -1,6 +1,4 @@
-<?php 
-	$this->load->view('change_password');
-?>
+<?php $this->load->view('change_password');?>
 <script>
 	var base_url = '<?=base_url();?>'; 
 	var controller = '<?=(isset($headData->controller)) ? $headData->controller : ''?>'; 
@@ -13,8 +11,7 @@
 
 	var startYearDate = '<?=$this->startYearDate?>';
 	var endYearDate = '<?=$this->endYearDate?>';
-
-	var companyStateCode = '<?=$companyDetail->company_state_code?>';
+	var device_type = 'DESKTOP';
 </script>
 <div class="chat-windows"></div>
 
@@ -23,7 +20,7 @@
 	$script= "";
 	if($permission = $this->session->userdata('emp_permission')):
 		if(!empty($headData->pageUrl)):
-			$empPermission = $permission[$headData->pageUrl];
+			$empPermission = (isset($permission[$headData->pageUrl]))?$permission[$headData->pageUrl]:['is_read'=>0,'is_write'=>0,'is_modify'=>0,'is_remove'=>0,'is_approve'=>0];
 			$script .= '<script>
 				var permissionRead = "'.$empPermission['is_read'].'";
 				var permissionWrite = "'.$empPermission['is_write'].'";
@@ -76,21 +73,30 @@
 <script src="<?=base_url()?>assets/plugins/datatables/bootstrap-datatable/js/moment.js"></script>
 <script src="<?=base_url()?>assets/plugins/datatables/bootstrap-datatable/js/dataTables.fixedHeader.min.js"></script>
 
-<!-- Select2 js -->
+<!-- Select 2 js -->
 <script src="<?=base_url()?>assets/js/pages/popper.js/dist/umd/popper.min.js"></script>
 <script src="<?=base_url()?>assets/js/pages/bootstrap/dist/js/bootstrap.min.js"></script>
 <script src="<?=base_url()?>assets/js/pages/multiselect/js/bootstrap-multiselect.js"></script>
 <script src="<?=base_url()?>assets/plugins/select2/js/select2.full.min.js"></script>
 <script src="<?=base_url()?>assets/plugins/sweet-alert2/sweetalert2.min.js"></script>
 
-<!-- overlayScrollbars -->
-<script src="<?=base_url("assets/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js")?>"></script>
+<script src="<?=base_url()?>assets/plugins/jquery-ui/jquery-ui.min.js"></script>
 
 <!-- Custom Scripts -->
 <script src="<?=base_url()?>assets/js/custom/comman-js.js?v=<?=time()?>"></script>
 <script src="<?=base_url()?>assets/js/custom/custom_ajax.js?v=<?=time()?>"></script>
 <script src="<?=base_url()?>assets/js/custom/typehead.js?v=<?=time()?>"></script>
-<script src="<?=base_url()?>assets/extra-libs/jquery-ui/jquery-ui.min.js?v=<?=time()?>"></script>
+
+<!-- Whatsapp js -->
+<script src="<?=base_url();?>assets/js/custom/whatsapp.js?v=<?=time()?>"></script>
+
+<!-- overlayScrollbars -->
+<script src="<?=base_url("assets/plugins/overlayScrollbars/js/jquery.overlayScrollbars.min.js")?>"></script>
+
+<!-- Firebase App is always required and must be first -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script> 
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
+<script type="module" src="<?=base_url()?>assets/js/notification.js?v=<?=time()?>"></script>
 
 <div class="ajaxModal"></div>
 <div class="centerImg">

@@ -1,104 +1,114 @@
-<?php
-class SalesReportModel extends MasterModel{
-    private $soMaster = "so_master";
-    private $soTrans = "so_trans";
-    private $transMain = "trans_main";
-    private $transChild = "trans_child";
+<?php 
+class SalesReportModel extends MasterModel
+{
 
-    public function getOrderMonitoringData($data){
+   /* Customer Detail Report */
+    public function getCustomerDetailList($data){
+        $queryData = [];
+        $queryData['tableName']  = "party_master";
+		$queryData['select'] = "party_master.*, executive_master.emp_name as executive_name,created_master.emp_name as created_name,b_countries.name as country_name,b_states.name as state_name,GROUP_CONCAT(party_activities.mode) as mode";
+
+        $queryData['leftJoin']['party_activities'] = "party_activities.party_id = party_master.id";
+        $queryData['leftJoin']['employee_master as executive_master'] = "executive_master.id = party_master.executive_id";
+        $queryData['leftJoin']['employee_master as created_master'] = "created_master.id = party_master.created_by";
+        $queryData['leftJoin']['countries as b_countries'] = "party_master.country_id = b_countries.id";
+        $queryData['leftJoin']['states as b_states'] = "party_master.state_id = b_states.id";
+
+
+        if(!empty($data['executive_id'])):
+			$queryData['where']['party_master.executive_id'] = $data['executive_id'];
+		endif;
+
+        if(!empty($data['business_type'])):
+			$queryData['where']['party_master.business_type'] = $data['business_type'];
+		endif;
+
+        if(!empty($data['lead_stage'])):
+			$queryData['where']['party_master.party_type'] = $data['lead_stage'];
+		endif;
+
+		if(!empty($data['mode'])):
+			$queryData['where']['party_activities.mode'] = $data['mode'];
+		endif;
+		
+        if(!empty($data['from_date'])):
+			$queryData['where']['party_master.created_at >= '] = date('Y-m-d H:i:s',strtotime($data['from_date'].' 00:00:00'));
+		endif;
+        if(!empty($data['to_date'])):
+			$queryData['where']['party_master.created_at <= '] = date('Y-m-d H:i:s',strtotime($data['to_date'].' 23:59:59'));
+		endif;
+		
+		// if(!in_array($this->userRole,[1,-1,2])):
+        //     $queryData['customWhere'][] = '(find_in_set("'.$this->empId.'", employee_master.super_auth_id) > 0 OR employee_master.id = '.$this->loginId.')';
+        // endif;   
+         
+        $queryData['group_by'][] = "party_master.id";
+        $result = $this->rows($queryData);
+        return $result;
+    }
+    
+    /* Appointment Register Data */
+    public function getAppointmentRegister($data){ 
         $queryData = array();
-        $queryData['tableName'] = $this->soMaster;
-        $queryData['select'] = "so_master.trans_number,so_master.trans_date,so_trans.qty,item_master.item_name,party_master.party_name,so_trans.id,so_trans.cod_date,item_master.uom"; 
-        $queryData['leftJoin']['so_trans'] = "so_trans.trans_main_id = so_master.id";
-        $queryData['leftJoin']['party_master'] = "so_master.party_id = party_master.id";
-        $queryData['leftJoin']['item_master'] = "so_trans.item_id = item_master.id";
-        $queryData['customWhere'][] = "so_master.trans_date BETWEEN '".$data['from_date']."' AND '".$data['to_date']."'";
-        if(!empty($data['party_id'])):
-            $queryData['where']['so_master.party_id'] = $data['party_id'];
+        $queryData['tableName'] = "party_activities";
+        $queryData['select'] = "party_activities.id,party_activities.ref_date,party_activities.lead_stage,party_activities.notes,party_activities.remark,party_activities.updated_at,party_activities.mode,party_activities.party_id,party_master.party_name ,employee_master.emp_name,party_activities.created_by";
+
+        $queryData['leftJoin']['party_master'] = "party_master.id = party_activities.party_id";
+        $queryData['leftJoin']['employee_master'] = "employee_master.id = party_master.executive_id";
+        
+        if(!empty($data['executive_id'])):
+            $queryData['where']['party_master.executive_id'] = $data['executive_id'];
         endif;
-        $queryData['order_by']['so_master.trans_date'] = "ASC";
-        $queryData['order_by']['so_master.trans_number'] = "ASC";
+        
+        if(!empty($data['mode'])):
+            $queryData['where']['party_activities.mode'] = $data['mode'];
+        endif;
+
+        if(!empty($data['status'])) {
+            if($data['status'] == 1){
+                $queryData['customWhere'][] = 'party_activities.updated_at IS NULL';
+            }elseif($data['status'] == 2){
+                $queryData['customWhere'][] = 'party_activities.updated_at IS NOT NULL';
+            }elseif($data['status'] == 3){ 
+                $queryData['customWhere'][] = 'DATE(party_activities.ref_date) < DATE(party_activities.updated_at)';
+            }
+        }
+
+        if(!empty($data['from_date'])){
+            $queryData['where']['DATE(party_activities.ref_date) >='] = $data['from_date'];
+        }
+
+        if(!empty($data['to_date'])){
+            $queryData['where']['DATE(party_activities.ref_date) <='] = $data['to_date'];
+        }
+        $queryData['where']['party_activities.lead_stage'] = 2;
+		$queryData['order_by']['party_activities.ref_date'] = 'ASC';
 
         $result = $this->rows($queryData);
         return $result;
     }
 
-    public function getSalesInvData($data){
+    /*  Followup Register Data*/
+    public function getFollowUpRegister($data){
         $queryData = array();
-        $queryData['tableName'] = $this->transMain;
-        $queryData['select'] = "trans_main.trans_number as invNo,trans_main.trans_date as invDate,trans_child.qty as invQty,trans_child.ref_id";
-        $queryData['leftJoin']['trans_child'] = "trans_main.id = trans_child.trans_main_id AND trans_child.is_delete = 0";
-		$queryData['where']['trans_child.ref_id'] = $data['ref_id'];
-        $queryData['where']['trans_child.from_entry_type'] = 14;
-        $result = $this->rows($queryData);
-        return $result;
-    }
+        $queryData['tableName'] = "party_activities";
+        $queryData['select'] = "party_activities.id,party_activities.created_at,party_master.executive_id,party_activities.notes,party_master.party_type,party_activities.party_id,party_master.party_name,employee_master.emp_name,party_master.business_type";
+        $queryData['leftJoin']['party_master'] = "party_master.id = party_activities.party_id";
+        $queryData['leftJoin']['employee_master'] = "employee_master.id = party_master.executive_id";
 
-    public function getSalesAnalysisData($data){
-        $queryData = array();
-        if($data['report_type'] == 1):
-            $queryData['tableName'] = $this->transMain;
-            $queryData['select'] = "party_name,SUM(taxable_amount) as taxable_amount,SUM(gst_amount) as gst_amount,SUM(net_amount) as net_amount";
-            $queryData['where']['trans_date >='] = $data['from_date'];
-            $queryData['where']['trans_date <='] = $data['to_date'];
-            $queryData['where']['vou_name_s'] = "Sale";
-            $queryData['group_by'][] = 'party_id';
-            $queryData['order_by']['SUM(taxable_amount)'] = $data['order_by'];
-            $result = $this->rows($queryData);
-        else:
-            $queryData['tableName'] = $this->transChild;
-            $queryData['select'] = "trans_child.item_name,SUM(trans_child.qty) as qty,SUM(trans_child.taxable_amount) as taxable_amount,ROUND((SUM(trans_child.taxable_amount) / SUM(trans_child.qty)),2) as price";
-            $queryData['leftJoin']['trans_main'] = "trans_child.trans_main_id = trans_main.id";
-            $queryData['where']['trans_date >='] = $data['from_date'];
-            $queryData['where']['trans_date <='] = $data['to_date'];
-            $queryData['where']['vou_name_s'] = "Sale";
-            $result = $this->rows($queryData);
-        endif;
-        return $result;
-    }
-
-    public function getMrpReportData($data) {
-        $queryData['tableName'] = $this->soTrans;  
-        $queryData['select'] = 'so_master.trans_number,so_master.trans_date,bom.item_name as bom_item_name,(stock_data.stock_qty / item_kit.qty) AS plan_qty,bom.uom'; 
-        $queryData['leftJoin']['so_master'] = "so_trans.trans_main_id = so_master.id";
-        $queryData['leftJoin']['item_kit'] = "item_kit.item_id = so_trans.item_id AND item_kit.is_delete = 0";
-        $queryData['leftJoin']['item_master AS bom'] = "bom.id = item_kit.ref_item_id";
-        $queryData['leftJoin']['(SELECT SUM(qty) AS dispatch_qty,`so_id` FROM `delivery_transaction` WHERE `delivery_transaction`.`is_delete` = 0 GROUP BY `delivery_transaction`.`so_id`) AS dt'] = "dt.so_id = so_trans.id";
-        $queryData['leftJoin']['(SELECT SUM(`stock_trans`.`qty` * `stock_trans`.`p_or_m`) AS stock_qty,`stock_trans`.`item_id` FROM `stock_trans` WHERE is_delete = 0 GROUP BY `stock_trans`.`item_id`) AS stock_data'] = 'stock_data.item_id = item_kit.ref_item_id';
-        if(!empty($data['party_id']) && $data['party_id'] != 'ALL'){ $queryData['where']['so_master.party_id'] = $data['party_id']; }
-        if(!empty($data['item_id'])){ $queryData['where']['so_trans.item_id'] = $data['item_id']; }
-        $queryData['where']['(so_trans.qty - IFNULL(dt.dispatch_qty, 0.000)) >'] = 0;
-        $queryData['order_by']['so_master.trans_no'] = 'ASC';
-        $queryData['order_by']['so_trans.id'] = 'ASC';
-        return $this->rows($queryData);
-    }
-
-	public function getSalesOrderRegister($data){
-        $queryData = array();
-        $queryData['tableName'] = $this->soTrans;
-        $queryData['select'] = "so_master.trans_number,so_master.trans_date,so_trans.qty,item_master.item_name,party_master.party_name,so_trans.id,so_trans.trans_status,ifnull(st.stock_qty,0) as stock_qty, IFNULL(dt.dispatch_qty, 0.000) AS dispatch_qty, IF((so_trans.qty - IFNULL(dt.dispatch_qty, 0.000)) < 0, 0, (so_trans.qty - IFNULL(dt.dispatch_qty, 0.000))) as pending_qty,item_master.uom";
-        $queryData['leftJoin']['so_master'] = "so_master.id = so_trans.trans_main_id";
-        $queryData['leftJoin']['party_master'] = "so_master.party_id = party_master.id";
-        $queryData['leftJoin']['item_master'] = "so_trans.item_id = item_master.id";
-        $queryData['leftJoin']['(SELECT SUM(qty * p_or_m) as stock_qty,item_id FROM stock_trans WHERE is_delete = 0 GROUP BY item_id) as st'] = "so_trans.item_id = st.item_id";
-        $queryData['leftJoin']['(SELECT SUM(qty) AS dispatch_qty, ref_id FROM trans_child WHERE is_delete = 0 AND from_entry_type = 14 GROUP BY ref_id) AS dt'] = "dt.ref_id = so_trans.id";
-        $queryData['customWhere'][] = "so_master.trans_date BETWEEN '".$data['from_date']."' AND '".$data['to_date']."'";
-        if(!empty($data['party_id'])):
-            $queryData['where']['so_master.party_id'] = $data['party_id'];
-        endif;
-        if($data['trans_status'] != 'All'):
-			if($data['trans_status'] == 0):
-				$queryData['where']['(so_trans.qty - IFNULL(dt.dispatch_qty, 0.000)) >'] = 0;
-				$queryData['where']['so_trans.trans_status != '] = 2;
-			elseif($data['trans_status'] == 1):
-				$queryData['where']['(so_trans.qty - IFNULL(dt.dispatch_qty, 0.000)) <='] = 0;
-				$queryData['where']['so_trans.trans_status != '] = 2;
-			elseif($data['trans_status'] == 2):
-				$queryData['where']['so_trans.trans_status'] = 2;
-			endif;	
-        endif;
-        $queryData['order_by']['so_master.trans_date'] = "ASC";
-        $queryData['order_by']['so_master.trans_number'] = "ASC";
+		if(!empty($data['business_type'])){
+            $queryData['where']['party_master.business_type'] = $data['business_type'];
+        }
+        if(!empty($data['from_date'])){
+            $queryData['where']['DATE(party_activities.created_at) >='] = $data['from_date'];
+        }
+        if(!empty($data['to_date'])){
+            $queryData['where']['DATE(party_activities.created_at) <='] = $data['to_date'];
+        }
+        if(!empty($data['party_id'])){
+            $queryData['where']['party_activities.party_id'] = $data['party_id'];
+        }
+        $queryData['where']['party_activities.lead_stage'] = 5;
 
         $result = $this->rows($queryData);
         return $result;

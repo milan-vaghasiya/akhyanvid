@@ -55,6 +55,11 @@ $(document).ready(function(){
 			$(".page-title-box .press-add-btn").trigger("click");
 		}
 
+		// Save Form Data Using (ALT + S)
+		/* if(e.altKey && e.which === 83){
+			$(".btn-save").trigger('click');
+		} */
+
 		// Check if the Alt key and C key are pressed
 		if (e.altKey && e.which === 67) {
 			// Find the last opened modal and close it
@@ -90,12 +95,16 @@ function ssDatatable(ele,tableHeaders,tableOptions,dataSet={}){
 	var tableId = ele.attr('id');
 	if(tableHeaders[0] != ""){$('#' + tableId).append(tableHeaders.theads);}	
 
+	//push cm_id in postdata
+	dataSet.cm_id = ($("#company_id :selected").val() || "");
+
 	var ssTableOptions = {
 		"paging": true,
 		"serverSide": true,
 		'ajax': {
 			url: base_url + controller + dataUrl,
-			type:"POST", data:dataSet,
+			type:"POST", 
+			data:dataSet,
 			global:false ,
 			beforeSend: function() {
 				var columnCount = $('#'+tableId+' thead tr').first().children().length;
@@ -109,12 +118,11 @@ function ssDatatable(ele,tableHeaders,tableOptions,dataSet={}){
 		deferRender: true,
 		destroy: true,
 		"autoWidth" : false,
-		"ordering": false,
 		pageLength: 25,
 		language: { search: "" },
 		lengthMenu: [
-			[ 10, 20, 25, 50, 75, 100, 250, 500, 1000 ],
-			[ '10 rows', '20 rows', '25 rows', '50 rows', '75 rows', '100 rows','250 rows','500 rows','1000 rows' ]
+			[ 10, 20, 25, 50, 75, 100, 250,500 ],
+			[ '10 rows', '20 rows', '25 rows', '50 rows', '75 rows', '100 rows','250 rows','500 rows' ]
 		],
 		order:[],
 		orderCellsTop: true,
@@ -156,8 +164,8 @@ function ssDatatable(ele,tableHeaders,tableOptions,dataSet={}){
 			//$('.dataTables_scrollBody').perfectScrollbar('destroy').perfectScrollbar();
 			/* $('.dataTables_scrollBody').each(function(){
 				new SimpleBar($(this)[0], { autoHide: false });
-			}); */		
-			//OverlayScrollbars(document.querySelector('.dataTables_scrollBody'), {});	
+			}); */	
+			//OverlayScrollbars(document.querySelector('.dataTables_scrollBody'), {});		
 			$('#' + tableId +' tbody tr:first').trigger('click');
 			checkPermission();
 		}
@@ -228,6 +236,9 @@ function reportTable(tableId = "reportTable",tableOptions = ""){
 	if(tableOptions == ""){
 		tableOptions = {
 			responsive: true,
+			scrollY: true,
+			scrollX: true,
+			scroller: true,
 			"autoWidth" : false,
 			order:[],
 			"columnDefs": [
@@ -236,7 +247,7 @@ function reportTable(tableId = "reportTable",tableOptions = ""){
 				{ className: "text-left", targets: [0,1] }, 
 				{ className: "text-center", "targets": "_all" } 
 			],
-			pageLength:25,
+			pageLength:10,
 			language: { search: "" },
 			lengthMenu: [
 				[ 10, 25, 50, 100, -1 ],[ '10 rows', '25 rows', '50 rows', '100 rows', 'Show all' ]

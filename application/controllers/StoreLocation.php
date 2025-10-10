@@ -47,15 +47,13 @@ class StoreLocation extends MY_Controller{
         if(empty($data['location']))
             $errorMessage['location'] = "Rack is required.";
 
-        /*if(empty($data['ref_id'])):
+        if(empty($data['ref_id'])):
             $errorMessage['ref_id'] = "Store Name is required..";
         else:
             if(empty($data['store_name'])):
                 $errorMessage['ref_id'] = "Store Name is required.";
             endif;
-        endif;*/
-		if(empty($data['store_name']))
-			$errorMessage['ref_id'] = "Store Name is required.";
+        endif;
 
         $nextlevel='';
         if($data['store_level'] != ""):

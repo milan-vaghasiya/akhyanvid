@@ -1,8 +1,23 @@
 var zindex = "9999";
-$(document).ready(function(){
-	localStorage.setItem('tabReloads', 'false');
+$(document).ready(function(){	
+	// if financial year change then Reload the page when the tab gains focus
+    /* $(window).focus(function() {
+        // Listen for changes in localStorage and reload the page if the flag is set	
+		if(localStorage.getItem("reloadFlag") == "true"){
+			localStorage.setItem('reloadFlag', "false");
+			window.location.reload();
+		}
+    }); */	
 
-	var lastActivityTime = new Date();;
+	localStorage.setItem('reloadTabs', 'false');
+
+	$("#company_id").val((localStorage.getItem('company_id') || ""));
+	$(document).on('change',"#company_id",function(){
+		localStorage.setItem('company_id',$(this).val());
+		window.location.reload();
+	});    
+
+	var lastActivityTime = new Date();
 
 	// Update last activity time on user interaction events //mousemove
 	$(document).on('click change keydown', function() {
@@ -50,7 +65,9 @@ $(document).ready(function(){
 	    
 	// initSpeechRecognitationMenu();
 	$('[data-tooltip="tooltip"]').tooltip();
-	if (typeof ssDatatable !== 'undefined'){ssTableInit();}
+	if(device_type != 'MOBILE'){
+		ssTableInit();
+	}
 	checkPermission();
 	initMultiSelect();
 	setMinMaxDate();
@@ -62,6 +79,7 @@ $(document).ready(function(){
 	});	
 
 	$(document).on("keypress",'.floatOnly',function(event) {
+		$(this).val($(this).val().replace(new RegExp(',', 'g'),""));
 		if ((event.which != 46 || $(this).val().indexOf('.') != -1) && (event.which < 48 || event.which > 57)) {event.preventDefault();}
 	});
 	
@@ -74,64 +92,11 @@ $(document).ready(function(){
 	$(document).on('click','.nav-tab',function(){
 		var id = $(this).attr('id');
     	localStorage.setItem('selected_tab', id);
-    });
+    });	
 	
 	$(document).on('click',".show_terms",function(){$("#termModel").modal('show');});
 	
-	$(document).on('change','.country_list',function(){
-		var id = $(this).val();
-		var state_id = $(this).data('state_id');
-		var selected_state_id = $(this).data('selected_state_id') || "";
-		var city_id = $("#"+state_id).data('city_id');
-		if(id == ""){
-			$("#"+state_id).html('<option value="">Select State</option>');
-			$("#"+city_id).html('<option value="">Select City</option>');
-			initSelect2();
-		}else{
-			$.ajax({
-				url: base_url + controller +'/getStatesOptions',
-				type:'post',
-				data:{country_id:id},
-				dataType:'json',
-				success:function(data){
-					$("#"+state_id).html(data.result);
-					if(selected_state_id != ""){
-						$("#"+state_id).val(selected_state_id);
-						$(".state_list").trigger('change');
-						initSelect2();
-					}
-					$(this).focus();
-				}
-			});
-		}
-	});
-
-	$(document).on('change',".state_list",function(){
-		var id = $(this).val();
-		var city_id = $(this).data('city_id');
-		var selected_city_id = $(this).data('selected_city_id') || "";
-		if(id == ""){
-			$("#"+city_id).html('<option value="">Select City</option>');
-			initSelect2();
-		}else{
-			$.ajax({
-				url: base_url + controller + '/getCitiesOptions',
-				type:'post',
-				data:{state_id:id},
-				dataType:'json',
-				success:function(data){
-					$("#"+city_id).html(data.result);
-					if(selected_city_id != ""){
-						$("#"+city_id).val(selected_city_id);
-						initSelect2();
-					}
-					$(this).focus();
-				}
-			});
-		}
-		initSelect2();
-	});	
-
+	
 	$(document).on('click','.pswHideShow',function(){
 		var type = $('.pswType').attr('type');
 		if(type == "password"){
@@ -172,10 +137,10 @@ $(document).ready(function(){
 		checkPermission();
 	});
 	
-	$(document).on('change','#financialYearSelection',function(e){
+	$(document).on('change','#financialYearSelection',function(){
 		var fy = $(this).val();
 		var send_data = { year:fy };
-
+		console.log(fy);
 		Swal.fire({
 			title: 'Confirm!',
 			text: "Are you sure want to change this Financial Year ?",
@@ -191,22 +156,20 @@ $(document).ready(function(){
 					data: send_data,
 					type: "POST",
 					dataType:"json",
-					success:function(data)
-					{
+					success:function(data){
 						if(data.status==0){
 							toastr.error(data.message, 'Sorry...!', { "showMethod": "slideDown", "hideMethod": "slideUp", "closeButton": true, positionClass: 'toastr toast-bottom-center', containerId: 'toast-bottom-center', "progressBar": true });
-						}
-						else{
+						}else{
 							Swal.fire({ icon: 'success', title: data.message});
 							// Trigger refresh in all open tabs    						
-    						localStorage.setItem('tabReloads', 'true');
+    						localStorage.setItem('reloadTabs', 'true');
 							window.location.reload();
 						}
 					}
 				});
 			}
 		});
-	});	
+	});
 
 	$(document).on('blur','.fyDates',function(){
 		setMinMaxDate();
@@ -228,13 +191,15 @@ $(document).ready(function(){
 
 	$(document).on('change',".partyDetails",function(){
 		var party_id = $(this).val();
+		var cm_id = $("#cm_id").val() || '';
 		var resFunctionName = $(this).data('res_function') || "";
+		if(cm_id == ""){cm_id = $("#cmId").val() || "";}
 
 		if(party_id){
 			$.ajax({
 				url : base_url + '/parties/getPartyDetails',
 				type:'post',
-				data: {id:party_id},
+				data: {id:party_id,cm_id:cm_id},
 				dataType : 'json',
 			}).done(function(response){
 				window[resFunctionName](response);
@@ -244,30 +209,30 @@ $(document).ready(function(){
 		}
 	});
 
-	$(document).on('change click',".itemDetails",function(){
+	$(document).on('change click',".itemDetails",function(){ 
 		var item_id = $(this).val();
-		var resFunctionName = $(this).data('res_function') || "";
 		var price_structure_id = $(this).attr('data-price_structure_id') || "";
+		var resFunctionName = $(this).data('res_function') || "";
 		var party_id = $("#party_id").val() || "";
 		var party_name = $("#party_name").val() || "";
+		var cm_id = $("#cm_id").val() || "";
+		if(cm_id == ""){cm_id = $("#cmId").val() || "";}
 
 		if($(this).hasClass("partyReq")){			
-			if(party_id == "" && party_name == ""){  
-				$(".party_id").html("Party name is required."); $(this).val(""); initSelect2();  
-				return false; 
-			} 
+			if(party_id == "" && party_name == ""){ return false; } 
 		}
 
 		if(item_id){
 			$.ajax({
 				url : base_url + '/items/getItemDetails',
 				type:'post',
-				data: {id : item_id, price_structure_id : price_structure_id, party_id : party_id},
+				data: {id : item_id, price_structure_id : price_structure_id, party_id : party_id, cm_id:cm_id},
 				dataType : 'json',
 			}).done(function(response){
 				window[resFunctionName](response);
 			});
 		}else{
+			
 			window[resFunctionName]();
 		}
 	});
@@ -303,38 +268,79 @@ $(document).ready(function(){
         $('label[for="' + inputId + '"]').html(fileName);
 	});
 
+	$(document).on('click','.removeImage',function(){
+        $(this).parent('div').remove();
+    });
+
 	//$("#print_dialog").modal();
 	$(document).on("click",".printDialog",function(){
-		$("#printModel").attr('action',base_url + controller + "/" + ($(this).data('fn_name') || ""));
-		$("#printModel #print_format").val($(this).data('print_format'));
+	    $("#printModel").attr('action',base_url + controller + "/" + ($(this).data('fn_name') || ""));
 		$("#printModel #id").val($(this).data('id'));
 		$("#print_dialog").modal("show");
 	});
 
-	// on first focus (bubbles up to document), open the menu
-	$(document).on('focus', '.select2-selection.select2-selection--single', function (e) {
-		$(this).closest(".select2-container").siblings('select:enabled').select2('open');
-	});
-	
-	// steal focus during close - only capture once and stop propogation
-	$('select.select2').on('select2:closing', function (e) {
-		$(e.target).data("select2").$selection.one('focus focusin', function (e) {
-			e.stopPropagation();
-		});
-	});
-
-	// Prevent Bootstrap dialog from blocking focusin
-    document.addEventListener('focusin', (e) => {
-		if (e.target.closest(".tox-tinymce, .tox-tinymce-aux, .moxman-window, .tam-assetmanager-root") !== null) {
-		  e.stopImmediatePropagation();
+	// On first focus (bubbles up to document), open the menu if not already open
+	$(document).on('focus', '.select2-selection.select2-selection--single', function () {
+		let $select = $(this).closest(".select2-container").siblings('select:enabled');
+		if (!$select.data('select2').isOpen()) {
+			$select.select2('open');
 		}
 	});
 
-	// fix select2 bootstrap modal scroll bug
-	$(document).on('select2:close', '.select2', function (e) {
-		var evt = "scroll.select2";
+	// Fix Select2 Bootstrap modal scroll bug
+	$(document).on('select2:close', '.basic-select2', function (e) {
+		let evt = "scroll.select2";
 		$(e.target).parents().off(evt);
 		$(window).off(evt);
+	});
+
+	// Prevent Select2 from stealing focus when closing
+	$(document).on('select2:closing', 'select.basic-select2', function (e) {
+		let $selection = $(e.target).data("select2").$selection;
+		if ($selection) {
+			$selection.one('focus', function (e) {
+				e.stopPropagation();
+			});
+		}
+	});
+
+	// Move focus to the next input field after selecting an option
+	$(document).on("select2:select", "select.basic-select2", function () {
+		let $formElements = $(this).closest('form').find('input, select, textarea').not('[type=hidden]').filter(':visible');
+			
+		let currentIndex = $formElements.index(this);
+		
+		if (currentIndex !== -1 && currentIndex + 1 < $formElements.length) {
+			$formElements.eq(currentIndex + 1).focus();
+		}
+	});
+
+	$(document).on('change','.country_list',function(){
+		var id = $(this).val();
+		var state_id = $(this).data('state_id');
+		var selected_state_id = $(this).data('selected_state_id') || "";
+		var city_id = $("#"+state_id).data('city_id');
+		if(id == ""){
+			$("#"+state_id).html('<option value="">Select State</option>');
+			$("#"+city_id).html('<option value="">Select City</option>');
+			initSelect2();
+		}else{
+			$.ajax({
+				url: base_url + controller +'/getStatesOptions',
+				type:'post',
+				data:{country_id:id},
+				dataType:'json',
+				success:function(data){
+					$("#"+state_id).html(data.result);
+					if(selected_state_id != ""){
+						$("#"+state_id).val(selected_state_id);
+						$(".state_list").trigger('change');
+						initSelect2();
+					}
+					$(this).focus();
+				}
+			});
+		}
 	});
 });
 
@@ -343,18 +349,81 @@ $(window).on('pageshow', function() {
 	checkPermission();setMinMaxDate();
 });
 
+/* $('.modal').on('shown.bs.modal', function () {
+	$('.select').select2({});
+}); */
+
 function initSimplebar(){new SimpleBar($('.simpleBar'), { autoHide: true });}
 
+/* Basic Select2 */
 function initSelect2(){
-	$(".select2").each(function () {
-		$(this).select2();
-	});	
+	$(".basic-select2").select2({with:null});
 
-	$(".modal .select2").each(function () {
+	$(".modal .basic-select2").each(function () {
 		$(this).select2({
-			dropdownParent: $('#'+$(this).closest('.modal').attr('id')),
+			dropdownParent: $('#'+$(this).closest('.modal form').attr('id'))
 		});
-	});	
+	});
+}
+
+/***** Server Side Select2 for Item List *****/
+function getDynamicItemList(dataSet = {}, eleClass = "server-side-select2"){   
+	$("." + eleClass).each(function () {
+        var $this = $(this);
+        var url = base_url + $this.data('url');
+        var placeholder = $this.data('placeholder');
+		var selected = $this.data('selected') || '';
+		
+		var parentModal = $this.closest('.modal'); // Check if inside a modal
+    	var dropdownParent = parentModal.length ? parentModal : $('body'); // Set the dropdown parent
+
+        $this.select2({
+            placeholder: placeholder,
+            closeOnSelect: true,
+            ajax: {
+                url: url,
+                type: "post",
+                dataType: 'json',
+                global: false,
+                data: function (params) {
+                    return $.extend({
+                        searchTerm: params.term || "", // search term
+                        item_type: $this.attr('data-item_type'), // Item Types
+                        pageSize: 20, // Number of results per page
+                        pageNo: params.page || 1 // Pagination
+                    }, dataSet);
+                },
+                processResults: function (response, params) {
+                    params.page = params.page || 1;
+                    return {
+                        results: response.data.itemList.map(function (item) {
+                            return {
+                                id: item.id,
+                                text: (item.item_code ? "[" + item.item_code + "] " : "") + item.item_name
+                            };
+                        }),
+                        pagination: {
+                            more: response.data.itemList.length >= 20
+                        }
+                    };
+                },
+                minimumInputLength: 1,
+                allowClear: true,
+                cache: true
+            },
+            dropdownParent: dropdownParent
+        });
+
+        if (selected) {
+			selected = JSON.parse(selected);
+            setTimeout(function () {
+                if (selected.id && selected.text) {
+                    //$this.append(new Option(dataSet.text, dataSet.id, true, true)).trigger('change');
+                    $this.append(new Option(selected.text, selected.id, true, true));
+                }
+            }, 200);
+        }
+    });
 }
 
 function getPartyList(postData){
@@ -451,24 +520,32 @@ function setPlaceHolder(){
 			var errorClass="";
 			var nm = $(this).attr('name');
 			
-			if($(this).attr('name')){errorClass=$(this).attr('name');}else{errorClass=$(this).attr('id');}
+			if($(this).attr('id')){errorClass=$(this).attr('id');}else{errorClass=$(this).attr('name');}
 			if(selectElement.find('.'+errorClass).length <= 0){selectElement.append('<div class="error '+ errorClass +'"></div>');}
 		}
 	});
 }
 
 function initMultiSelect(){
-    //$(".jp_multiselect option:selected").prependTo(".jp_multiselect");
 	$('.jp_multiselect').multiselect({
-		includeSelectAllOption:false,
+		includeSelectAllOption:true,
 		enableFiltering:true,
         enableCaseInsensitiveFiltering: true,
 		buttonWidth: '100%',
+		onDropdownShown: function(even) {
+			this.$filter.find('.multiselect-search').focus();
+		},
 		onChange: function() {
 			var inputId = this.$select.data('input_id');
 			var selected = this.$select.val();$('#' + inputId).val(selected);
-			//$(".jp_multiselect option:selected").prependTo(".jp_multiselect");
-		    //reInitMultiSelect();
+		},
+		onSelectAll: function(){
+			var inputId = this.$select.data('input_id');
+			var selected = this.$select.val();$('#' + inputId).val(selected.join(","));
+		},
+		onDeselectAll: function(){
+			var inputId = this.$select.data('input_id');
+			$('#' + inputId).val("");
 		}
 	});
 	$('.form-check-input').addClass('filled-in');
@@ -499,7 +576,9 @@ function statusTab(tableId,status,hp_fn_name="",page=""){
     $("#"+tableId).data("page",page);
 
     ssTable.state.clear();
-	initTable();
+	if(device_type != 'MOBILE'){
+		initTable(); 
+	}
 }
 
 function ssTableInit(){
@@ -527,6 +606,7 @@ function initTable(postData = {}){
 				var tableOptions = {pageLength: 25,'stateSave':false};
 				var dataSet = postData;
 				var tableHeaders = response.data;
+				tableHeaders.reInit = 1;
 				
 				$('.ssTable').html("");
 				ssDatatable($('.ssTable'),tableHeaders,tableOptions,dataSet);
@@ -577,13 +657,13 @@ function closeModal(formId){
 
 function store(postData){
 	setPlaceHolder();
-		
+
 	if(postData.txt_editor !== "")
 	{
     	var myContent = tinymce.get(postData.txt_editor).getContent();
     	$("#" + postData.txt_editor).val(myContent);
 	}
-
+		
 	var formId = postData.formId;
 	var fnsave = postData.fnsave || "save";
 	var controllerName = postData.controller || controller;
@@ -599,7 +679,10 @@ function store(postData){
 		dataType:"json",
 	}).done(function(data){
 		if(data.status==1){
-			initTable(); $('#'+formId)[0].reset(); closeModal(formId);
+			if(device_type != 'MOBILE'){
+				initTable(); 
+			}
+			 $('#'+formId)[0].reset(); closeModal(formId);
 			Swal.fire({ icon: 'success', title: data.message});
 			/*toastr.success(data.message, 'Success', { "showMethod": "slideDown", "hideMethod": "slideUp", "closeButton": true, positionClass: 'toastr toast-bottom-center', containerId: 'toast-bottom-center', "progressBar": true });*/
 		}else{
@@ -615,23 +698,21 @@ function store(postData){
 
 function customStore(postData){
 	setPlaceHolder();
-
 	postData.txt_editor = postData.txt_editor || "";
 	if(postData.txt_editor !== "")
 	{
     	var myContent = tinymce.get(postData.txt_editor).getContent();
     	$("#" + postData.txt_editor).val(myContent);
 	}
-	
 	var formId = postData.formId;
 	var fnsave = postData.fnsave || "save";
 	var controllerName = postData.controller || controller;
-	var formClose = postData.form_close || "";
+	var reloadPage = postData.reload || "";
 
 	var form = $('#'+formId)[0];
 	var fd = new FormData(form);
 	var resFunctionName = $("#"+formId).data('res_function') || "";
-	
+	var formClose = postData.form_close || "";
 
 	$.ajax({
 		url: base_url + controllerName + '/' + fnsave,
@@ -641,26 +722,29 @@ function customStore(postData){
 		contentType:false,
 		dataType:"json",
 	}).done(function(data){
-		
 		if(resFunctionName != ""){
 			if(formClose){ 
 				$('#'+formId)[0].reset(); closeModal(formId);
-				Swal.fire({ icon: 'success', title: data.message}); 
+				Swal.fire({ icon: 'success', title: data.message});
 			}
 			window[resFunctionName](data,formId);
-			
 		}else{
 			if(data.status==1){
-				initTable(); $('#'+formId)[0].reset(); closeModal(formId);
+				if(device_type != 'MOBILE'){
+					if(reloadPage){window.location.reload();}else{initTable(); }
+				}
+				$('#'+formId)[0].reset(); closeModal(formId);
 				Swal.fire({ icon: 'success', title: data.message});
-				$(".modal-select2").select2();
+				//$(".modal-select2").select2();
 				// toastr.success(data.message, 'Success', { "showMethod": "slideDown", "hideMethod": "slideUp", "closeButton": true, positionClass: 'toastr toast-bottom-center', containerId: 'toast-bottom-center', "progressBar": true });
 			}else{
 				if(typeof data.message === "object"){
 					$(".error").html("");
 					$.each( data.message, function( key, value ) {$("."+key).html(value);});
 				}else{
-					initTable();
+					if(device_type != 'MOBILE'){
+						initTable(); 
+					}
 					Swal.fire({ icon: 'error', title: data.message });
 					// toastr.error(data.message, 'Error', { "showMethod": "slideDown", "hideMethod": "slideUp", "closeButton": true, positionClass: 'toastr toast-bottom-center', containerId: 'toast-bottom-center', "progressBar": true });
 				}			
@@ -701,7 +785,7 @@ function confirmStore(data){
 		};
 	}
 	Swal.fire({
-		title: 'Are you sure?',
+		title: 'Confirm!',
 		text: msg,
 		icon: 'warning',
 		showCancelButton: true,
@@ -715,7 +799,9 @@ function confirmStore(data){
 					window[resFunctionName](response,formId);
 				}else{
 					if(response.status==1){
-						initTable();
+						if(device_type != 'MOBILE'){
+							initTable(); 
+						}
 
 						if(formId != ""){$('#'+formId)[0].reset(); closeModal(formId);}
 						Swal.fire( 'Success', response.message, 'success' );
@@ -724,7 +810,9 @@ function confirmStore(data){
 							$(".error").html("");
 							$.each( response.message, function( key, value ) {$("."+key).html(value);});
 						}else{
-							initTable();
+							if(device_type != 'MOBILE'){
+								initTable(); 
+							}
 							Swal.fire( 'Sorry...!', response.message, 'error' );
 						}			
 					}	
@@ -746,10 +834,12 @@ function initModal(postData,response){
 
 	var resFunction = postData.res_function || "";
 	var jsStoreFn = postData.js_store_fn || 'store';
+
 	var txt_editor = postData.txt_editor || '';
 	var form_close = postData.form_close || '';
 
 	var fnJson = "{'formId':'"+postData.form_id+"','fnsave':'"+fnsave+"','controller':'"+controllerName+"','txt_editor':'"+txt_editor+"','form_close':'"+form_close+"'}";
+
 
 	$("#"+postData.modal_id).modal('show');
 	$("#"+postData.modal_id).addClass('modal-i-'+zindex);
@@ -782,6 +872,9 @@ function initModal(postData,response){
 		$("#"+postData.modal_id+" .modal-footer .btn-close-modal").show();
 		$("#"+postData.modal_id+" .modal-footer .btn-save").show();
 	}
+
+	//$("#"+postData.modal_id+" .single-select").comboSelect();
+	//$("#"+postData.modal_id+" .scrollable").perfectScrollbar({suppressScrollX: true});
 	
 	setTimeout(function(){ 
 		initMultiSelect();setPlaceHolder();setMinMaxDate();initSelect2();		
@@ -791,6 +884,26 @@ function initModal(postData,response){
 	},500);
 	zindex++;
 }
+
+function initEditor(setting={}){
+    
+    var options = {
+                    selector: '#txt_editor',
+                    height: 400,
+                    plugins: [ 'lists advlist paste link' ],
+                    toolbar: 'undo redo | fontselect fontsizeselect | bullist numlist | link',
+                    toolbar_sticky: true,
+                    menu: {},
+                    menubar: '',
+                    content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
+                };
+                
+    $.extend( options, setting );
+    
+    tinymce.init(options);
+    
+}
+
 
 function modalAction(data){
 	var call_function = data.call_function;
@@ -855,11 +968,13 @@ function trash(data){
 				if(resFunctionName != ""){
 					window[resFunctionName](response);
 				}else{
-					if(response.status==0){
-						Swal.fire( 'Sorry...!', response.message, 'error' );
+					if(response.status==1){
+						if(device_type != 'MOBILE'){
+							initTable(); 
+						}
+						Swal.fire( 'Deleted!', response.message, 'success' );						
 					}else{
-						initTable();
-						Swal.fire( 'Deleted!', response.message, 'success' );
+						Swal.fire( 'Sorry...!', response.message, 'error' );
 					}	
 				}
 			});
@@ -888,6 +1003,7 @@ function getTransHtml(data){
 		data:postData,
 		type: "POST",
 		dataType:"json",
+		async : false,
 		beforeSend: function() {
 			if(table_id != ""){
 				var columnCount = $('#'+table_id+' thead tr').first().children().length;
@@ -923,55 +1039,22 @@ function changePsw(formId){
 				$("."+key).html(value);
 			});
 		}else if(data.status==1){
-			initTable(); $("#change-psw").modal('hide');
+			if(device_type != 'MOBILE'){
+				initTable(); 
+			}
+			$("#change-psw").modal('hide');
 			Swal.fire({ icon: 'success', title: data.message});
 		}else{
-			initTable(); $("#change-psw").modal('hide');
+			if(device_type != 'MOBILE'){
+				initTable(); 
+			}
+			$("#change-psw").modal('hide');
 			Swal.fire({ icon: 'error', title: data.message });
 		}		
 	});
 }
 
-/***** Get Select2 Data *****/
-function getDynamicItemList(dataSet = {},eleClass = "large-select2"){   
-	var eleID = $('.' + eleClass).attr('id');
-	var url = base_url + $('.' + eleClass).data('url');
-	var pholder = $('.' + eleClass).data('pholder');
-	
-	var base_element = $('.' + eleClass);
-	
-	$(base_element).select2({
-		placeholder: pholder,
-		closeOnSelect: true,
-		ajax: {
-			url: url,
-			type: "post",
-			dataType: 'json',
-			//delay: 250,
-			global:false,
-			data: function (params) {var dataObj = {searchTerm: params.term,item_type:$(this).attr('data-item_type'),category_id:$(this).attr('data-category_id'),family_id:$(this).attr('data-family_id'),default_val:$(this).attr('data-default_val')};return $.extend(dataObj, dataSet);},
-			processResults: function (response) {return {results: response};},
-			templateSelection: function (item) { return item.name; },
-			cache: true
-		},
-		dropdownParent: $(base_element).parent()
-	});
-	
-	if(dataSet.id)
-	{
-    	setTimeout(function()
-    	{
-    	    if(dataSet.id != "" && dataSet.row != "" && dataSet.text != "")
-    	    {
-    		    var $option = "<option value='"+dataSet.id+"' data-row='"+dataSet.row+"' selected>"+dataSet.text+"</option>";
-                $('.' + eleClass).append($option).trigger('change');
-    	    }
-    	}, 200);
-    }
-}
-
 function isInteger(x) { return typeof x === "number" && isFinite(x) && Math.floor(x) === x; }
-
 function isFloat(x) { return !!(x % 1); }
 
 function checkPermission(){
@@ -1051,27 +1134,27 @@ function formatResult(node) {
     return $result;
 };
 
-function formatDate(date,format='Y-m-d') {
-	var convertedDate = "";
+function formatDate(date="",format='Y-m-d') {
 	if(date != ""){
 		var d = new Date(date),
-			month = '' + (d.getMonth() + 1),
-			day = '' + d.getDate(),
-			year = d.getFullYear();
+        month = '' + (d.getMonth() + 1),
+        day = '' + d.getDate(),
+        year = d.getFullYear();
 
 		if (month.length < 2) 
 			month = '0' + month;
 		if (day.length < 2) 
 			day = '0' + day;
 			
-		convertedDate = date;
+		var convertedDate = date;
 		if(format == "Y-m-d"){return [year, month, day].join('-');}
 		if(format == "y-m-d"){year = year.toString().substr(-2); convertedDate = [year, month, day].join('-');}
 		if(format == "d-m-Y"){return [day, month, year].join('-');}
 		if(format == "d-m-y"){year = year.toString().substr(-2); convertedDate = [day, month, year].join('-');}
+		
+		return convertedDate;
 	}
-    
-    return convertedDate;
+    return "";
 }
 
 function formatSymbol(selection) {
@@ -1133,6 +1216,13 @@ function calcTimeDiffInHrs(start_time,end_time,type="H"){
 
 function inrFormat(no){
     if(no){
+		// Check if the number is negative
+		var negative = false;
+		if (parseFloat(no) < 0) {
+			negative = true;
+			no = Math.abs(no);
+		}
+
         no=no.toString();
         var afterPoint = '';
         if(no.indexOf('.') > 0)
@@ -1144,6 +1234,12 @@ function inrFormat(no){
         if(otherNumbers != ''){lastThree = ',' + lastThree;}
             
         var res = otherNumbers.replace(/\B(?=(\d{2})+(?!\d))/g, ",") + lastThree + afterPoint;
+
+		// Prepend the negative sign if the number was negative
+		if (negative) {
+			res = '-' + res;
+		}
+
     	return res;
     }else{return no;}        
 }
@@ -1201,6 +1297,7 @@ function resItemMaster(response,formId){
 }
 
 function resetFormByClass(cls) {
+	console.log(cls);
     $('.' + cls + " input").each(function(){
 		if($(this).data('resetval')){$(this).val($(this).data('resetval'));}else{$(this).val('');}
 	});
@@ -1208,32 +1305,81 @@ function resetFormByClass(cls) {
     $('.' + cls).find('textarea').val('');
 }
 
+/***** GET DYNAMIC DATA *****/
+function loadHtmlData(data){
+		
+	var postData = data.postData || {};
+	var fnget = data.fnget || "";
+	var controllerName = data.controller || controller;
+	var rescls = data.rescls || "dynamicData";
+	var scrollType = data.scroll_type || "";
+	
+	$.ajax({
+		url: base_url + controllerName + '/' + fnget,
+		data:postData,
+		type: "POST",
+		dataType:"json",
+		global:false,
+		/*beforeSend: function() {
+			if(rescls != ""){
+				$("."+rescls).html('<h4 class="text-center">Loading...</h4>');
+			}
+		},*/
+	}).done(function(res){
+		if(!scrollType){$("."+rescls).html(res.htmlContent);}else{$("."+rescls).append(res.htmlContent);}		
+		loading = true;
+		setTimeout(function(){ 
+			initMultiSelect();setPlaceHolder();setMinMaxDate();initSelect2();		
+		}, 5);
+	});
+}
+
+function delay(callback, ms=500) {
+	var timer = 0;
+	return function() {
+		var context = this, args = arguments;
+		clearTimeout(timer);
+		timer = setTimeout(function () { callback.apply(context, args); }, ms || 0);
+	};
+}
+
 // Check if the dropdown has changed in other tabs
 window.addEventListener('storage', function(event){
-    if (event.key === 'tabReloads') {
-		localStorage.setItem('tabReloads', 'false');
+    if (event.key === 'reloadTabs') {
+		localStorage.setItem('reloadTabs', 'false');
 		// Reload the page if the dropdown has changed in another tab
 		location.reload();
     }
 });
 
-function initEditor(setting={}){
-    
-    var options = {
-                    selector: '#txt_editor',
-                    height: 400,
-                    plugins: [ 'lists advlist paste' ],
-                    toolbar: 'undo redo | fontselect fontsizeselect | bullist numlist',
-                    toolbar_sticky: true,
-                    menu: {},
-                    menubar: '',
-                    content_style: 'body { font-family:Helvetica,Arial,sans-serif; font-size:14px }'
-                };
-                
-    $.extend( options, setting );
-    
-    tinymce.init(options);
-    
+//Check Internet Connection
+function checkConnection() {
+    var status = navigator.onLine;
+    if (!status) {
+        // Show the "No internet connection" popup if it's not already shown
+        if(!$(".noInternet").is(':visible')) {
+			Swal.close();
+            Swal.fire({
+                icon: "info",
+                title: "No Internet Connection!",
+                text: "Please check your network settings.",
+                allowOutsideClick: false,
+                allowEscapeKey: false,
+                showConfirmButton: false,
+                backdrop: true,
+				customClass: 'noInternet',
+				willOpen: () => {
+					Swal.showLoading(); // Show a loading indicator
+				}
+            });
+        }
+    } else {
+        // Close the "No internet connection" popup if internet is back
+		if ($(".noInternet").is(':visible')) {
+			Swal.close($(this));
+		}
+    }
 }
 
-function initModalSelect(){$('.select2').select2({ width: null});}
+// Run the checkConnection function every 3 seconds
+setInterval(checkConnection, 3000);

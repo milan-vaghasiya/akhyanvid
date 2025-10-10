@@ -4,8 +4,8 @@ class PermissionModel extends MasterModel{
     private $subMenuMaster = "sub_menu_master";
     private $menuPermission = "menu_permission";
     private $subMenuPermission = "sub_menu_permission";
-    private $dashboard_widget = "dashboard_widget";
-    private $dashboard_permission = "dashboard_permission";
+    private $dashboardWidget = "dashboard_widget";
+    private $dashboardPermission = "dashboard_permission";
 
     public function getMainMenus($is_report = 0,$menu_type=""){
         $queryData = array();
@@ -24,8 +24,8 @@ class PermissionModel extends MasterModel{
         $queryData['tableName'] = $this->subMenuMaster;
         $queryData['where']['menu_id'] = $menu_id;
         $queryData['where']['is_report'] = $is_report;
-        $queryData['where']['menu_type'] = $menu_type;
         $queryData['order_by']['sub_menu_seq'] = "ASC";
+        $queryData['where']['menu_type'] = $menu_type;
         return $this->rows($queryData);
     }
 
@@ -70,6 +70,7 @@ class PermissionModel extends MasterModel{
     }
 
     public function save($data){
+        
         $employeePermission = $this->getEmployeePermission($data['emp_id'],$data['menu_type']);
         $mainPermissionData = array();
         foreach($employeePermission['mainPermission'] as $row):
@@ -186,11 +187,17 @@ class PermissionModel extends MasterModel{
         return ['status'=>1,'message'=>'Employee Permission saved successfully.'];
     }
 
-    public function saveCopyPermission($data,$mainPermissionData,$submenuPermissionData){
+    public function saveCopyPermission($data){
+        $fromData = $this->getEmployeePermission($data['from_id']);
+
         if(!empty($data['to_id'])){
             $this->remove($this->menuPermission,['emp_id'=>$data['to_id']]); 
             $this->remove($this->subMenuPermission,['emp_id'=>$data['to_id']]); 
+            $this->remove($this->dashboardPermission,['emp_id'=>$data['to_id']]);
         }
+
+        $mainPermissionData = $fromData['mainPermission'];
+        $submenuPermissionData = $fromData['subMenuPermission'];
             
         $mainPermission = array();
         foreach ($mainPermissionData as $row) :                
@@ -203,7 +210,7 @@ class PermissionModel extends MasterModel{
                 'is_write' => $row->is_write,
                 'is_modify' => $row->is_modify,
                 'is_remove' => $row->is_remove,
-                'creted_by' => $this->loginId
+                'created_by' => $this->loginId
             ]; 
             $result = $this->store($this->menuPermission,$mainPermission);
         endforeach;
@@ -220,10 +227,19 @@ class PermissionModel extends MasterModel{
                 'is_modify' => $row->is_modify,
                 'is_remove' => $row->is_remove,
                 'is_approve' => $row->is_approve,
-                'creted_by' => $this->loginId
+                'created_by' => $this->loginId
             ];
             $result = $this->store($this->subMenuPermission,$subPermission);
         endforeach;
+
+        $dashPermission = $this->getDashboardPermission(['emp_id'=>$data['from_id'],'is_read'=>1]);
+        foreach ($dashPermission as $row) : 
+            $row = (array) $row;
+            $row['id'] = "";
+            $row['emp_id'] = $data['to_id']; 
+            $result = $this->store($this->dashboardPermission,$row);
+        endforeach;
+
         $result = ['status'=>1,'message'=>'Permission Copied successfully.'];
         return $result;
     }
@@ -288,7 +304,6 @@ class PermissionModel extends MasterModel{
                 $queryData['where']['sub_menu_permission.menu_id'] = $row->menu_id;
                 $queryData['where']['sub_menu_master.is_report'] = 0;
                 $queryData['where']['sub_menu_master.is_delete'] = 0;
-                $queryData['where']['sub_menu_master.menu_type'] = 1;
                 $queryData['order_by']['sub_menu_master.sub_menu_seq'] = "ASC";
                 $subMenuData = $this->rows($queryData);
 
@@ -355,8 +370,8 @@ class PermissionModel extends MasterModel{
                 $queryData['select'] = 'sub_menu_permission.*,sub_menu_master.sub_menu_name,sub_menu_master.sub_controller_name,sub_menu_master.sub_menu_icon';
                 $queryData['leftJoin']['sub_menu_master'] = "sub_menu_master.id = sub_menu_permission.sub_menu_id";
                 $queryData['where']['sub_menu_permission.emp_id'] = $this->loginId;
-                $queryData['where']['sub_menu_master.menu_type'] = 1;
                 $queryData['where']['sub_menu_permission.menu_id'] = $row->menu_id;
+                $queryData['where']['sub_menu_master.menu_type'] = 1;
                 $queryData['where']['sub_menu_master.is_report'] = 0;
                 $queryData['where']['sub_menu_master.is_delete'] = 0;
                 $queryData['order_by']['sub_menu_master.sub_menu_seq'] = "ASC";
@@ -394,6 +409,7 @@ class PermissionModel extends MasterModel{
 		
         return $html;
     }
+
 
     public function getEmployeeReportMenus(){ 
         $employeePermission = array();
@@ -460,7 +476,92 @@ class PermissionModel extends MasterModel{
         return $menuArray;
     }
 
-    // is_report field used for bottom menu
+    public function getEmployeeAppMenuList(){
+        $queryData = array();
+        $queryData['tableName'] = $this->subMenuPermission;
+        $queryData['select'] = 'sub_menu_permission.*,sub_menu_master.sub_menu_name,sub_menu_master.sub_controller_name,sub_menu_master.sub_menu_icon,sub_menu_master.report_id';
+        $queryData['leftJoin']['sub_menu_master'] = "sub_menu_master.id = sub_menu_permission.sub_menu_id";
+        $queryData['where']['sub_menu_permission.emp_id'] = $this->loginId;
+        $queryData['where']['sub_menu_master.is_report'] = 0;
+        $queryData['where']['sub_menu_master.menu_type'] = "2";
+        $queryData['where']['sub_menu_master.is_delete'] = 0;
+        $queryData['order_by']['sub_menu_master.sub_menu_seq'] = "ASC";
+        $subMenuData = $this->getData($queryData,"rows"); 
+
+        //$permissionData = [];$i=1;$menu_position = ["Home"=>0,"Attendance"=>0,"Party"=>0,"Sales_Enquiry"=>0,"Visit"=>0,"Expense"=>0,"Profile"=>0,"Logout"=>0];
+		$permissionData = [];$i=1;$menu_position = ["Home"=>0,"Profile"=>0,"Logout"=>0];
+		
+        $permissionData["bottomMenus"][] = ['menu_name'=>"Home",'menu_icon'=>"",'base_url'=>base_url("api/dashboard"),'is_read'=>1,'is_write'=>0,'is_modify'=>0,'is_remove'=>0,'is_approve'=>0];
+		$permissionData["menuPosition"] = [];
+        $permissionData["sidebarMenus"][] = ['menu_name'=>"Home",'menu_icon'=>"",'base_url'=>base_url("api/dashboard"),'is_read'=>1,'is_write'=>0,'is_modify'=>0,'is_remove'=>0,'is_approve'=>0];
+        foreach($subMenuData as $subRow):
+            if(!empty($subRow->is_read)):
+                if(!empty($subRow->is_read) || !empty($subRow->is_write) || !empty($subRow->is_modify) || !empty($subRow->is_remove)):
+                    $sub_url = (!empty($subRow->sub_controller_name))?str_replace("app/","api/",$subRow->sub_controller_name):"#";
+
+                    $permissionData["sidebarMenus"][] = ['menu_name'=>$subRow->sub_menu_name,'menu_icon'=>$subRow->sub_menu_icon,'base_url'=>base_url($sub_url),'is_read'=>$subRow->is_read,'is_write'=>$subRow->is_write,'is_modify'=>$subRow->is_modify,'is_remove'=>$subRow->is_remove,'is_approve'=>$subRow->is_approve];
+					
+					$menu_position[str_replace(" ","_",$subRow->sub_menu_name)] = $i++;
+
+                    if($subRow->report_id == 1):
+                        $permissionData["bottomMenus"][] = ['menu_name'=>$subRow->sub_menu_name,'menu_icon'=>$subRow->sub_menu_icon,'base_url'=>base_url($sub_url),'is_read'=>$subRow->is_read,'is_write'=>$subRow->is_write,'is_modify'=>$subRow->is_modify,'is_remove'=>$subRow->is_remove,'is_approve'=>$subRow->is_approve];
+                    endif;
+                endif;
+            endif;
+        endforeach;
+        $permissionData["sidebarMenus"][] = ['menu_name'=>"Logout",'menu_icon'=>"",'base_url'=>base_url("api/logout"),'is_read'=>1,'is_write'=>0,'is_modify'=>0,'is_remove'=>0,'is_approve'=>0];
+		$menu_position["Logout"] = $i;
+		$permissionData["menuPosition"] = $menu_position;
+
+        return $permissionData;
+    }
+    
+    public function getDashboardWidget(){
+        $queryData = array();
+        $queryData['tableName'] = $this->dashboardWidget;
+        $queryData['order_by']['id'] = "ASC";
+        return $this->rows($queryData);
+    }
+
+    public function saveDashboardPermission($data){ 
+        try {
+            $this->db->trans_begin();
+
+            $this->trash($this->dashboardPermission,['emp_id'=>$data['emp_id']]);
+
+            foreach ($data['permission'] as $row):
+                $row['emp_id'] = $data['emp_id'];
+                $row['is_read'] = (!empty($row['is_read']))?1:0;
+                $row['is_delete'] = 0;
+                $result = $this->store($this->dashboardPermission,$row,'Employee Permission');
+            endforeach;
+
+            if ($this->db->trans_status() !== FALSE) :
+                $this->db->trans_commit();
+                return $result;
+            endif;
+        } catch (\Exception $e) {
+            $this->db->trans_rollback();
+            return ['status' => 2, 'message' => "somthing is wrong. Error : " . $e->getMessage()];
+        }
+    }
+
+    public function getDashboardPermission($data=array()){
+        $queryData = array();
+        $queryData['tableName'] = $this->dashboardPermission;
+        $queryData['select'] = "dashboard_permission.*";
+        $queryData['leftJoin']['dashboard_widget'] = "dashboard_widget.id = dashboard_permission.widget_id";
+        $queryData['where']['dashboard_permission.emp_id'] = $data['emp_id'];
+
+        if(!empty($data['is_read'])):
+            $queryData['where']['dashboard_permission.is_read'] = $data['is_read'];
+        endif;
+
+        $queryData['where']['dashboard_widget.is_delete'] = 0;
+        return $this->rows($queryData);
+    }
+
+    // report_id field used for bottom menu
     public function getEmployeeAppMenus($bottom_menu = 0){
         $html = ""; $employeePermission = array(); $subMenus = "";
                 

@@ -8,14 +8,17 @@
                         <div class="float-start">
                             <ul class="nav nav-pills">
                                 <a href="<?= base_url($headData->controller) ?>" class="btn waves-effect waves-light btn-outline-primary  permission-write <?=($menu_type == 1)?'active':''?>"> General Permission</a>
-                                <a href="<?= base_url($headData->controller . "/empPermissionReport/") ?>" class="btn waves-effect waves-light btn-outline-warning permission-write"> Report Permission</a>
-                                <button type="button" class="btn waves-effect waves-light btn-outline-success float-center permission-write" onclick="modalAction({'modal_id' : 'modal-md', 'form_id' : 'copyPermission','call_function':'copyPermission','fnsave':'copyPermission', 'title' : 'Copy Permission','js_store_fn':'confirmStore'});">Copy Permission</button>
+                                <a href="<?= base_url($headData->controller . "/reportPermission/") ?>" class="btn waves-effect waves-light btn-outline-warning permission-write"> Report Permission</a>
+                                <!--
+								<a href="<?= base_url($headData->controller . "/dashboardPermission/") ?>" class="btn waves-effect waves-light btn-outline-info permission-write"> Dashboard Permission</a> -->
                                 <a href="<?= base_url($headData->controller . "/appPermission/") ?>" class="btn waves-effect waves-light btn-outline-warning permission-write <?=($menu_type == 2)?'active':''?>"> App Permission</a>
-                            </ul>
+								
+								<!-- <button type="button" class="btn waves-effect waves-light btn-outline-success float-center permission-write" onclick="modalAction({'modal_id' : 'modal-md', 'form_id' : 'copyPermission','call_function':'copyPermission','fnsave':'saveCopyPermission', 'title' : 'Copy Permission','js_store_fn':'confirmStore'});">Copy Permission</button> -->
+						   </ul>
                         </div>
                         <div class="float-end" style="width:30%;">
-                            <input type="hidden" id="menu_type" name="menu_type" value="<?=!empty($menu_type)?$menu_type:1;?>">		
-                            <select name="emp_id" id="emp_id" class="form-control select2">
+                            <input type="hidden" id="menu_type" name="menu_type" value="<?=!empty($menu_type)?$menu_type:1;?>">	
+                            <select name="emp_id" id="emp_id" class="form-control basic-select2">
                                 <option value="">Select Employee</option>
                                 <?php
                                     foreach ($empList as $row) :
@@ -41,7 +44,7 @@
                                             <div class="panel">
                                                 <div class="panel-heading">
                                                     <h4 class="panel-title">
-                                                        <a data-toggle="collapse" data-parent="#bs-collapse" href="#Pmenu<?= $row->id ?>"><?= $row->menu_name ?></a>
+                                                        <a data-toggle="collapse" data-parent="#bs-collapse" href="#menu<?= $row->id ?>"><?= $row->menu_name ?></a>
                                                         <input type="hidden" name="menu_id[]" value="<?= $row->id ?>">
                                                         <input type="hidden" name="is_master[]" value="<?= $row->is_master ?>">
                                                         <?php
@@ -51,7 +54,7 @@
                                                         ?>
                                                     </h4>
                                                 </div>
-                                                <div id="Pmenu<?= $row->id ?>" class="panel-collapse collapse">
+                                                <div id="menu<?= $row->id ?>" class="panel-collapse collapse">
                                                     <div class="panel-body">
                                                         <table id='reportTable' class="table table-bordered">
                                                             <tr class="thead-dark">

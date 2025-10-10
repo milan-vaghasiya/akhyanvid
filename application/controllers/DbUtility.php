@@ -13,8 +13,8 @@ class DbUtility extends CI_Controller{
     public function exportDBfile($password = "",$db_name = ""){
         $this->trashFiles();
         if($password == "Nbt-".date("dmY")):
+            $NAME=$this->db->database;
             if($NAME == SERVER_PREFIX.$db_name):
-                $NAME=$this->db->database;
                 $SQL_NAME = $NAME."_".date("d_m_Y_H_i_s").'.sql';
                 $this->load->dbutil();
                 $prefs = [
@@ -94,13 +94,9 @@ class DbUtility extends CI_Controller{
     *   Post Data : password
     *   Note : Get SQL Querys from live Database and Import in Local Database
     */
-    public function syncDbQuery($password = ""){
+    public function syncDbQuery(){
         if($_SERVER['HTTP_HOST'] == 'localhost'):
-            if(!empty($password)):
-                $data['password'] = "Nbt-".$password;
-            else:
-                $data = $this->input->post();
-            endif;
+            $data = $this->input->post();
 
             $curlSync = curl_init();
             curl_setopt_array($curlSync, array(

@@ -354,7 +354,6 @@
 					<div class="col-md-12">
 						<div class="row">
                             <input type="hidden" name="id" id="id" value="0">
-                            <input type="hidden" name="print_format" id="print_format" value="">
                             
 							<div class="col-lg-5 col-md-5 col-sm-12 col-xs-12">
 								<div class="custom-control custom-checkbox">
@@ -397,35 +396,6 @@
 			</form>
 		</div>
 	</div>
-</div>
-
-<div class="modal fade bd-example-modal-lg" id="modal-large" tabindex="-1" aria-labelledby="myLargeModalLabel" aria-hidden="true" style="display: none;">
-	<div class="modal-dialog modal-lg" role="document">
-		<div class="modal-content">
-			<div class="modal-header">
-				<h6 class="modal-title m-0" id="myLargeModalLabel">Large Modal</h6>
-				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-			</div><!--end modal-header-->
-			<div class="modal-body">
-				<div class="row">
-					<div class="col-lg-4 text-center">
-						<img src="assets/images/small/flame.png" alt="" class="img-fluid">
-					</div><!--end col-->
-					<div class="col-lg-8 align-self-center">
-						<div class="error-content text-center">
-							<h1>404!</h1>
-							<h4 class=" mb-3">Looks like you've got lost...</h4>
-							<button type="button" class="btn btn-soft-primary">Back to Dashboard</button>
-						</div>
-					</div><!--end col-->                                                            
-				</div><!--end row-->
-				
-			</div><!--end modal-body-->
-			<div class="modal-footer">
-				<button type="button" class="btn btn-de-secondary btn-sm" data-bs-dismiss="modal">Close</button>
-			</div><!--end modal-footer-->
-		</div><!--end modal-content-->
-	</div><!--end modal-dialog-->
 </div>
 
 <script>

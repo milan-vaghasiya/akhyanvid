@@ -1,146 +1,59 @@
+var old_no = ""; var old_prefix = "";
 $(document).ready(function(){
     $("#party_id").trigger('change');
-    $(document).on('change',"#party_id",function(){
-        var party_id = $(this).val();
-        getPoList(party_id);
-    });
 
-    $(document).on('change',"#po_id",function(){
-        var po_id = $(this).val();
-        getItemList(po_id);
-    });
+    old_no = $('#trans_no').val();
+	old_prefix = $('#trans_prefix').val();
+	$(document).on('change','#cm_id',function(){
+		var cm_id = $(this).val();
+		var selected_cm_id = $(this).data('selected_cm_id');
+		var append_id = $(this).data('append_id') || "trans_number";		
 
-	$(document).on('click','.addBatch',function(e){
-        e.stopImmediatePropagation();
-        e.preventDefault();
+		if(selected_cm_id == cm_id){
+			$('#trans_no').val(old_no);
+			$('#trans_prefix').val(old_prefix);
+			$('#'+append_id).val(old_prefix+old_no);
+		}else{
+			$.ajax({
+				url : base_url + controller + '/getMirNextNo',
+				type : 'post',
+				data : {cm_id : cm_id},
+				dataType : 'json'
+			}).done(function(response){
+				$('#trans_no').val(response.next_no);
+				$('#trans_prefix').val(old_prefix);
+				$('#'+append_id).val(old_prefix+response.next_no);
+			});
+		}
+	});
+
+    $(document).on('click','.addBatch',function(e){
+        e.stopImmediatePropagation(); e.preventDefault();
         
         var formData = {};
+        $.each($(".itemFormInput"),function() {  
+            formData[$(this).attr("id")] = $(this).val();  
+        });
 
-        formData.mir_id = "";
-        formData.id = "";
-
-        formData.po_number = $("#po_id :selected").data('po_no');
-        formData.item_name = $("#item_id :selected").text();
-        formData.qty = $("#qty").val();
-        formData.po_trans_id = $("#po_trans_id").val();
-        formData.po_id = $("#po_id").val();
-        formData.item_id = $("#item_id").val();
-		formData.location_id = $("#location_id").val();
-		formData.unit_id = $("#unit_id").val();
-		formData.conversion_value = $("#conversion_value").val();
-        formData.trans_status = 0;        
-        var smplWt = $(".avg_weight").map(function(){return $(this).val();}).get();
-        implodedArray = smplWt.join(",");
+        $("#itemForm .error").html("");
+        if (formData.item_id == "") { $(".item_id").html("Item Name is required."); 	}
+        if (formData.qty == "" || parseFloat(formData.qty) == 0) {  $(".qty").html("Qty is required.");   }
+        if (formData.project_id == ""){   $('.project_id').html("Project is required.");  }
         
-        formData.weight_sample = implodedArray;        
-
-        $(".error").html("");
-
-        if(formData.item_id == ""){ 
-            $('.item_id').html("Item Name is required.");
-        }
-		if(formData.location_id == ""){ 
-            $('.location_id').html("Location is required.");
-        }
-        if(formData.qty == "" || parseFloat(formData.qty) == 0){ 
-            $('.qty').html("Qty is required.");
-        }
-        if(formData.po_id == ""){ 
-            $('.po_id').html("Purchase Order is required.");
-        }
-
         var errorCount = $('.error:not(:empty)').length;
 
 		if(errorCount == 0){
+            formData.item_name = $("#item_id :selected").text();
+            formData.trans_status = 0; 
             AddBatchRow(formData);
-            $("#qty").val("");
-            $("#item_id").val("");$("#item_id").select2();
-            $("#location_id").val("");$("#location_id").select2();
-            $("#po_trans_id").val("");
-            $("#po_id").val("");$("#po_id").select2();     
-            $("#unit_id").val("");
-            $("#conversion_value").val("");
+            $.each($('.itemFormInput'),function(){ $(this).val(""); });
+            $("#itemForm input:hidden").val('')
+            $('#itemForm #row_index').val("");
             $(".error").html("");
             initSelect2();
         }
     });
-
-    $(document).on('keyup change','.avg_weight',function(){
-        var weightArray = $(".avg_weight").map(function(){return $(this).val();}).get();
-        var weightSum = 0;var count = 0;
-        $.each(weightArray,function(){weightSum += parseFloat(this) || 0; if(parseFloat(this) > 0){ count += 1; } });
-        var avg_weight = 0;
-        avg_weight = (parseFloat(weightSum) > 0)?parseFloat(parseFloat(weightSum) / parseFloat(count)).toFixed(3):0;
-        $("#avg_weight").html(avg_weight);
-    }); 
-   
-
-    $(document).on('change','#unit_id',function(){
-        var conValue = $("#unit_id").find(":selected").data('conversion_value') || 0;
-		$("#conversion_value").val(conValue);
-        initSelect2();
-    });
 });
-
-function resItemDetail(response = ""){
-
-    if(response != ""){
-        var itemDetail = response.data.itemDetail;
-        if($("#po_id").find(":selected").val() == ""){
-            $("#po_trans_id").val("");
-            
-			var location_id = (itemDetail.location_id || ''); 
-            $("#location_id").val(location_id);
-            
-            
-        }else{
-           
-            $("#po_trans_id").val(($("#item_id").find(":selected").data('po_trans_id') || 0));
-			
-			var location_id = ($("#item_id").find(":selected").data('location_id') || ''); 
-            $("#location_id").val(location_id);
-           
-        }        
-        if(itemDetail.unit_id != itemDetail.com_unit_id && parseFloat(itemDetail.com_unit_id) > 0){
-			html = '<option value="'+itemDetail.unit_id+'" data-conversion_value="'+1+'">'+itemDetail.unit_name+'</option><option value="'+itemDetail.com_unit_id+'" data-conversion_value="'+itemDetail.conversion_value+'">'+itemDetail.com_unit+'</option>';
-		}else{
-			html = '<option value="'+itemDetail.unit_id+'" data-conversion_value="'+1+'">'+itemDetail.unit_name+'</option>';
-		}
-    }else{
-        
-        $("#po_trans_id").val("");
-    }
-    $("#unit_id").html(html);
-    initSelect2();
-}
-
-function getPoList(party_id){
-    if(party_id){
-        $.ajax({
-            url : base_url + controller + '/getPoNumberList',
-            type : 'post',
-            data : {party_id : party_id},
-            dataType : 'json'
-        }).done(function(response){
-            $("#po_id").html(response.poOptions);
-        });
-    }else{
-        $("#po_id").html('<option value="">Select Purchase Order</option>');
-    }
-    initSelect2();
-}
-
-function getItemList(po_id){
-    $.ajax({
-        url : base_url + controller + '/getItemList',
-        type : 'post',
-        data : {po_id : po_id},
-        dataType : 'json'
-    }).done(function(response){
-        $("#item_id").html(response.itemOptions);
-    });
-    initSelect2();
-}
 
 var itemCount = 0;
 function AddBatchRow(data){
@@ -149,46 +62,45 @@ function AddBatchRow(data){
 	var tblName = "batchTable";
 	
 	var tBody = $("#"+tblName+" > TBODY")[0];
-	
-	//Add Row.
-	row = tBody.insertRow(-1);
+
+    //Add Row.
+	if (data.row_index != "") {
+		var trRow = data.row_index;
+		$("#" + tblName + " tbody tr:eq(" + trRow + ")").remove();
+	}
+	var ind = (data.row_index == "") ? -1 : data.row_index;
+	row = tBody.insertRow(ind);
+
     //Add index cell
-	var countRow = $('#'+tblName+' tbody tr:last').index() + 1;
+	var countRow = (data.row_index == "") ? ($('#' + tblName + ' tbody tr:last').index() + 1) : (parseInt(data.row_index) + 1);
 	var cell = $(row.insertCell(-1));
 	cell.html(countRow);
-	cell.attr("style","width:5%;");	
-
-    var poIdInput = $("<input/>",{type:"hidden",name:"batchData["+itemCount+"][po_id]",value:data.po_id});
-    var poTransIdInput = $("<input/>",{type:"hidden",name:"batchData["+itemCount+"][po_trans_id]",value:data.po_trans_id});
-    var itemIdInput = $("<input/>",{type:"hidden",name:"batchData["+itemCount+"][item_id]",value:data.item_id});
-    var locationIdInput = $("<input/>",{type:"hidden",name:"batchData["+itemCount+"][location_id]",value:data.location_id});
-    var weightSampleInput = $("<input/>",{type:"hidden",name:"batchData["+itemCount+"][weight_sample]",value:data.weight_sample});
-    var unitInput = $("<input/>",{type:"hidden",name:"batchData["+itemCount+"][unit_id]",value:data.unit_id});
-    var conversionValueInput = $("<input/>",{type:"hidden",name:"batchData["+itemCount+"][conversion_value]",value:data.conversion_value});
+	cell.attr("style", "width:5%;");	
+    	
+    var itemIdInput = $("<input/>",{type:"hidden",name:"item_data["+itemCount+"][item_id]",value:data.item_id});
+    var mirTransIdInput = $("<input/>",{type:"hidden",name:"item_data["+itemCount+"][id]",value:data.id});
     
-    var cell = $(row.insertCell(-1));
-	cell.html(data.po_number);
-    cell.append(poIdInput);
-	cell.append(poTransIdInput);
-	cell.append(locationIdInput);
-	cell.append(itemIdInput);
-	cell.append(weightSampleInput);
-	cell.append(conversionValueInput);
-	cell.append(unitInput);
-
-    var cell = $(row.insertCell(-1));
+	var cell = $(row.insertCell(-1));
 	cell.html(data.item_name);
-
-    var mirIdInput = $("<input/>",{type:"hidden",name:"batchData["+itemCount+"][mir_id]",value:data.mir_id});
-    var mirTransIdInput = $("<input/>",{type:"hidden",name:"batchData["+itemCount+"][id]",value:data.id});
-    cell.append(mirIdInput);
+	cell.attr("style","width:5%;");	
+	cell.append(itemIdInput);
     cell.append(mirTransIdInput);
-	
-    
-    var batchQtyInput = $("<input/>",{type:"hidden",name:"batchData["+itemCount+"][qty]",value:data.qty});   
+
+    var batchQtyInput = $("<input/>",{type:"hidden",name:"item_data["+itemCount+"][qty]",value:data.qty});    
     cell = $(row.insertCell(-1));
 	cell.html(data.qty);
     cell.append(batchQtyInput);
+
+    var priceInput = $("<input/>",{type:"hidden",name:"item_data["+itemCount+"][price]",value:data.price});   
+    cell = $(row.insertCell(-1));
+	cell.html(data.price);
+    cell.append(priceInput);
+
+
+    var remarkInput = $("<input/>",{type:"hidden",name:"item_data["+itemCount+"][item_remark]",value:data.item_remark}); 
+    cell = $(row.insertCell(-1));
+	cell.html(data.item_remark);
+    cell.append(remarkInput);
 
     //Add Button cell.	
     var btnRemove = $('<button><i class="mdi mdi-trash-can-outline"></i></button>');
@@ -196,18 +108,34 @@ function AddBatchRow(data){
 	btnRemove.attr("onclick", "batchRemove(this);");
 	btnRemove.attr("style", "margin-left:4px;");
 	btnRemove.attr("class", "btn btn-outline-danger btn-sm waves-effect waves-light");
-    
+
+    var btnEdit = $('<button><i class="mdi mdi-square-edit-outline"></i></button>');
+	btnEdit.attr("type", "button");
+	btnEdit.attr("onclick", "Edit(" + JSON.stringify(data) + ",this);");
+	btnEdit.attr("class", "btn btn-outline-warning btn-sm waves-effect waves-light");
+
     cell = $(row.insertCell(-1));
-    if(data.trans_status == 0){
-    	cell.append(btnRemove);
-    }
-    else{
-    	cell.append('');
-    }
+    cell.append(btnEdit);
+    cell.append(btnRemove);
+ 
+
     cell.attr("class","text-center");
     cell.attr("style","width:10%;");
 
     itemCount++;
+}
+
+function Edit(data, button) {
+	var row_index = $(button).closest("tr").index();
+	$("#batchTable").modal('show');
+	$("#batchTable .btn-save").hide();
+
+	$.each(data, function (key, value) {
+		$("#itemForm #" + key).val(value);
+	});
+	
+	initSelect2('batchTable');
+	$("#itemForm #row_index").val(row_index);
 }
 
 function batchRemove(button){
@@ -223,4 +151,21 @@ function batchRemove(button){
     if (countTR == 0) {
         $("#batchTable tbody").html('<tr id="noData"><td colspan="9" align="center">No data available in table</td></tr>');
     }
+}
+
+
+function resItemDetail(response = ""){
+
+    if(response != ""){
+        var itemDetail = response.data.itemDetail;
+
+        if($("#item_id").find(":selected").val() == ""){ 
+            $("#price").val(($("#item_id").find(":selected").data('price') || 0));
+        }else{
+            $("#price").val((itemDetail.price || 0));
+        }  
+    }else{
+        $("#price").val("");
+    }
+
 }

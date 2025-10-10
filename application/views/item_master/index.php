@@ -31,52 +31,42 @@
 </div>
 <?php $this->load->view('includes/footer'); ?>
 <script>
-function getProcessTransHtml(data){
-    var postData = data.postData || {};
-	var fnget = data.fnget || "";
-	var controllerName = data.controller || controller;
-	var resFunctionName = data.res_function || "";
-
-	var table_id = data.table_id || "";
-	var thead_id = data.thead_id || "";
-	var tbody_id = data.tbody_id || "";
-	var tfoot_id = data.tfoot_id || "";	
-
-	if(thead_id != ""){
-		$("#"+table_id+" #"+thead_id).html(data.thead);
-	}
-	
-	$.ajax({
-		url: base_url + controllerName + '/' + fnget,
-		data:postData,
-		type: "POST",
-		dataType:"json",
-		beforeSend: function() {
-			if(table_id != ""){
-				var columnCount = $('#'+table_id+' thead tr').first().children().length;
-				$("#"+table_id+" #"+tbody_id).html('<tr><td colspan="'+columnCount+'" class="text-center">Loading...</td></tr>');  
-			}
-		},
-	}).done(function(res){
-		if(resFunctionName != ""){
-			window[resFunctionName](response);
-		}else{
-			$("#"+table_id+" #"+tbody_id).html('');
-			$("#"+table_id+" #"+tbody_id).html(res.tbodyData);
-            $("#process_id").html(res.processOptions);
-            $("#process_id").select2();
-			if(tfoot_id != ""){
-				$("#"+table_id+" #"+tfoot_id).html('');
-				$("#"+table_id+" #"+tfoot_id).html(res.tfootData);
-			}
-		}
-	});
-}
-
-function fixWidthHelper(e, ui) {
-	ui.children().each(function () {
-		$(this).width($(this).width());
-	});
-	return ui;
-}
+$(document).ready(function() {
+    $('body').on('click', '.importExcel', function() {
+        $(".msg").html("");
+        $(this).attr("disabled", "disabled");
+        var fd = new FormData();
+        fd.append("item_excel", $("#item_excel")[0].files[0]);
+        $.ajax({
+            url: base_url + controller + '/importExcel',
+            data: fd,
+            type: "POST",
+            processData: false,
+            contentType: false,
+            dataType: "json",
+        }).done(function(data) {
+            if (data.status === 0) {
+                $(".msg").html("");
+                var error='';
+                $.each(data.message, function(key, value) {
+                    error+=' '+value;
+                });
+                $(".msg").html(error);
+            } else if (data.status == 1) {
+                toastr.success(data.message, 'Success', {
+                    "showMethod": "slideDown",
+                    "hideMethod": "slideUp",
+                    "closeButton": true,
+                    positionClass: 'toastr toast-bottom-center',
+                    containerId: 'toast-bottom-center',
+                    "progressBar": true
+                });
+                initTable();
+            }
+         
+            $(this).removeAttr("disabled");
+            $("#item_excel").val(null);
+        });
+    });
+});
 </script>

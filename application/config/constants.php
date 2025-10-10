@@ -86,28 +86,31 @@ defined('EXIT_USER_INPUT')     OR define('EXIT_USER_INPUT', 7); // invalid user 
 defined('EXIT_DATABASE')       OR define('EXIT_DATABASE', 8); // database error
 defined('EXIT__AUTO_MIN')      OR define('EXIT__AUTO_MIN', 9); // lowest automatically-assigned error code
 defined('EXIT__AUTO_MAX')      OR define('EXIT__AUTO_MAX', 125); // highest automatically-assigned error code
+define('GMAK','AIzaSyAAzYbgqM1TKIa7psryIXXP07g6FTk_inY');
 define('FIREBASE_API_KEY','');
 
-define("LIVE_LINK","https://define.nativebittechnologies.in");
+define("LIVE_LINK","");
+
+//Whatsapp Master API KEY
+define('WP_MASTER_KEY','');
+//Whatsapp Instance API KEY
+define('WP_API_KEY','');
 
 define('HOST_NAME','localhost');
-if($_SERVER['HTTP_HOST'] == 'localhost')
-{
+if($_SERVER['HTTP_HOST'] == 'localhost'):
+	define('SERVER_PREFIX','');
 	define('USER_NAME','root');
 	define('PASSWORD','');
-	define('SERVER_PREFIX','');
 	define('DEVELOPMENT',1);
-}
-else
-{
+else:	
 	define('SERVER_PREFIX','u560636344_');
-	define('USER_NAME',SERVER_PREFIX.'define');
+	define('USER_NAME',SERVER_PREFIX.'akhyanvid');
 	define('PASSWORD','Nbterp@123$');
 	define('DEVELOPMENT',0);
-}
+endif;
 
-define('SITENAME','DEFINE OVERSEAS PVT LTD');
-define('MASTER_DB', SERVER_PREFIX.'define');
-define('POPUP_TITLE', 'DEFINE OVERSEAS PVT LTD');
-define('ISO_COMPANY_TITLE', 'DEFINE OVERSEAS PVT LTD');
+define('SITENAME','AKHYANVID LLP');
+define('MASTER_DB', SERVER_PREFIX.'akhyanvid');
+define('POPUP_TITLE', 'AKHYANVID LLP');
+define('ISO_COMPANY_TITLE', 'AKHYANVID LLP');
 

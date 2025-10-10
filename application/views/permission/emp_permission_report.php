@@ -8,14 +8,17 @@
                         <div class="float-start">
                             <ul class="nav nav-pills">
                                 <a href="<?= base_url($headData->controller) ?>" class="btn waves-effect waves-light btn-outline-primary  permission-write"> General Permission</a>
-                                <a href="<?= base_url($headData->controller . "/empPermissionReport/") ?>" class="btn waves-effect waves-light btn-outline-warning permission-write active"> Report Permission</a>
-                                <button type="button" class="btn waves-effect waves-light btn-outline-success float-center permission-write" onclick="modalAction({'modal_id' : 'modal-md', 'form_id' : 'copyPermission','fnedit':'copyPermission','call_function':'copyPermission', 'title' : 'Copy Permission','js_store_fn':'confirmStore'});">Copy Permission</button>
-                                <a href="<?= base_url($headData->controller . "/appPermission/") ?>" class="btn waves-effect waves-light btn-outline-warning permission-write"> App Permission</a>
+                                <a href="<?= base_url($headData->controller . "/reportPermission/") ?>" class="btn waves-effect waves-light btn-outline-warning permission-write active"> Report Permission</a>
+                                <!-- 
+								<a href="<?= base_url($headData->controller . "/dashboardPermission/") ?>" class="btn waves-effect waves-light btn-outline-info permission-write"> Dashboard Permission</a> -->
+                                <a href="<?= base_url($headData->controller . "/appPermission/") ?>" class="btn waves-effect waves-light btn-outline-warning permission-write"> App Permission</a> 
+								
+								<!-- <button type="button" class="btn waves-effect waves-light btn-outline-success float-center permission-write" onclick="modalAction({'modal_id' : 'modal-md', 'form_id' : 'copyPermission','call_function':'copyPermission','fnsave':'saveCopyPermission', 'title' : 'Copy Permission','js_store_fn':'confirmStore'});">Copy Permission</button> -->
                             </ul>
                         </div>
                         <div class="float-end" style="width:30%;">
-                            <input type="hidden" name="menu_type" id="menu_type" value="1">
-                            <select name="emp_id" id="emp_id" class="form-control select2">
+                            <input type="hidden" id="menu_type" name="menu_type" value="1">	
+                            <select name="emp_id" id="emp_id" class="form-control basic-select2">
                                 <option value="">Select Employee</option>
                                 <?php
                                     foreach ($empList as $row) :

@@ -1,7 +1,8 @@
 <html>
     <head>
-        <title>GRN</title>
-        <!-- <link rel="icon" type="image/png" sizes="16x16" href="<?=base_url();?>assets/images/favicon.png">/ -->
+        <title>Gate Inward</title>
+        <!-- Favicon icon -->
+        <link rel="icon" type="image/png" sizes="16x16" href="<?=base_url();?>assets/images/favicon.png">
     </head>
     <body>
         <div class="row">
@@ -9,80 +10,89 @@
 				<table>
 					<tr>
 						<td>
-							<img src="<?=$letter_head?>" class="img">
+							<?php if(!empty($letter_head)): ?>
+                                <img src="<?=$letter_head?>" class="img">
+                            <?php endif;?>
 						</td>
 					</tr>
 				</table>
 
-				<table class="table bg-light-grey">
+				<table class="table">
 					<tr class="" style="letter-spacing: 2px;font-weight:bold;padding:2px !important; border-bottom:1px solid #000000;">
-						<td style="width:33%;" class="fs-18 text-left">
-							GSTIN: <?=$companyData->company_gst_no?>
-						</td>
-						<td style="width:33%;" class="fs-18 text-center">Gate Receipt Note</td>
-						<td style="width:33%;" class="fs-18 text-right"></td>
+						<td style="width:30%;" class="fs-18 text-left"></td>
+						<th style="width:40%;" class="fs-18 text-center">GOODS RECEIPT NOTE</th>
+						<td style="width:30%;" class="fs-17 text-right"><?=(!empty($dataRow->project_name) ? strtoupper($dataRow->project_name) : '')?></td>
 					</tr>
 				</table>               
                 
-                <table class="table item-list-bb fs-22" style="margin-top:5px;">
-                    <tr >
-                        <td rowspan="4" style="width:67%;vertical-align:top;">
+                <table class="table item-list-bb fs-22" style="margin-top:3px;">
+                    <tr>
+                        <td rowspan="5" style="width:67%;vertical-align:top;">
                             <b>M/S. <?=$dataRow->party_name?></b><br>
-                            <?=(!empty($dataRow->delivery_address) ? $dataRow->delivery_address ." - ".$dataRow->delivery_pincode : $partyData->party_address ." - ".$partyData->party_pincode)?><br>
-                            <b>Kind. Attn. : <?=$dataRow->contact_person?></b> <br>
-                            Contact No. : <?=$dataRow->party_mobile?><br>
+                            <?=(!empty($partyData->party_address) ? $partyData->party_address ." - ".$partyData->party_pincode : '')?><br>
+                            <b>Kind. Attn. : <?=$partyData->contact_person?></b> <br>
+                            Contact No. : <?=$partyData->party_phone?><br>
                             Email : <?=$partyData->party_email?><br><br>
-                            GSTIN : <?=$dataRow->gstin?>
+                            GSTIN : <?=$partyData->gstin?><br>
                         </td>
-                        <td>
-                            <b>GI No.</b>
-                        </td>
-                        <td>
-                            <?=$dataRow->trans_number?>
-                        </td>
+                        <td><b>GRN No.</b></td>
+                        <td><?=$dataRow->trans_number?></td>
                     </tr>
                     <tr>
-				        <th class="text-left">GI Date</th>
+				        <th class="text-left">GRN Date</th>
                         <td><?=formatDate($dataRow->trans_date)?></td>
                     </tr>
                     <tr>
-                        <th class="text-left">CH/Inv. No.</th>
-                        <td><?=$dataRow->inv_no?></td>
+                        <th class="text-left">Inv./Ch No.</th>
+                        <td><?=(!empty($dataRow->doc_no) ? $dataRow->doc_no : '')?></td>
                     </tr>
                     <tr>
-                        <th class="text-left">CH/Inv. Date</th>
-                        <td><?=(!empty($dataRow->inv_date)) ? formatDate($dataRow->inv_date) : ""?></td>
+                        <th class="text-left">Inv./Ch Date</th>
+                        <td><?=(!empty($dataRow->doc_date)) ? formatDate($dataRow->doc_date) : ""?></td>
                     </tr>
                 </table>
                 
                 <table class="table item-list-bb" style="margin-top:10px;">
 					<thead>
-						<tr>
-							<th style="width:30px;">No.</th>
+						<tr class="bg-light">
+							<th style="width:40px;">No.</th>
 							<th class="text-left">Item Description</th>
-							<th style="width:80px;">PO No.</th>
-							<th style="width:120px;">Location</th>
 							<th style="width:80px;">Qty</th>
+							<th style="width:75px;">Rate</th>
+							<th style="width:110px;">Taxable Amount</th>
 						</tr>
 					</thead>
 					<tbody>
 						<?php
-							$i=1;$totalQty = 0;
-							if(!empty($dataRow->itemData)):
-								foreach($dataRow->itemData as $row):
-									echo '<tr>';
-										echo '<td class="text-center">'.$i++.'</td>';
-										echo '<td>'.$row->item_name.'</td>';
-										echo '<td class="text-center">'.$row->po_number.'</td>';
-                                        echo '<td class="text-center">'.$row->location_name.'</td>';
-										echo '<td class="text-right">'.sprintf('%0.2f',$row->qty).' '.$row->uom.'</td>'; 
-									$totalQty += $row->qty;
-								endforeach;
-							endif;
+                        $i=1; $totalQty=0; $totalAmt=0;
+                        if (!empty($dataRow->itemData)) {
+                            foreach ($dataRow->itemData as $row) {
+                                $amount = ($row->qty * $row->price);
+								$notes = '';$notesRSPN = 1;
+								if(!empty($row->item_remark)){$notes = '<tr><td colspan="4"><i>Notes:</i> '.$row->item_remark.'</td></tr>';$notesRSPN = 2;}
+                                echo '<tr>
+                                    <td class="text-center" rowspan="'.$notesRSPN.'">'.$i++.'</td>
+                                    <td>'.(!empty($row->item_code) ? '['.$row->item_code.'] ' : '').$row->item_name.'</td>
+                                    <td class="text-center">'.floatval($row->qty).' <small>'.$row->uom.'</small></td>
+                                    <td class="text-right">'.moneyFormatIndia($row->price).'</td>
+                                    <td class="text-right">'.moneyFormatIndia($amount).'</td>
+                                </tr>';
+								echo $notes;
+                                $totalQty += $row->qty;
+                                $totalAmt += $amount;
+                            }
+                        }
 						?>
 						<tr>
-							<th colspan="4" class="text-right">Total Qty.</th>
-							<th class="text-right"><?=sprintf('%.3f',$totalQty)?></th>
+							<th colspan="2" class="text-right">Total Qty.</th>
+							<th class="text-right"><?=floatval($totalQty)?></th>
+							<th class="text-right">Sub Total</th>
+							<th class="text-right"><?=moneyFormatIndia($totalAmt)?></th>
+						</tr>
+						<tr>
+							<th class="text-left" colspan="5">
+								Amount In Words : <?=numToWordEnglish(floatval($totalAmt))?>
+							</th>							
 						</tr>
 					</tbody>
                 </table>
@@ -94,17 +104,17 @@
 							<th colspan="2">For, <?=$companyData->company_name?></th>
 						</tr>
 						<tr>
-							<td style="width:25%;" class="text-center"><?=$dataRow->prepareBy?></td>
-							<td style="width:25%;" class="text-center"><?=$dataRow->approveBy?>'</td>
+							<td style="width:25%;" class="text-center"></td>
+							<td style="width:25%;" class="text-center"><?=$dataRow->prepareBy?><br>(<?=formatDate($dataRow->created_at)?>)</td>
 						</tr>
 						<tr>
+							<td style="width:25%;" class="text-center"><b></b></td>
 							<td style="width:25%;" class="text-center"><b>Prepared By</b></td>
-							<td style="width:25%;" class="text-center"><b>Authorised By</b></td>
 						</tr>
 					</table>
 					<table class="table top-table" style="margin-top:10px;border-top:1px solid #545454;">
 						<tr>
-							<td style="width:25%;">GI No. & Date : <?=$dataRow->trans_number.' ['.formatDate($dataRow->trans_date).']'?></td>
+							<td style="width:25%;">GRN No. & Date : <?=$dataRow->trans_number.' ['.formatDate($dataRow->trans_date).']'?></td>
 							<td style="width:25%;"></td>
 							<td style="width:25%;text-align:right;">Page No. {PAGENO}/{nbpg}</td>
 						</tr>

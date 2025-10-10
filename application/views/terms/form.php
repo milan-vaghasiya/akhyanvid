@@ -15,20 +15,19 @@
 
             <div class="col-md-6 form-group">
                 <label for="type">Type</label>
-                <select id="typeSelect" data-input_id="type" class="form-control jp_multiselect req" multiple="multiple">
+                <select name="type" id="type" class="form-control basic-select2 req">
                     <?php
-                        foreach ($typeArray as $row) :
+                        foreach ($this->TERMS_TYPES as $key=>$row) :
                             $selected = '';
                             if (!empty($dataRow->type)):
-                                if(in_array($row, explode(',', $dataRow->type))):
+                                if($row==$dataRow->type):
                                     $selected = "selected";
                                 endif;
                             endif;
-                            echo '<option value="' . $row . '" ' . $selected . '>' . $row . '</option>';
+                            echo '<option value="' . $key . '" ' . $selected . '>' . $row . '</option>';
                         endforeach;
                     ?>
                 </select>
-                <input type="hidden" name="type" id="type" value="<?= (!empty($dataRow->type)) ? $dataRow->type : "" ?>" />
                 <div class="error type"></div>
             </div>
 

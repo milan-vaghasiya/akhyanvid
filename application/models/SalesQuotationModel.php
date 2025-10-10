@@ -5,41 +5,39 @@ class SalesQuotationModel extends MasterModel{
     private $transExpense = "trans_expense";
     private $transDetails = "trans_details";
 
+    public function getNextSQNo(){
+		$queryData = array(); 
+		$queryData['tableName'] = 'sq_master';
+        $queryData['select'] = "MAX(trans_no) as trans_no ";
+		$queryData['where']['sq_master.trans_date >='] = $this->startYearDate;
+		$queryData['where']['sq_master.trans_date <='] = $this->endYearDate;
+		$trans_no = $this->specificRow($queryData)->trans_no;
+		$nextTransNo = (!empty($trans_no))?($trans_no + 1):1;        
+		return $nextTransNo;
+    }
+
 	public function getDTRows($data){
-        $data['tableName'] = $this->sqTrans;
-        $data['select'] = "sq_trans.id,item_master.item_name,sq_trans.qty,sq_trans.price,sq_master.id as trans_main_id,sq_master.trans_number,DATE_FORMAT(sq_master.trans_date,'%d-%m-%Y') as trans_date,sq_master.party_id,party_master.sales_executive,party_master.party_name,sq_master.sales_type,sq_trans.trans_status,sq_master.is_approve,employee_master.emp_name as approve_by_name,sq_master.approve_date,sq_master.quote_rev_no,sq_trans.cod_date,item_master.uom"; 
+        $data['tableName'] = $this->sqMaster;
+        $data['select'] = 'sq_master.*,item_master.item_name,party_master.party_name,(CASE WHEN sq_master.project_type = 1 THEN "Automation" WHEN sq_master.project_type = 2 THEN "Theater"  ELSE "" END) as project_type';
 
-        $data['leftJoin']['sq_master'] = "sq_master.id = sq_trans.trans_main_id";
-        $data['leftJoin']['item_master'] = "item_master.id = sq_trans.item_id";
-        $data['leftJoin']['employee_master'] = "employee_master.id = sq_master.is_approve";
+        $data['leftJoin']['item_master'] = "item_master.id = sq_master.item_id";
         $data['leftJoin']['party_master'] = "party_master.id = sq_master.party_id";
+		
+        if(!empty($data['trans_status'])):
+            $data['where']['sq_master.trans_status'] = $data['trans_status'];
+		endif;
 
-        $data['where']['sq_trans.entry_type'] = $data['entry_type'];
-        if($data['status'] == 0):
-            $data['where']['sq_trans.trans_status'] = 0;
-            $data['where']['sq_master.trans_date <='] = $this->endYearDate;
-        elseif($data['status'] == 1):
-            $data['where']['sq_trans.trans_status'] = 1;
-            $data['where']['sq_master.trans_date >='] = $this->startYearDate;
-            $data['where']['sq_master.trans_date <='] = $this->endYearDate;
-        endif;
-
+        $data['group_by'][] = 'sq_master.trans_number';
         $data['order_by']['sq_master.trans_date'] = "DESC";
         $data['order_by']['sq_master.id'] = "DESC";
 
-        $data['group_by'][] = "sq_trans.trans_main_id";
-
         $data['searchCol'][] = "";
         $data['searchCol'][] = "";
-        $data['searchCol'][] = "sq_master.quote_rev_no";
         $data['searchCol'][] = "sq_master.trans_number";
         $data['searchCol'][] = "DATE_FORMAT(sq_master.trans_date,'%d-%m-%Y')";
         $data['searchCol'][] = "party_master.party_name";
-        $data['searchCol'][] = "item_master.item_name";
-        $data['searchCol'][] = "CONCAT(sq_trans.qty,' ',item_master.uom)"; 
-        $data['searchCol'][] = "sq_trans.price";
-        $data['searchCol'][] = "employee_master.emp_name";
-        $data['searchCol'][] = "DATE_FORMAT(sq_master.approve_date,'%d-%m-%Y')";
+        $data['searchCol'][] = "(CASE WHEN sq_master.project_type = 1 THEN 'Automation' WHEN sq_master.project_type = 2 THEN 'Theater'  ELSE ''' END)";
+        $data['searchCol'][] = "sq_master.description";
 
         $columns =array(); foreach($data['searchCol'] as $row): $columns[] = $row; endforeach;
         if(isset($data['order'])){$data['order_by'][$columns[$data['order'][0]['column']]] = $data['order'][0]['dir'];}
@@ -47,90 +45,40 @@ class SalesQuotationModel extends MasterModel{
         return $this->pagingRows($data);
     }
 	
-    public function save($data){
+    public function save($data){ 
         try{
             $this->db->trans_begin();
-
-            if(!empty($data['is_rev'])):
-                $this->quotationRevision($data['id']);
-                $data['quote_rev_no'] = $data['quote_rev_no'] + 1;
-            endif;
 
             if(!empty($data['id'])):
-                $dataRow = $this->getSalesQuotation(['id'=>$data['id'],'itemList'=>1]);
-                foreach($dataRow->itemList as $row):
-                    if(!empty($row->ref_id)):
-                        $setData = array();
-                        $setData['tableName'] = $this->sqTrans;
-                        $setData['where']['id'] = $row->ref_id;
-                        $setData['update']['trans_status'] = 0;
-                        $this->setValue($setData);
-                    endif;
-
-                    $this->trash($this->sqTrans,['id'=>$row->id]);
+                $dataRow = $this->getSalesQuotation(['trans_number'=>$data['trans_number']]);
+                foreach($dataRow as $row):
+                    $this->trash($this->sqMaster,['id'=>$row->id]);
                 endforeach;
-
-                $this->trash($this->transExpense,['trans_main_id'=>$data['id']]);
-                $this->remove($this->transDetails,['main_ref_id'=>$data['id'],'table_name'=>$this->sqMaster,'description'=>"SQ TERMS"]);
             endif;
-            
-            $itemData = $data['itemData'];
 
-            $transExp = getExpArrayMap(((!empty($data['expenseData']))?$data['expenseData']:array()));
-			$expAmount = $transExp['exp_amount'];
-            $termsData = (!empty($data['conditions']))?$data['conditions']:array();
-
-            unset($transExp['exp_amount'],$data['itemData'],$data['expenseData'],$data['conditions'],$data['is_rev']);		
-
-            $result = $this->store($this->sqMaster,$data,'Sales Quotation');
-
-            $expenseData = array();
-            if($expAmount <> 0):				
-				$expenseData = $transExp;
-                $expenseData['id'] = "";
-				$expenseData['trans_main_id'] = $result['id'];
-                $this->store($this->transExpense,$expenseData);
-			endif;
-
-            //Terms & Conditions
-            if(!empty($termsData)):
-                $termsData = [
-                    'id' =>"",
-                    'table_name' => $this->sqMaster,
-                    'description' => "SQ TERMS",
-                    'main_ref_id' => $result['id'],
-                    't_col_1' => $termsData
+            foreach ($data['itemData'] as $item) {
+                $sqData = [
+                    'id' => (!empty($item['id']) ? $item['id'] : ''),
+                    'trans_number' => $data['trans_number'],
+                    'trans_no' => $data['trans_no'],
+                    'trans_date' => $data['trans_date'],
+                    'party_id' => $data['party_id'],
+                    'description' => $data['description'],
+                    'item_id' => $item['item_id'],
+                    'qty' => $item['qty'],
+                    'price' => $item['price'],
+                    'amount' => $item['amount'],
+                    'conditions' => $data['conditions'],
+                    'is_delete' => 0,
                 ];
-                $this->store($this->transDetails,$termsData);
+                $result = $this->store($this->sqMaster, $sqData, 'Sales Quotation');
+            }
+           
+            // Save Party Activity Log Record 
+            if(empty($data['id'])):
+                $this->party->savePartyActivity(['party_id'=>$data['party_id'],'lead_stage'=>6,'ref_date'=>$data['trans_date']." ".date("H:i:s"),'ref_no'=>$data['trans_number']]);
             endif;
-
-            $i=1;
-            foreach($itemData as $row):
-                $row['entry_type'] = $data['entry_type'];
-                $row['trans_main_id'] = $result['id'];
-                $row['is_delete'] = 0;
-                $this->store($this->sqTrans,$row);
-
-                if(!empty($row['ref_id'])):
-                    $setData = array();
-                    $setData['tableName'] = 'se_trans';
-                    $setData['where']['id'] = $row['ref_id'];
-                    $setData['update']['trans_status'] = "1";
-                    $this->setValue($setData);
-                endif;
-            endforeach;
             
-            if(!empty($data['ref_id'])):
-                $refIds = explode(",",$data['ref_id']);
-                foreach($refIds as $main_id):
-                    $setData = array();
-                    $setData['tableName'] = 'se_master';
-                    $setData['where']['id'] = $main_id;
-                    $setData['update']['trans_status'] = "(SELECT IF( COUNT(id) = SUM(IF(trans_status <> 0, 1, 0)) ,1 , 0 ) as trans_status FROM sq_trans WHERE trans_main_id = ".$main_id." AND is_delete = 0)";
-                    $this->setValue($setData);
-                endforeach;
-            endif;
-
             if ($this->db->trans_status() !== FALSE):
                 $this->db->trans_commit();
                 return $result;
@@ -139,178 +87,40 @@ class SalesQuotationModel extends MasterModel{
             $this->db->trans_rollback();
             return ['status'=>2,'message'=>"somthing is wrong. Error : ".$e->getMessage()];
         }
-    }
-
-    public function quotationRevision($id){
-        try{
-            $this->db->trans_begin();
-
-            $quotationData = $this->getSalesQuotation(['id'=>$id,'itemList'=>1]);
-
-            $itemData = $quotationData->itemList;
-
-            $termsData = '';
-            if(!empty($quotationData->termsConditions)):
-                $termsData = $quotationData->termsConditions;
-            endif;
-
-            $transExp = (!empty($quotationData->expenseData))?$quotationData->expenseData:array();
-
-            unset($quotationData->itemList,$quotationData->termsConditions,$quotationData->expenseData,$quotationData->created_name);
-
-            $quotationData = (array) $quotationData;
-            $quotationData["ref_id"] = $quotationData["id"];
-            $quotationData["id"] = "";
-            $quotationData["from_entry_type"] = $quotationData['entry_type'];
-            $quotationData["entry_type"] = "";
-            
-            $result = $this->store($this->sqMaster,$quotationData,'Sales Quotation');
-
-            $expenseData = array();
-            if(!empty($transExp)):
-				$expenseData = (array) $transExp;
-                $expenseData['id'] = "";
-				$expenseData['trans_main_id'] = $result['id'];
-                $this->store($this->transExpense,$expenseData);
-			endif;
-
-            //Terms & Conditions
-            if(!empty($termsData)):
-                $termsData = [
-                    'id' =>"",
-                    'table_name' => $this->sqMaster,
-                    'description' => "SQ TERMS",
-                    'main_ref_id' => $result['id'],
-                    't_col_1' => $termsData->condition
-                ];
-                $this->store($this->transDetails,$termsData);
-            endif;
-
-            $i=1;
-            foreach($itemData as $row):
-                $row = (array) $row;
-                $row['from_entry_type'] = $row['entry_type'];
-                $row['entry_type'] = "";
-                $row['ref_id'] = $row['id'];
-                $row['id'] = "";
-                $row['trans_main_id'] = $result['id'];
-                $row['is_delete'] = 0;	
-
-                unset($row['item_name'],$row['unit_name'],$row['hsn_code']);
-                $this->store($this->sqTrans,$row);
-            endforeach;
-            
-
-            if ($this->db->trans_status() !== FALSE):
-                $this->db->trans_commit();
-                return $result;
-            endif;
-        }catch(\Throwable $e){
-            $this->db->trans_rollback();
-            return ['status'=>2,'message'=>"somthing is wrong. Error : ".$e->getMessage()];
-        }
-    }
-
-    public function checkDuplicate($data){
-        $queryData['tableName'] = $this->sqMaster;
-        $queryData['where']['trans_number'] = $data['trans_number'];
-        $queryData['where']['entry_type'] = $data['entry_type'];
-
-        if(!empty($data['id']))
-            $queryData['where']['id !='] = $data['id'];
-
-        $queryData['resultType'] = "numRows";
-        return $this->specificRow($queryData);
-    }
-
-    public function getQuotationRevisionList($data){
-        $queryData = array();
-        $queryData['tableName'] = $this->sqMaster;
-        $queryData['select'] = "id,trans_number,quote_rev_no,doc_date";
-        $queryData['where']['sq_master.trans_number'] = $data['trans_number'];
-        $result = $this->rows($queryData);
-        return $result;
     }
 
     public function getSalesQuotation($data){
         $queryData = array();
         $queryData['tableName'] = $this->sqMaster;
-        $queryData['select'] = "sq_master.*,employee_master.emp_name as created_name,party_master.party_name";
+		$queryData['select'] = "sq_master.*,employee_master.emp_name as created_name,party_master.party_type,party_master.party_name,party_master.party_code,item_master.item_name,item_master.item_code,item_master.make_brand,item_master.item_class,item_category.category_name,item_master.gst_per";
         $queryData['leftJoin']['employee_master'] = "employee_master.id = sq_master.created_by";
         $queryData['leftJoin']['party_master'] = "party_master.id = sq_master.party_id";
-        $queryData['where']['sq_master.id'] = $data['id'];
-        $result = $this->row($queryData);
-
-        if($data['itemList'] == 1):
-            $result->itemList = $this->getSalesQuotationItems($data);
+        $queryData['leftJoin']['item_master'] = "item_master.id = sq_master.item_id";
+        $queryData['leftJoin']['item_category'] = "item_master.category_id = item_category.id";
+        if(!empty($data['id'])){
+            $queryData['where']['sq_master.id'] = $data['id'];
+        }
+        if(!empty($data['trans_number'])){
+            $queryData['where']['sq_master.trans_number'] = $data['trans_number'];
+        }
+        if(!empty($data['group_by'])){
+            $queryData['group_by'][] = $data['group_by'];
+        }
+        if(!empty($data['single_row'])):
+            $result = $this->row($queryData);
+        else:
+            $result = $this->rows($queryData);
         endif;
-
-        $queryData = array();
-        $queryData['tableName'] = $this->transExpense;
-        $queryData['where']['trans_main_id'] = $data['id'];
-        $result->expenseData = $this->row($queryData);
-
-        $queryData = array();
-        $queryData['tableName'] = $this->transDetails;
-        $queryData['select'] = "t_col_1 as condition";
-        $queryData['where']['main_ref_id'] = $data['id'];
-        $queryData['where']['table_name'] = $this->sqMaster;
-        $queryData['where']['description'] = "SQ TERMS";
-        $result->termsConditions = $this->row($queryData);
-
         return $result;
     }
 
-    public function getSalesQuotationItems($data){
-        $queryData = array();
-        $queryData['tableName'] = $this->sqTrans;
-        $queryData['select'] = "sq_trans.*,item_master.item_name,unit_master.unit_name,item_master.hsn_code,item_master.item_image";
-        $queryData['leftJoin']['item_master'] = "item_master.id = sq_trans.item_id";
-        $queryData['leftJoin']['unit_master'] = "unit_master.id = item_master.unit_id";
-        $queryData['where']['sq_trans.trans_main_id'] = $data['id'];
-        $result = $this->rows($queryData);
-        return $result;
-    }
 
-    public function getSalesQuotationItem($data){
-        $queryData = array();
-        $queryData['tableName'] = $this->sqTrans;
-        $queryData['where']['id'] = $data['id'];
-        $result = $this->row($queryData);
-        return $result;
-    }    
-
-    public function delete($id){
+    public function delete($data){
         try{
             $this->db->trans_begin();
 
-            $dataRow = $this->getSalesQuotation(['id'=>$id,'itemList'=>1]);
-            foreach($dataRow->itemList as $row):
-                if(!empty($row->ref_id)):
-                    $setData = array();
-                    $setData['tableName'] = 'se_trans';
-                    $setData['where']['id'] = $row->ref_id;
-                    $setData['update']['trans_status'] = 0;
-                    $this->setValue($setData);
-                endif;
-
-                $this->trash($this->sqTrans,['id'=>$row->id]);
-            endforeach;
-
-            if(!empty($dataRow->ref_id)):
-                $oldRefIds = explode(",",$dataRow->ref_id);
-                foreach($oldRefIds as $main_id):
-                    $setData = array();
-                    $setData['tableName'] = 'se_master';
-                    $setData['where']['id'] = $main_id;
-                    $setData['update']['trans_status'] = "(SELECT IF( COUNT(id) = SUM(IF(trans_status <> 0, 1, 0)) ,1 , 0 ) as trans_status FROM sq_trans WHERE trans_main_id = ".$main_id." AND is_delete = 0)";
-                    $this->setValue($setData);
-                endforeach;
-            endif;
-
-            $this->trash($this->transExpense,['trans_main_id'=>$id]);
-            $this->remove($this->transDetails,['main_ref_id'=>$id,'table_name'=>$this->sqMaster,'description'=>"SQ TERMS"]);
-            $result = $this->trash($this->sqMaster,['id'=>$id],'Sales Quotation');
+            $this->trash('party_activities',['ref_no'=>$data['trans_number'],'lead_stage'=>6]); 
+            $result = $this->trash($this->sqMaster,['trans_number'=>$data['trans_number']],'Sales Quotation');
 
             if ($this->db->trans_status() !== FALSE):
                 $this->db->trans_commit();
@@ -322,37 +132,22 @@ class SalesQuotationModel extends MasterModel{
         }
     }
 
-    public function getPendingQuotationItems($data){
-        $queryData = array();
-        $queryData['tableName'] = $this->sqTrans;
-        $queryData['select'] = "sq_trans.*,sq_master.entry_type as main_entry_type,sq_master.trans_number,sq_master.trans_date,sq_master.doc_no,sq_master.is_approve,item_master.item_name";
-        $queryData['leftJoin']['sq_master'] = "sq_trans.trans_main_id = sq_master.id";
-        $queryData['leftJoin']['item_master'] = "item_master.id = sq_trans.item_id";
-        $queryData['where']['sq_master.party_id'] = $data['party_id'];
-        $queryData['where']['sq_trans.entry_type'] = $this->data['entryData']->id;
-        $queryData['where']['sq_master.is_approve'] = 1;
-        $queryData['where']['sq_trans.trans_status'] = 0;
-        return $this->rows($queryData);
-    }
-
-	public function approveSalesQuotation($data){
-		try{
+    public function changeQuotationStatus($data) { 
+        try{
             $this->db->trans_begin();
-			$date = ($data['is_approve'] == 1)?date('Y-m-d'):null;
-			$isApprove =  ($data['is_approve'] == 1)?$this->loginId:0;
-			
-			$this->store($this->sqMaster, ['id'=> $data['id'], 'is_approve' => $isApprove, 'approve_date'=>$date]);
-			
-			$result = ['status' => 1, 'message' => 'Sales Quotation Approve successfully.'];
-			
-			if ($this->db->trans_status() !== FALSE):
+
+            $this->edit($this->sqMaster, ['trans_number'=> $data['trans_number']], ['trans_status' => $data['trans_status']]);
+            $result = ['status' => 1, 'message' => 'Sales Quotation '.$data['msg'].' Successfully.'];
+
+            if ($this->db->trans_status() !== FALSE):
                 $this->db->trans_commit();
                 return $result;
             endif;
         }catch(\Throwable $e){
             $this->db->trans_rollback();
             return ['status'=>2,'message'=>"somthing is wrong. Error : ".$e->getMessage()];
-        }
-	}
+        }	    
+    }
+
 }
 ?>

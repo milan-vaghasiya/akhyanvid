@@ -1,6 +1,6 @@
 <?php
 class ReportList extends MY_Controller{
-    private $indexPage = "reports/index";
+    private $indexPage = "report/index_report";
   
 	public function __construct(){
 		parent::__construct();

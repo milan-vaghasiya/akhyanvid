@@ -2,9 +2,8 @@
 class permission extends MY_Controller{
     private $modualPermission = "permission/emp_permission";
     private $reportPermission = "permission/emp_permission_report";
+    private $dashboardPermission = "permission/dashboard_permission";
     private $copyPermission = "permission/copy_permission";
-    private $app_permission = "permission/app_permission";
-    private $dashPermission = "permission/dash_permission";
 
     public function __construct(){
 		parent::__construct();
@@ -13,18 +12,18 @@ class permission extends MY_Controller{
         $this->data['headData']->pageUrl = "permission";
 	}
 
-    public function index(){      
-        $this->data['menu_type'] = 1  ;  
-        $this->data['empList'] = $this->employee->getEmployeeList(['all'=>1]);
+    public function index(){   
+        $this->data['menu_type'] = 1;     
+        $this->data['empList'] = $this->employee->getEmployeeList();
         $this->data['permission'] = $this->permission->getPermission();
         $this->load->view($this->modualPermission,$this->data);
     }
 
-    public function empPermissionReport(){
-        $this->data['empList'] = $this->employee->getEmployeeList(['all'=>1]);
+    public function reportPermission(){
+        $this->data['empList'] = $this->employee->getEmployeeList();
         $this->data['permission'] = $this->permission->getPermission(1);
         $this->load->view($this->reportPermission,$this->data);
-    }
+    }    
 
     public function copyPermission(){
         $this->data['fromList'] = $this->employee->getEmployeeList();
@@ -62,9 +61,34 @@ class permission extends MY_Controller{
         
         if(!empty($errorMessage)):
 			$this->printJson(['status'=>0,'message'=>$errorMessage]);
-		else:
-            $fromData = $this->permission->getEmployeePermission($data['from_id']);            
-            $this->printJson($this->permission->saveCopyPermission($data,$fromData['mainPermission'],$fromData['subMenuPermission']));
+		else:                        
+            $this->printJson($this->permission->saveCopyPermission($data));
+        endif;
+    }
+
+    public function dashboardPermission(){
+        $this->data['empList'] = $this->employee->getEmployeeList();
+        $this->data['dashboardPermission'] = $this->permission->getDashboardWidget();
+        $this->load->view($this->dashboardPermission,$this->data);
+    }
+
+    public function editDashboardPermission(){
+        $data = $this->input->post();
+        $empPermission = $this->permission->getDashboardPermission($data);
+        $this->printJson(['status' => 1, 'message' => 'Record Found', 'empPermission' => $empPermission]);
+    }
+
+    public function saveDashboardPermission(){
+        $data = $this->input->post();
+        $errorMessage = array();
+        
+        if(empty($data['emp_id']))
+            $errorMessage['emp_id'] = "Employee name is required.";
+
+        if(!empty($errorMessage)):
+            $this->printJson(['status'=>0,'message'=>$errorMessage]);
+        else:
+            $this->printJson($this->permission->saveDashboardPermission($data));
         endif;
     }
 

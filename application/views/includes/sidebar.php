@@ -1,9 +1,9 @@
 <div class="left-sidebar">
 	<!-- LOGO -->
 	<div class="brand">
-		<a href="javascript:void(0);" class="logo">
+		<a href="javascript: void(0);" class="logo">
 			<span>
-				<img src="<?=base_url()?>assets/images/logo_text.png" alt="logo-large" class="logo-lg logo-light" style="height:90px;">
+				<img src="<?=base_url()?>assets/images/logo_text.png" alt="logo-large" class="logo-lg logo-light" style="height:55px;">
 				<img src="<?=base_url()?>assets/images/logo_text.png" alt="logo-large" class="logo-lg logo-dark">
 			</span>
 		</a>
@@ -27,9 +27,10 @@
 					</li>
 					<?=$this->permission->getEmployeeMenus()?>
 					<li class="nav-item">
-                    	<a class="nav-link" href="<?=base_url('reportList')?>"><i class="mdi mdi-chart-bar menu-icon"></i><span>Reports </span></a>
-                	</li>					
+						<a class="nav-link" href="<?=base_url('reportList')?>"><i class="mdi mdi-chart-bar menu-icon"></i><span>Reports </span></a>
+					</li>
 				</ul>
+
 				<ul class="navbar-nav tab-pane" id="Extra" role="tabpanel">
 					<li>
 						<div class="update-msg text-center position-relative">
@@ -40,6 +41,7 @@
 						</div>
 					</li>
 				</ul>
+				
 			</div>
 		</div>
 	</div>

@@ -20,7 +20,7 @@
                         ?>
                         <button type="button" class="btn waves-effect waves-light btn-outline-dark permission-write float-right press-add-btn" onclick="modalAction(<?=$addParam?>);"><i class="fa fa-plus"></i> Add Employee</button>
 					</div>
-                    <h4 class="card-title text-center">Employee</h4>
+                    <h4 class="card-title text-center">Employees</h4>
 				</div>
             </div>
 		</div>
@@ -40,7 +40,7 @@
     </div>
 </div>
 
-<div class="modal fade" id="print_dialog" data-bs-backdrop="static" data-bs-keyboard="false">
+<!-- <div class="modal fade" id="print_dialog" data-bs-backdrop="static" data-bs-keyboard="false">
 	<div class="modal-dialog" style="min-width:30%;">
 		<div class="modal-content animated zoomIn border-light">
 			<div class="modal-header bg-light">
@@ -68,7 +68,7 @@
 			</form>
 		</div>
 	</div>
-</div>
+</div> -->
 
 <?php $this->load->view('includes/footer'); ?>
 <script src="<?php echo base_url();?>assets/js/custom/employee.js?v=<?=time()?>"></script>
@@ -90,23 +90,23 @@ $(document).ready(function(){
     });
 
     <?php if(!empty($printID)): ?>
-        $("#printModel").attr('action',base_url + controller + '/printExperienceCertificate');
+        /* $("#printModel").attr('action',base_url + controller + '/printExperienceCertificate');
         $("#printsid").val(<?=$printID?>);
-        $("#print_dialog").modal("show");
+        $("#print_dialog").modal("show"); */
     <?php endif; ?>
 
-    $(document).on("click",".printCertificate",function(){
+    /* $(document).on("click",".printCertificate",function(){
         $("#printModel").attr('action',base_url + controller + '/printExperienceCertificate');
         $("#id").val($(this).data('id'));
         $("#print_dialog").modal("show");
-    });		
+    });	 */	
 });
 
-function closeModal(modalId){
+/* function closeModal(modalId){
     $("#"+ modalId).modal('hide');
     
     <?php if(!empty($printID)): ?>
         window.location = base_url + controller;
     <?php endif; ?>
-}		
+}	 */	
 </script>

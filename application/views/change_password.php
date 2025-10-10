@@ -1,9 +1,9 @@
-<div class="modal fade" id="change-psw" tabindex="-1" role="dialog" aria-labelledby="exampleModalLabel1" data-backdrop="static" data-keyboard="false">
+<div class="modal fade" id="change-psw" tabindex="-1" role="dialog" data-bs-backdrop="static" data-bs-keyboard="false">
     <div class="modal-dialog" role="document">
         <div class="modal-content animated slideDown">
             <div class="modal-header">
-                <h4 class="modal-title" id="exampleModalLabel1">Change Password</h4>
-				<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" data-modal_id="bs-right-md-modal" data-modal_class="addItemCategoryModal"></button>
+                <h4 class="modal-title">Change Password</h4>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <div class="modal-body">
                 <form id="changePSW">
@@ -36,8 +36,8 @@
                 </form>
             </div>
             <div class="modal-footer">
-				<button type="button" class="btn btn-secondary press-close-btn btn-close-modal save-form" data-bs-dismiss="modal" data-modal_id="bs-right-md-modal" data-modal_class="addItemCategoryModal"><i class="fa fa-times"></i> Close</button>
-                <button type="button" class="btn waves-effect waves-light btn-success btn-save" onclick="changePsw('changePSW');"><i class="fa fa-check"></i> Save</button>
+                <button type="button" class="btn btn-secondary press-close-btn btn-close-modal save-form" data-bs-dismiss="modal"><i class="fa fa-times"></i> Close</button>
+                <button type="button" class="btn waves-effect waves-light btn-outline-success btn-save" onclick="changePsw('changePSW');"><i class="fa fa-check"></i> Save</button>
             </div>
         </div>
     </div>

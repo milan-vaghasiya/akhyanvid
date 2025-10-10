@@ -29,43 +29,48 @@
                     <div class="auth-full-page-content d-flex p-sm-5 p-4">
                         <div class="w-100">
                             <div class="d-flex flex-column h-100">
-                                <div class="mb-3 mb-md-3 text-center">
-                                    <a href="javascript:void(0);" class="d-block auth-logo">
-                                        <img src="<?=base_url()?>assets/images/logo.png" alt="logo" width="80%" />
+                                <div class="text-center">
+                                    <a href="index.html" class="d-block auth-logo">
+                                        <img src="<?=base_url()?>assets/images/logo.png" alt="logo" width="100%" />
                                     </a>
                                 </div>
                                 <div class="auth-content my-auto">
                                     <div class="text-center">
                                         <h5 class="mb-0">Welcome !</h5>
-                                        <p class="text-muted mt-2">Sign in to continue</p>
                                     </div>
                                     <?php if($errorMsg = $this->session->flashdata('loginError')): ?>
                                         <div class="error errorMsg text-center"><?=$errorMsg?></div>
                                     <?php endif; ?>
-                                    <form class="custom-form mt-2 pt-2" id="loginform" action="<?=base_url('login/auth');?>" method="post">
+                                    <form class="custom-form mt-4 pt-2" id="loginform" action="<?=base_url('login/auth');?>" method="post">
+                                        
+                                        <input type="hidden" name="web_push_token" id="web_push_token" value="">
+
                                         <div class="mb-3">
                                             <div class="d-flex align-items-start"><div class="flex-grow-1"><label class="form-label">Username</label></div></div>
                                             <div class="input-group auth-pass-inputgroup">
                                                 <span class="input-group-text"><i class="fa fa-user"></i></span>
                                                 <input type="text" name="user_name" id="user_name" class="form-control form-control-lg" placeholder="Username" aria-label="Username" aria-describedby="basic-addon1">
                                             </div>
+                                            <?=form_error('user_name')?>
                                         </div>
-                                        <?=form_error('user_name')?>
+                                        
                                         <div class="mb-3">
                                             <div class="d-flex align-items-start"><div class="flex-grow-1"><label class="form-label">Password</label></div></div>
                                             <div class="input-group auth-pass-inputgroup">
                                                 <span class="input-group-text" id="password-addon"><i class="fa fa-key"></i></span>
                                                 <input type="password" id="password" name="password" class="form-control form-control-lg" placeholder="Password" aria-label="Password" aria-describedby="basic-addon1">
                                             </div>
+                                            <?=form_error('password')?>
                                         </div>
-                                        <?=form_error('password')?>
-                                        <div class="row mb-4 text-center">
+                                        
+                                        <div class="row mb-4">
                                             <div class="col">
                                                 <div class="form-check">
                                                     <input type="checkbox" class="form-check-input filled-in chk-col-success" value="lsRememberMe" id="rememberMe" onclick="lsRememberMe();">
-                                                    <label class="form-check-label" for="rememberMe"> Remember me</label>
+                                                    <label class="form-check-label" for="remember-check"> Remember me</label>
                                                 </div>  
-                                            </div>                                            
+                                            </div>
+                                            
                                         </div>
                                         <div class="mb-3">
                                             <button class="btn btn-facebook btn-round btn-outline-dashed w-100 p-2" type="submit">Log In</button>
@@ -85,7 +90,7 @@
                             <li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li><li></li>
                         </ul>
                         <!-- end bubble effect -->
-                        <h4 class="col-xxl-12 p-0 p-sm-4 px-xl-0 text-white text-center">NATIVEBIT TECHNOLOGIES</h4>
+                        <!-- <h4 class="col-xxl-12 p-0 p-sm-4 px-xl-0 text-white text-center">NATIVEBIT TECHNOLOGIES</h4> -->
                     </div>
                 </div>
             </div>
@@ -97,6 +102,11 @@
     <!-- ============================================================== -->
 	<script src="<?=base_url()?>assets/js/jquery/dist/jquery.min.js"></script>
 	<script src="<?=base_url()?>assets/js/app.js"></script>
+
+    <!-- Firebase App is always required and must be first -->
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script> 
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-messaging.js"></script>
+    <script type="module" src="<?=base_url()?>assets/js/notification.js?v=<?=time()?>"></script>
     <!-- ============================================================== -->
     <!-- This page plugin js -->
     <!-- ============================================================== -->
@@ -113,8 +123,6 @@
             $("#recoverform").fadeOut();
             $("#loginform").slideDown();            
         });
-
-        $("#user_name").focus();
 
         const rmCheck = document.getElementById("rememberMe"),
         emailInput = document.getElementById("user_name");
@@ -137,6 +145,10 @@
             }
         }
         
+        if (Notification.permission !== "granted"){  
+            Notification.requestPermission();  
+            console.log("send permission req.");
+        }
     </script>
 </body>
 

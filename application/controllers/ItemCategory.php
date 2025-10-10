@@ -13,7 +13,7 @@ class ItemCategory extends MY_Controller{
     public function list($parent_id = 0){
         $this->data['parent_id'] = $parent_id;
         $categoryData = $this->itemCategory->getCategory(['id'=>$parent_id]);
-        $this->data['categoryName'] = (!empty($categoryData->category_name))?$categoryData->category_name:"Item Category";
+        $this->data['categoryName'] = (!empty($categoryData))?$categoryData->category_name:"Item Category";
         $this->data['ref_id'] = (!empty($categoryData))?$categoryData->ref_id:0;
         $this->data['tableHeader'] = getMasterDtHeader("itemCategory");
         $this->load->view($this->indexPage,$this->data);
@@ -35,7 +35,6 @@ class ItemCategory extends MY_Controller{
         $data = $this->input->post();
         $this->data['ref_id'] = $data['ref_id'];
         $this->data['mainCategory'] = $this->itemCategory->getCategoryList(['final_category'=>0]);
-        $this->data['locationList'] = $this->storeLocation->getStoreLocationList(['final_location'=>1]);
         $this->load->view($this->form,$this->data);
     }
 
@@ -67,7 +66,6 @@ class ItemCategory extends MY_Controller{
         $data = $this->input->post();
         $this->data['dataRow'] = $this->itemCategory->getCategory($data);
         $this->data['mainCategory'] = $this->itemCategory->getCategoryList(['final_category'=>0]);
-        $this->data['locationList'] = $this->storeLocation->getStoreLocationList(['final_location'=>1]);
         $this->load->view($this->form,$this->data);
     }
 
@@ -79,6 +77,5 @@ class ItemCategory extends MY_Controller{
             $this->printJson($this->itemCategory->delete($id));
         endif;
     }
-
 }
 ?>

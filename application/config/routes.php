@@ -55,7 +55,17 @@ $route['404'] = 'error_404';
 $route['translate_uri_dashes'] = FALSE;
 
 $route['logout'] = "login/logout";
-$route['partyOrders'] = "salesOrders/partyOrders";
+$route['changeCompany'] = "login/changeCompany";
 
-//Admin Routes
-$route['admin/logout'] = "admin/login/logout";
+$route['tcsTdsPayment'] = "taxPayment/tcsTdsPayment";
+$route['tcsTdsPayment/addTcsTdsVoucher'] = "taxPayment/addTcsTdsVoucher";
+$route['tcsTdsPayment/getTcsTdsDtRows'] = "taxPayment/getTcsTdsDtRows";
+$route['tcsTdsPayment/getTransNo'] = "taxPayment/getTransNo";
+$route['tcsTdsPayment/getLedgerList'] = "taxPayment/getLedgerList";
+$route['tcsTdsPayment/saveTcsTdsVoucher'] = "taxPayment/saveTcsTdsVoucher";
+$route['tcsTdsPayment/editTcsTdsVoucher'] = "taxPayment/editTcsTdsVoucher";
+$route['tcsTdsPayment/deleteTcsTdsVoucher'] = "taxPayment/deleteTcsTdsVoucher";
+$route['tcsTdsPayment/voucherSettlement'] = "taxPayment/voucherSettlement";
+$route['tcsTdsPayment/saveSettledTransaction'] = "taxPayment/saveSettledTransaction";
+$route['tcsTdsPayment/removeSettlement'] = "taxPayment/removeSettlement";
+

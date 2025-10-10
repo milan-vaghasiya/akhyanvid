@@ -202,6 +202,8 @@ function resPartyDetail(response = ""){
 function editJournalEntry(response = ""){
     
     if(response != ""){
+		$("#tempItem").html('<tr id="noData"><td colspan="6" align="center">No data available in table</td></tr>');
+		
         var jvData = response.data;
         $.each(jvData, function (key, value) {
             if(key != "ledgerData"){

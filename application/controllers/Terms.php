@@ -3,7 +3,6 @@ class Terms extends MY_Controller
 {
     private $indexPage = "terms/index";
     private $termsForm = "terms/form";
-	public $termsTypeArray = ["Purchase","Sales"];
     
 	public function __construct(){
 		parent::__construct();
@@ -31,7 +30,7 @@ class Terms extends MY_Controller
     }
 
     public function addTerms(){
-        $this->data['typeArray'] = $this->termsTypeArray;
+        $this->data['typeArray'] = $this->TERMS_TYPES;
         $this->load->view($this->termsForm, $this->data);
     }
 
@@ -49,6 +48,8 @@ class Terms extends MY_Controller
         if(!empty($errorMessage)):
             $this->printJson(['status'=>0,'message'=>$errorMessage]);
         else:
+			$data['sub_menu_id'] = $data['type'];
+			$data['type'] = $this->TERMS_TYPES[$data['type']];
             $this->printJson($this->terms->save($data));
         endif;
     }
@@ -56,7 +57,7 @@ class Terms extends MY_Controller
     public function edit(){     
         $data = $this->input->post();
         $this->data['dataRow'] = $this->terms->getTerm($data);
-        $this->data['typeArray'] = $this->termsTypeArray;
+        $this->data['typeArray'] = $this->TERMS_TYPES;
         $this->load->view($this->termsForm, $this->data);
     }
 

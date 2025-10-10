@@ -3,7 +3,7 @@ class Login extends CI_Controller{
 
 	public function __construct(){
 		parent::__construct();
-		$this->load->model('LoginModel','login_model');
+		$this->load->model('LoginModel','loginModel');
 		$this->load->library('form_validation');
 		$this->form_validation->set_error_delimiters( '<div class="error">', '</div>' );
 	}
@@ -25,7 +25,7 @@ class Login extends CI_Controller{
 			$this->form_validation->set_rules('user_name','Username','required|trim');
 			$this->form_validation->set_rules('password','Password','required|trim');
 			if($this->form_validation->run() == true):
-				$result = $this->login_model->checkAuth($data);
+				$result = $this->loginModel->checkAuth($data);
 				if($result['status'] == 1):
 					return redirect( base_url('dashboard') );
 				else:
@@ -45,7 +45,7 @@ class Login extends CI_Controller{
 
 	public function setFinancialYear(){
 		$year = $this->input->post('year');
-		$this->login_model->setFinancialYear($year);
+		$this->loginModel->setFinancialYear($year);
 		echo json_encode(['status'=>1,'message'=>'Financial Year changed successfully.']);
 	}
 }

@@ -7,13 +7,16 @@
     <!-- Favicon icon -->
     <link rel="icon" type="image/png" sizes="16x16" href="<?=base_url();?>assets/images/favicon.png">
 
-    <title><?=SITENAME?> - <?=(isset($headData->pageTitle)) ? $headData->pageTitle : '' ?></title>
+    <title><?=(isset($headData->pageTitle)) ? $headData->pageTitle : SITENAME ?></title>
     
 	<link href="<?=base_url();?>assets/css/bootstrap.min.css" rel="stylesheet" type="text/css" />
 	<link href="<?=base_url();?>assets/css/icons.min.css" rel="stylesheet" type="text/css" />
 	<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.7.0/css/font-awesome.min.css">
 	<link href="<?=base_url();?>assets/css/app.min.css" rel="stylesheet" type="text/css" />	
-    <link href="<?=base_url();?>assets/plugins/datatables/bootstrap-datatable/css/dataTables.bootstrap4.css" rel="stylesheet">    
+    <link href="<?=base_url();?>assets/plugins/datatables/bootstrap-datatable/css/dataTables.bootstrap4.css" rel="stylesheet">
+	
+	<!-- Bootstrap Side Modals -->
+	<link href="<?=base_url();?>assets/css/bootstrap-side-modals.css" rel="stylesheet">
 	
 	<!-- Sweet Alert -->
 	<link href="<?=base_url();?>assets/plugins/sweet-alert2/sweetalert2.min.css" rel="stylesheet" type="text/css">
@@ -27,8 +30,8 @@
 	<!-- overlayScrollbars -->
     <link rel="stylesheet" href="<?=base_url("assets/plugins/overlayScrollbars/css/OverlayScrollbars.min.css")?>">
 	
-    <!-- Custom CSS -->
-    <link href="<?=base_url();?>assets/css/bootstrap-side-modals.css" rel="stylesheet">
+    <!-- Custom CSS -->    
 	<link href="<?=base_url();?>assets/css/jp_helper.css?v=<?=time()?>" rel="stylesheet">	
 	<link href="<?=base_url();?>assets/css/cm-style.css?v=<?=time()?>" rel="stylesheet">
+	<link href="<?=base_url();?>assets/css/crm.css?v=<?=time()?>" rel="stylesheet">
 </head>
