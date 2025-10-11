@@ -24,11 +24,7 @@ $(document).ready(function(){
 
         var errorCount = $('#itemForm .error:not(:empty)').length;
 
-		if (errorCount == 0) {
-			if(checkGoodsItemExists()){
-				return false;
-			}
-			
+		if (errorCount == 0) {			
 			formData.id = formData.trans_id;
             var itemData = calculateItem(formData);
             AddRow(itemData);
@@ -70,7 +66,6 @@ $(document).ready(function(){
 var itemCount = 0;
 function AddRow(data) { 
     var tblName = "salesQuotationItems";
-
     //Remove blank line.
 	$('table#'+tblName+' tr#noData').remove();
 
@@ -96,24 +91,34 @@ function AddRow(data) {
     cell.append(idInput);
     cell.append(itemIdInput);
 
-
 	var qtyInput = $("<input/>", { type: "hidden", name: "itemData["+itemCount+"][qty]", class:"item_qty", value: data.qty });
 	var qtyErrorDiv = $("<div></div>", { class: "error qty" + itemCount });
 	cell = $(row.insertCell(-1));
+
 	cell.html(data.qty);
+	if(data.item_class == "Service" && data.price > 1){
+		cell.html('--');
+	}
 	cell.append(qtyInput);
 	cell.append(qtyErrorDiv);
 
 	var priceInput = $("<input/>", { type: "hidden", name: "itemData["+itemCount+"][price]", value: data.price});
 	var priceErrorDiv = $("<div></div>", { class: "error price" + itemCount });
 	cell = $(row.insertCell(-1));
+
 	cell.html(data.price);
+	if(data.item_class == "Service" && data.qty > 1){
+		cell.html('--');
+	}
 	cell.append(priceInput);
 	cell.append(priceErrorDiv);
 	
     var amountInput = $("<input/>", { type: "hidden", name: "itemData["+itemCount+"][amount]", class:"amount", value: data.amount });
 	cell = $(row.insertCell(-1));
 	cell.html(data.amount);
+	if(data.item_class == "Service" && data.qty > 1){
+		cell.html('--');
+	}
 	cell.append(amountInput);
 
     //Add Button cell.
@@ -204,26 +209,4 @@ function resSaveQuotation(data,formId){
 			Swal.fire({ icon: 'error', title: data.message });
         }			
     }	
-}
-
-function checkGoodsItemExists(){
-	var response = false;
-	var count_item_for_service = 0;
-
-	if($('#item_class').val() == "Goods" && $('#trans_id').val() == ""){
-		var service_items_arr = [];
-		$('#salesQuotationItems .item_type').each(function(){
-			if($(this).data('item_type') == "Service"){
-				service_items_arr.push($(this).data('item_name'));
-				count_item_for_service++;
-			}
-		});
-		var service_items = service_items_arr.join(', ');
-
-		if(count_item_for_service > 0){
-			Swal.fire({ icon: 'error', title: 'You can\'t add this item. First of delete the service items(' + service_items + ') and then you will be able to add this item.' });
-			response = true;
-		}
-	}
-	return response;
 }

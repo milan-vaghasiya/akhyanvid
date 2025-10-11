@@ -106,6 +106,7 @@ class SalesQuotationModel extends MasterModel{
         if(!empty($data['group_by'])){
             $queryData['group_by'][] = $data['group_by'];
         }
+        $queryData['order_by']['item_master.item_class'] = 'ASC';
         if(!empty($data['single_row'])):
             $result = $this->row($queryData);
         else:

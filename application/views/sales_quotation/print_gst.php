@@ -107,7 +107,7 @@
 												<th class="text-right" style="font-size:13px;">' .  moneyFormatIndia($totalAmt) . '</th>
 											</tr>
 											<tr>
-												<th colspan="6" class="text-right" style="font-size:13px;">GST (' . round($maxGst) . '% )</th>
+												<th colspan="6" class="text-right" style="font-size:13px;">GST (' . round($maxGst) . '%)</th>
 												<th class="text-right" style="font-size:13px;">' .  moneyFormatIndia($gstAmount) . '</th>
 											</tr>
 											<tr>
