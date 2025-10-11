@@ -15,9 +15,9 @@
         </div>
         
         <div class="row">
-            <div class="col-lg-4">
+            <div class="col-lg-12">
                 <div class="row">
-                    <div class="col-12 col-lg-6 PENQ"> 
+                    <div class="col-12 col-lg-4 PENQ"> 
                         <div class="card bgl_green border border-light2">
                             <div class="card-body">
                                 <div class="row align-items-center">
@@ -30,7 +30,7 @@
                         </div>
                     </div>
 
-                    <div class="col-12 col-lg-6 ONGO"> 
+                    <div class="col-12 col-lg-4 ONGO"> 
                         <div class="card bgl_purple border border-light2">
                             <div class="card-body">
                                 <div class="row align-items-center">
@@ -43,7 +43,7 @@
                         </div>
                     </div>
 
-                    <div class="col-12 col-lg-6 PENS"> 
+                    <div class="col-12 col-lg-4 PENS"> 
                         <div class="card bgl_cream border border-light2">
                             <div class="card-body">
                                 <div class="row align-items-center">
@@ -56,7 +56,7 @@
                         </div>
                     </div>
 
-                    <div class="col-12 col-lg-6 PENC">
+                    <div class="col-12 col-lg-4 PENC">
                         <div class="card bgl_pink border border-light2">
                             <div class="card-body">
                                 <div class="row align-items-center">
@@ -69,7 +69,7 @@
                         </div>
                     </div>
 
-                    <div class="col-12 col-lg-6 PENT"> 
+                    <div class="col-12 col-lg-4 PENT"> 
                         <div class="card bgl_sky border border-light2">
                             <div class="card-body">
                                 <div class="row align-items-center">
@@ -82,7 +82,20 @@
                         </div>
                     </div>
 
-                    <div class="col-12 col-lg-6 CONRATE hidden"> 
+                    <div class="col-12 col-lg-4"> 
+                        <div class="card">
+                            <div class="card-body border border-light2">
+                                <div class="row align-items-center">
+                                    <div class="col text-center">
+                                        <i class="mdi mdi-currency-inr mdi-18px"></i><span class="h5 fw-bold" >0</span>  
+                                        <h6 class="text-uppercase text-muted mt-2 m-0 font-11">--</h6>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-12 col-lg-3 CONRATE hidden"> 
                         <div class="card bgl_orange border border-light2">
                             <div class="card-body">
                                 <div class="row align-items-center">
@@ -95,7 +108,7 @@
                         </div>
                     </div>                    
 
-                    <div class="col-12 col-lg-6 OSREC hidden"> 
+                    <div class="col-12 col-lg-3 OSREC hidden"> 
                         <div class="card">
                             <div class="card-body border border-light2">
                                 <div class="row align-items-center">
@@ -120,11 +133,10 @@
                             </div>
                         </div>
                     </div>
-
                 </div>
             </div>
 
-            <div class="col-md-8">
+            <div class="col-md-12">
                 <div class="dashData">
                 </div>
             </div>

@@ -45,78 +45,83 @@
                 </table>
 
                 <table class="table item-list-bb" style="margin-top:10px;">
-                        <?php 
-                            $i=1;$itemData = []; 
-                            if(!empty($dataRow)): 
-                                foreach($dataRow as $row): 
-                                   $itemData[$row->category_name][] = $row;
+                    <?php 
+                        $i=1;$itemData = []; 
+                        if(!empty($dataRow)): 
+                            foreach($dataRow as $row): 
+                                $itemData[$row->category_name][] = $row;
+                            endforeach;
+                            $previousCategoryTotal = 0; 
+
+                            foreach($itemData as $categoryName => $items):	
+                                echo '<tr><td class="text-center bg-light-grey" colspan="7" ><strong>' . $categoryName . '</strong></td></tr>';
+                                echo '<thead>
+                                    <tr class="bg-light-grey">
+                                        <th style="width:40px;">SRN.</th>
+                                        <th class="text-center" style="width:40px;">PARTICULARS</th>
+                                        <th style="width:100px;">BRAND</th>
+                                        <th style="width:80px;">MODEL NO</th>
+                                        <th style="width:90px;">QTY/PERCENTAGE</th>
+                                        <th style="width:90px;">RATE</th>
+                                        <th style="width:60px;">TOTAL</th>
+                                    </tr>
+                                </thead>';
+
+                                $srn = 1;
+                                $totalAmt = $total_amount_of_goods_product = $maxGst = 0;                                    
+
+                                foreach($items as $row1):	 
+                                    if ($row1->gst_per > $maxGst) {
+                                        $maxGst = $row1->gst_per;
+                                    }
+
+                                    $amount = $row1->amount;
+                                    if ($row1->item_class == "Service" && $row1->price == 1) {
+                                        $baseAmount = ($total_amount_of_goods_product > 0) ? $total_amount_of_goods_product : $previousCategoryTotal;
+                                        $amount = ($baseAmount * $row1->qty) / 100;
+                                    }
+
+                                    if ($row1->item_class == "Goods") {
+                                        $total_amount_of_goods_product += $row1->amount;
+                                    }
+
+                                    echo '<tr>';
+                                    echo '<td class="text-center">' . $srn++ . '</td>';
+                                    if ($row1->item_class == "Service") {
+                                        echo '<td colspan="5" class="text-center">' . $row1->item_name . '</td>';
+                                    } else {
+                                        echo '<td>' . $row1->item_name . '</td>';
+                                        echo '<td>' . $row1->make_brand . '</td>';
+                                        echo '<td class="text-center">' . $row1->item_code . '</td>';
+                                        echo '<td class="text-center">' .  $row1->qty . '</td>';
+                                        echo '<td class="text-right">' .  $row1->price . '</td>';
+                                    }
+                                    echo '<td class="text-right">' . moneyFormatIndia($amount) . '</td>';
+                                    echo '</tr>';
+
+                                    $totalAmt += $amount;
                                 endforeach;
-                                foreach($itemData as $categoryName => $items):	
-                                    echo '<tr><td class="text-center bg-light-grey" colspan="7" ><strong>' . $categoryName . '</strong></td></tr>';
-                                    echo '<thead>
-                                        <tr class="bg-light-grey">
-                                            <th style="width:40px;">SRN.</th>
-                                            <th class="text-center" style="width:40px;">PARTICULARS</th>
-                                            <th style="width:100px;">BRAND</th>
-                                            <th style="width:80px;">MODEL NO</th>
-                                            <th style="width:90px;">QTY/PERCENTAGE</th>
-                                            <th style="width:90px;">RATE</th>
-                                            <th style="width:60px;">TOTAL</th>
-                                        </tr>
-                                    </thead>';
 
-                                    $srn = 1;
-                                    $totalAmt = $total_amount_of_goods_product = $maxGst = 0;                                    
-                                    foreach($items as $row1):	 
-                                        if ($row1->gst_per > $maxGst) {
-                                            $maxGst = $row1->gst_per;
-                                        }
-                                        //Calculation for service amount
-                                        $amount = $row1->amount;
+                                $gstAmount = ($totalAmt * $maxGst) / 100;
+                                $grandTotal = $totalAmt + $gstAmount;
 
-                                        if ($row1->item_class == "Goods") {
-                                            $total_amount_of_goods_product += $row1->amount;
-                                        }
+                                echo '<tr>
+                                    <th colspan="6" class="text-right" style="font-size:13px;">Sub Total</th>
+                                    <th class="text-right" style="font-size:13px;">' .  moneyFormatIndia($totalAmt) . '</th>
+                                </tr>
+                                <tr>
+                                    <th colspan="6" class="text-right" style="font-size:13px;">GST (' . round($maxGst) . '%)</th>
+                                    <th class="text-right" style="font-size:13px;">' .  moneyFormatIndia($gstAmount) . '</th>
+                                </tr>
+                                <tr>
+                                    <th colspan="6" class="text-right" style="font-size:13px;">Net Amount</th>
+                                    <th class="text-right" style="font-size:13px;">' . moneyFormatIndia($grandTotal) . '</th>
+                                </tr>';
 
-                                        if ($row1->item_class == "Service" && $row1->price == 1 && $total_amount_of_goods_product > 0) {
-                                            $amount = ($total_amount_of_goods_product * $row1->qty) / 100;
-                                        }
-
-                                        echo '<tr>';
-                                        echo '<td class="text-center">' . $srn++ . '</td>';
-                                          if ($row1->item_class == "Service") {
-                                            echo '<td colspan="5" class="text-center">' . $row1->item_name . '</td>';
-                                        } else {
-                                            echo '<td>' . $row1->item_name . '</td>';
-                                            echo '<td>' . $row1->make_brand . '</td>';
-                                            echo '<td class="text-center">' . $row1->item_code . '</td>';
-                                            echo '<td class="text-center">' .  $row1->qty . '</td>';
-                                            echo '<td class="text-right">' .  $row1->price . '</td>';
-                                        }
-                                            echo '<td class="text-right">' . moneyFormatIndia($amount) . '</td>';
-                                            echo '</tr>';
-                                        $totalAmt += $amount;
-                                    endforeach;
-
-                                    // GST calculation based on max GST of the
-                                    $gstAmount = ($totalAmt * $maxGst) / 100;
-                                    $grandTotal = $totalAmt + $gstAmount;
-                                    
-                                    echo '<tr>
-												<th colspan="6" class="text-right" style="font-size:13px;">Sub Total</th>
-												<th class="text-right" style="font-size:13px;">' .  moneyFormatIndia($totalAmt) . '</th>
-											</tr>
-											<tr>
-												<th colspan="6" class="text-right" style="font-size:13px;">GST (' . round($maxGst) . '%)</th>
-												<th class="text-right" style="font-size:13px;">' .  moneyFormatIndia($gstAmount) . '</th>
-											</tr>
-											<tr>
-												<th colspan="6" class="text-right" style="font-size:13px;">Net Amount</th>
-												<th class="text-right" style="font-size:13px;">' . moneyFormatIndia($grandTotal) . '</th>
-											</tr>';
-                                endforeach;
-                            endif;
-                        ?>
+                                $previousCategoryTotal = $totalAmt;
+                            endforeach;
+                        endif;
+                    ?>
                 </table>
                 
                 <div style="font-size:12px;padding-left:10px;" style="margin-top:10px;">

@@ -115,7 +115,6 @@ class SalesQuotationModel extends MasterModel{
         return $result;
     }
 
-
     public function delete($data){
         try{
             $this->db->trans_begin();
