@@ -34,8 +34,27 @@ class Store extends MY_Controller
         $this->data['issue_no'] = $issue_no;
         $this->data['itemList'] = $this->item->getItemList();
         $this->data['empData'] = $this->employee->getEmployeeList();
-		// $this->data['partyList'] = $this->party->getPartyList(['party_category'=>"3"]);
+        $this->data['projectList']= $this->project->getProjectData(['trans_status'=>'1,2']);
         $this->load->view('store/issue_form', $this->data);
+    }	
+	
+    public function getItemListDetail(){
+        $data = $this->input->post();
+
+        $options = '<option value="">Select Item Name</option>';
+		
+        if($data['product_type'] == 1){
+            $itemList = $this->salesQuotation->getSalesQuotation(['project_id'=>$data['project_id']]);
+            foreach($itemList as $row):
+                $options .= '<option value="'.$row->item_id.'">'.(!empty($row->item_code)?'[ '.$row->item_code.' ] ':'').$row->item_name.'</option>';
+			endforeach;
+        }
+        elseif($data['product_type'] == 2){
+            $itemList = $this->item->getItemList(['item_type'=>"1"]);
+            $options .= getItemListOption($itemList);
+        }
+       
+        $this->printJson(['status'=>1,'options'=>$options]);
     }
 
     public function getItemStock(){
@@ -52,8 +71,12 @@ class Store extends MY_Controller
         $errorMessage = array(); 
 
         if(empty($data['item_id'])) {  $errorMessage['item_id'] = "Item is required";  }
-		if(empty($data['issue_qty']) OR $data['issue_qty']<=0){ $errorMessage['issue_qty'] = "Issue Qty is required."; }
-        else{
+		
+        if(empty($data['project_id'])) {  $errorMessage['project_id'] = "Project is required";  }
+		
+		if(empty($data['issue_qty']) OR $data['issue_qty']<=0){ 
+			$errorMessage['issue_qty'] = "Issue Qty is required."; 
+		}else{
             $stockData = $this->store->getItemStockBatchWise(['item_id'=>$data['item_id'],'stock_required'=>1,'single_row'=>1]);
             $stock_qty = (!empty($stockData->qty) ? $stockData->qty : 0);
             if($data['issue_qty'] > $stock_qty){
@@ -64,6 +87,7 @@ class Store extends MY_Controller
         if (!empty($errorMessage)) :
             $this->printJson(['status' => 0, 'message' => $errorMessage]);
         else :
+			 unset($data['product_type']);
 			$this->printJson($this->store->saveIssuedMaterial($data));
         endif;
     }

@@ -35,6 +35,7 @@ class ServiceModel extends MasterModel{
 
 		$data['searchCol'][] = "";
         $data['searchCol'][] = "";
+        $data['searchCol'][] = "service_master.type"; 
         $data['searchCol'][] = "service_master.trans_number";
 		$data['searchCol'][] = "DATE_FORMAT(service_master.trans_date,'%d-%m-%Y %H:%i:%s')";
         $data['searchCol'][] = "project_info.project_name";
@@ -43,6 +44,7 @@ class ServiceModel extends MasterModel{
         $data['searchCol'][] = "employee_master.emp_name";
         $data['searchCol'][] = "DATE_FORMAT(service_master.start_date,'%d-%m-%Y %H:%i:%s')";
         $data['searchCol'][] = "DATE_FORMAT(service_master.complete_date,'%d-%m-%Y %H:%i:%s')";
+        $data['searchCol'][] = "service_master.voice_notes";
 
 		$columns =array(); foreach($data['searchCol'] as $row): $columns[] = $row; endforeach;
 
@@ -105,8 +107,22 @@ class ServiceModel extends MasterModel{
 					return ['status'=>0,'message'=>$errorMessage];
 				endif;
 			endif;
+            
+			$result = $this->store($this->serviceMaster,$data,'Service');
 			
-            $result = $this->store($this->serviceMaster,$data,'Service');
+			$ref_id=0;
+            if(empty($data['id']) && !empty($data['ref_id'])){
+                $ref_id = $data['ref_id']; $complain_status = 3;
+            }elseif(!empty($data['status']) AND $data['status'] == 5){
+                $serviceData = $this->getService(['id'=>$data['id']]);
+                $ref_id = (!empty($serviceData->ref_id) ? $serviceData->ref_id : 0);
+                $complain_status = 2;
+            }
+
+            if(!empty($ref_id)):
+                $this->edit('customer_complaint', ['id'=>$ref_id], ['status'=>$complain_status]); //Service request Add
+            endif;
+            
             
             if ($this->db->trans_status() !== FALSE):
                 $this->db->trans_commit();
@@ -157,6 +173,10 @@ class ServiceModel extends MasterModel{
 					$a_files = explode(',',$serviceData->aft_images);
 					foreach($a_files as $file_name){ unlink($filePath.'/'.TRIM($file_name)); }
 				}
+				
+				if(!empty($serviceData->ref_id)):
+                    $this->edit('customer_complaint', ['id'=> $serviceData->ref_id], ['status'=>1]); //Service request Add
+                endif;
 				
                 $this->db->trans_commit();
                 return $result;

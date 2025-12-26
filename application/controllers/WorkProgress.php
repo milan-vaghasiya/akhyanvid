@@ -31,6 +31,7 @@ class WorkProgress extends MY_Controller{
     public function updateWorkProgress(){
         $data = $this->input->post();
         $this->data['project_id'] = $data['id'];
+        $this->data['workStepData'] = $this->workInstructions->getWorkInstructions(['work_type'=>3]); 
         $this->load->view($this->formPage,$this->data);
     }
 
@@ -50,16 +51,6 @@ class WorkProgress extends MY_Controller{
             $this->printJson($this->workProgress->save($data));
         endif;
     }
-
-    // public function delete(){
-    //     $id = $this->input->post('id');
-    //     if(empty($id)):
-    //         $this->printJson(['status'=>0,'message'=>'Somthing went wrong...Please try again.']);
-    //     else:
-    //         $this->printJson($this->workProgress->delete($id));
-
-    //     endif;
-    // }
 
     public function getWorkProgressData() {
         $data = $this->input->post(); 
@@ -99,6 +90,5 @@ class WorkProgress extends MY_Controller{
         $this->printJson(['status' => 1, 'tbodyData' => $html]);
     }
 
-   
 }
 ?>

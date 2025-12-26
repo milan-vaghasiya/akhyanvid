@@ -5,15 +5,15 @@
                 <table class="table table-bordered">
                     <thead class="thead-info">
                         <tr class="text-center">
-                            <th style="width:70%">Complaint File</th>
+                            <th style="width:70%">Service File</th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php
                         $i=1;
-                        if (!empty($complaint_file)) {
-                             $custFiles = explode(',',$complaint_file);
-                            foreach ($custFiles as $key=>$val) {
+                        if (!empty($bfr_images)) {
+                             $serviceFiles = explode(',',$bfr_images);
+                            foreach ($serviceFiles as $key=>$val) {
                                  $filePath = base_url('assets/uploads/service/'.$val);
                                 echo '<tr class="text-center">
                                         <td>

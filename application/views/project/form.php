@@ -9,7 +9,7 @@
 
             <div class="col-md-12 form-group">
                 <label for="project_name">Project Name</label>
-                <input type="text" class="form-control req" name="project_name" id="project_name" value="<?=(!empty($dataRow->project_name) ? $dataRow->project_name : "")?>">
+                <input type="text" class="form-control req" name="project_name" id="project_name" value="<?=(!empty($dataRow->project_name) ? $dataRow->project_name : (!empty($partyData->party_name) ? $partyData->party_name : ""))?>">
             </div>
 
             <div class="col-md-6 form-group">

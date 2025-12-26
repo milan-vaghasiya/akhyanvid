@@ -10,7 +10,7 @@ function getHrDtHeader($page){
     $data['employees'][] = ["name"=>"Emp Code"];
     $data['employees'][] = ["name"=>"Employee Name"];
     $data['employees'][] = ["name"=>"Mobile No."];
-    $data['employees'][] = ["name"=>"Employee Role"];
+    $data['employees'][] = ["name"=>"Role"];
 
     return tableHeader($data[$page]);
 }

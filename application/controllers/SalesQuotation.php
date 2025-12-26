@@ -70,8 +70,8 @@ class SalesQuotation extends MY_Controller{
 
     public function delete(){
         $data = $this->input->post();
-        $data['trans_number'] = decodeURL($data['trans_number']);
-        if(empty($data['trans_number'])):
+		
+		if(empty($data['trans_number'])):
             $this->printJson(['status'=>0,'message'=>'Somthing went wrong...Please try again.']);
         else:
             $this->printJson($this->salesQuotation->delete($data));
@@ -123,7 +123,6 @@ class SalesQuotation extends MY_Controller{
 		$mpdf->Output($pdfFileName, 'I');		
     }
     
-
     public function changeQuotationStatus(){
 		$data = $this->input->post();
 		if(empty($data['trans_number'])):

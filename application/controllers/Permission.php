@@ -67,7 +67,7 @@ class permission extends MY_Controller{
     }
 
     public function dashboardPermission(){
-        $this->data['empList'] = $this->employee->getEmployeeList(['all'=>1]);
+		$this->data['empList'] = $this->employee->getEmployeeList(['all'=>1]);
         $this->data['dashboardPermission'] = $this->permission->getDashboardWidget();
         $this->load->view($this->dashboardPermission,$this->data);
     }
@@ -98,5 +98,7 @@ class permission extends MY_Controller{
         $this->data['menu_type'] = 2;
         $this->load->view($this->modualPermission,$this->data);
     }
+
+	
 }
 ?>

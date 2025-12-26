@@ -49,12 +49,12 @@
                         $i=1;$itemData = []; 
                         if(!empty($dataRow)): 
                             foreach($dataRow as $row): 
-                                $itemData[$row->category_name][] = $row;
+                                $itemData[$row->quot_option][] = $row;
                             endforeach;
                             $previousCategoryTotal = 0; 
 
-                            foreach($itemData as $categoryName => $items):	
-                                echo '<tr><td class="text-center bg-light-grey" colspan="7" ><strong>' . $categoryName . '</strong></td></tr>';
+                            foreach($itemData as $optionName => $items):	
+                                echo '<tr><td class="text-center bg-light-grey" colspan="7" ><strong>' . $optionName . '</strong></td></tr>';
                                 echo '<thead>
                                     <tr class="bg-light-grey">
                                         <th style="width:40px;">SRN.</th>
@@ -93,8 +93,8 @@
                                         echo '<td>' . $row1->item_name . '</td>';
                                         echo '<td>' . $row1->make_brand . '</td>';
                                         echo '<td class="text-center">' . $row1->item_code . '</td>';
-                                        echo '<td class="text-center">' .  $row1->qty . '</td>';
-                                        echo '<td class="text-right">' .  $row1->price . '</td>';
+                                        echo '<td class="text-center">' .  round($row1->qty) . '</td>';
+                                        echo '<td class="text-right">' .  round($row1->price) . '</td>';
                                     }
                                     echo '<td class="text-right">' . moneyFormatIndia($amount) . '</td>';
                                     echo '</tr>';

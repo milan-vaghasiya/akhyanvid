@@ -11,16 +11,12 @@
             </div>
 
             <div class="col-md-4 form-group">
-                <label for="party_code">Party Code</label>
-                <input type="text" name="party_code" class="form-control req" value="<?=(!empty($dataRow->party_code))?$dataRow->party_code:""?>" />
-            </div>  
-
-            <div class="col-md-4 form-group">
                 <label for="business_type">Business Type</label>
                 <select name="business_type" id="business_type" class="form-control  basic-select2">
                     <option value = "">Select Business Type</option>
                     <option value="Builder" <?=(!empty($dataRow->business_type) && $dataRow->business_type == "Builder")?"selected":""?>>Builder</option>
-                    <option value="Individuals" <?=(!empty($dataRow->business_type) && $dataRow->business_type == "Individuals")?"selected":""?>>Individuals</option>
+                    <option value="Individual" <?=(!empty($dataRow->business_type) && $dataRow->business_type == "Individual")?"selected":""?>>Individual</option>
+					<option value="Commercial" <?=(!empty($dataRow->business_type) && $dataRow->business_type == "Commercial")?"selected":""?>>Commercial</option>
                 </select>
             </div>
             
@@ -37,7 +33,7 @@
                 </select>
             </div>
             
-            <div class="col-md-3 form-group">
+            <div class="col-md-4 form-group">
                 <label for="contact_person">Contact Person</label>
                 <input type="text" name="contact_person" id="contact_person" class="form-control text-capitalize" value="<?=(!empty($dataRow->contact_person))?$dataRow->contact_person:""?>" />
             </div>
@@ -62,7 +58,7 @@
                 <input type="text" name="gstin" id="gstin" class="form-control text-uppercase" value="<?=(!empty($dataRow->gstin))?$dataRow->gstin:""; ?>" />
             </div>	
             
-            <div class="col-md-3 form-group">
+            <div class="col-md-4 form-group">
                 <label for="country_id">Country</label>
                 <select name="country_id" id="country_id" class="form-control country_list  basic-select2 req" data-state_id="state_id" data-selected_state_id="<?=(!empty($dataRow->state_id))?$dataRow->state_id:4030?>">
                     <option value="">Select Country</option>
@@ -76,14 +72,14 @@
                 </select>
             </div>
 
-            <div class="col-md-3 form-group">
+            <div class="col-md-4 form-group">
                 <label for="state_id">State</label>
                 <select name="state_id" id="state_id" class="form-control  basic-select2 req">
                     <option value="">Select State</option>
                 </select>
             </div>  
 
-            <div class="col-md-3 form-group">
+            <div class="col-md-4 form-group">
                 <label for="city_name">City</label>
                 <input type="text" name="city_name" id="city_name" class="form-control  req" value="<?=(!empty($dataRow->city_name))?$dataRow->city_name:""; ?>" />
             </div>
@@ -101,7 +97,5 @@ $(document).ready(function(){
 	setTimeout(function(){
         $("#country_id").trigger('change');
     },500);
-
- 
 });
 </script>

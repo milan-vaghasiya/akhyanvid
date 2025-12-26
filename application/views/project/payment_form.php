@@ -12,12 +12,13 @@
                 <input type="date" name="payment_date" id="payment_date" class="form-control req" value="<?=date('Y-m-d')?>" />
             </div>
              <div class="col-md-3 form-group ">
-                <label for="pay_mode">Payment Mode</label>
+				<label for="pay_mode">Payment Mode</label>
                 <select name="pay_mode" id="pay_mode" class="form-control basic-select2 req">
                     <option value="CASH" <?=(!empty($dataRow) && $dataRow->pay_mode == "CASH") ? "selected" : "";?>>CASH</option>
-                    <option value="BANK" <?=(!empty($dataRow) && $dataRow->pay_mode == "BANK") ? "selected" : "";?>>BANK</option>
+                    <option value="CHEQUE" <?=(!empty($dataRow) && $dataRow->pay_mode == "CHEQUE") ? "selected" : "";?>>CHEQUE</option>
                     <option value="RTGS" <?=(!empty($dataRow) && $dataRow->pay_mode == "RTGS") ? "selected" : "";?>>RTGS</option>
                     <option value="IMPS" <?=(!empty($dataRow) && $dataRow->pay_mode == "IMPS") ? "selected" : "";?>>IMPS</option>
+                    <option value="UPI" <?=(!empty($dataRow) && $dataRow->pay_mode == "UPI") ? "selected" : "";?>>UPI</option>
                 </select>
             </div>
             <div class="col-md-3 form-group">

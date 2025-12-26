@@ -32,6 +32,10 @@ class ItemModel extends MasterModel{
         if(!empty($data['item_type'])):
             $queryData['where_in']['item_master.item_type'] = $data['item_type'];
         endif;
+
+        if(!empty($data['category_id'])):
+            $queryData['where']['item_master.category_id'] = $data['category_id'];
+        endif;
         
         return $this->rows($queryData);
     }
@@ -60,12 +64,12 @@ class ItemModel extends MasterModel{
         try{
             $this->db->trans_begin();
 		
-            if($this->checkDuplicate(['item_name'=>$data['item_name'],'item_type'=>$data['item_type'],'category_id'=>$data['category_id'],'id'=>$data['id']]) > 0):
+            if($this->checkDuplicate(['item_code'=>$data['item_code'],'item_type'=>$data['item_type'],'category_id'=>$data['category_id'],'make_brand'=>$data['make_brand'],'id'=>$data['id']]) > 0):
                 $errorMessage['item_name'] = "Item Name is duplicate.";
                 return ['status'=>0,'message'=>$errorMessage];
             endif;
             
-            $result = $this->store($this->itemMaster,$data,"Item");            
+            $result = $this->store($this->itemMaster,$data,"Item");
 
             if ($this->db->trans_status() !== FALSE):
                 $this->db->trans_commit();
@@ -77,15 +81,17 @@ class ItemModel extends MasterModel{
         }
     }
 
-    public function checkDuplicate($data){
+	public function checkDuplicate($data){
         $queryData['tableName'] = $this->itemMaster;
 
-        if(!empty($data['item_name']))
-            $queryData['where']['item_name'] = $data['item_name'];
+        if(!empty($data['item_code']))
+            $queryData['where']['item_code'] = $data['item_code'];
         if(!empty($data['item_type']))
             $queryData['where']['item_type'] = $data['item_type'];
 		if(!empty($data['category_id']))
             $queryData['where']['category_id'] = $data['category_id'];
+		if(!empty($data['make_brand']))
+            $queryData['where']['make_brand'] = $data['make_brand'];
         
         if(!empty($data['id']))
             $queryData['where']['id !='] = $data['id'];
@@ -93,7 +99,7 @@ class ItemModel extends MasterModel{
         $queryData['resultType'] = "numRows";
         return $this->specificRow($queryData);
     }
-
+	
     public function delete($id){
         try{
             $this->db->trans_begin();
@@ -122,7 +128,31 @@ class ItemModel extends MasterModel{
         $queryData['tableName'] = $this->unitMaster;
 		return $this->rows($queryData);
 	}
+	
+    /** Update Price */
+	public function saveUpdatePrice($data){ 
+        try{
+            $this->db->trans_begin();
 
+            foreach ($data['itemData'] as $row) {
+                $priceData = [
+                    'id' => $row['id'],
+                    'gst_per' => $row['gst_per'],
+                    'price' => $row['price'],
+                    'inc_price' => $row['inc_price'],
+                ];
+				$result = $this->store($this->itemMaster,$priceData,'Price');
+            }
 
+            if ($this->db->trans_status() !== FALSE):
+                $this->db->trans_commit();
+                return $result;
+            endif;
+        }catch(\Exception $e){
+            $this->db->trans_rollback();
+            return ['status'=>2,'message'=>"somthing is wrong. Error : ".$e->getMessage()];
+        }	
+    }
+	
 }
 ?>

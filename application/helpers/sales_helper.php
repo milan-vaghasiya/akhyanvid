@@ -12,7 +12,6 @@ function getSalesDtHeader($page){
 	$data['salesQuotation'][] = ["name"=>"Project Type"];
 	$data['salesQuotation'][] = ["name"=>"Project Description"];
 
-
     /* Project Master Header */
     $data['project'][] = ["name"=>"Action","class"=>"text-center no_filter noExport","sortable"=>FALSE,"style"=>""];
     $data['project'][] = ["name"=>"#","class"=>"text-center no_filter","sortable"=>FALSE,"style"=>""];
@@ -25,8 +24,9 @@ function getSalesDtHeader($page){
 	$data['project'][] = ["name"=>"AMC?"];
 	
     /* Service Header */
-    $data['service'][] = ["name"=>"Action","class"=>"text-center no_filter noExport","sortable"=>FALSE];
+	$data['service'][] = ["name"=>"Action","class"=>"text-center no_filter noExport","sortable"=>FALSE];
     $data['service'][] = ["name"=>"#","class"=>"text-center no_filter","sortable"=>FALSE]; 
+    $data['service'][] = ["name"=>"Type"];
     $data['service'][] = ["name"=>"Service No."];
     $data['service'][] = ["name"=>"Service Date"];
     $data['service'][] = ["name"=>"Project"];
@@ -35,6 +35,7 @@ function getSalesDtHeader($page){
     $data['service'][] = ["name"=>"Technician Name"];
     $data['service'][] = ["name"=>"Start Date"];
     $data['service'][] = ["name"=>"Complete Date"];
+    $data['service'][] = ["name"=>"Voice Notes"];
 
     /* Work Progress Header */
     $data['workProgress'][] = ["name"=>"Action","class"=>"text-center no_filter noExport","sortable"=>FALSE,"style"=>""];
@@ -45,15 +46,15 @@ function getSalesDtHeader($page){
     $data['workProgress'][] = ["name"=>"Project Loaction"];
     $data['workProgress'][] = ["name"=>"Project Other info"];
 	$data['workProgress'][] = ["name"=>"SQ. No."];
+	$data['workProgress'][] = ["name"=>"AMC?"];
 
-        
     /* Customer Complaints Header */
 	$data['customerComplaints'][] = ["name"=>"Action","class"=>"text-center no_filter noExport","sortable"=>FALSE];
     $data['customerComplaints'][] = ["name"=>"#","class"=>"text-center no_filter noExport","sortable"=>FALSE]; 
     $data['customerComplaints'][] = ["name"=>"Date"];
     $data['customerComplaints'][] = ["name"=>"Project Name"];
-    $data['customerComplaints'][] = ["name"=>"Voice Note"];
     $data['customerComplaints'][] = ["name"=>"Remarks"];
+    $data['customerComplaints'][] = ["name"=>"Voice Notes"];
 	
     return tableHeader($data[$page]);
 }
@@ -64,7 +65,7 @@ function getSalesQuotationData($data){
 
     $editButton = '<a class="btn btn-success btn-edit permission-modify" href="'.base_url('salesQuotation/edit/'.encodeURL(['trans_number'=>$data->trans_number])).'" datatip="Edit" flow="down" ><i class="mdi mdi-square-edit-outline"></i></a>';
 
-    $deleteParam = "{'postData':{'trans_number' : '".encodeURL($data->trans_number)."'},'message' : 'Sales Quotation'}";
+    $deleteParam = "{'postData':{'trans_number' : '".$data->trans_number."'},'message' : 'Sales Quotation'}";
     $deleteButton = '<a class="btn btn-danger btn-delete permission-remove" href="javascript:void(0)" onclick="trash('.$deleteParam.');" datatip="Remove" flow="down"><i class="mdi mdi-trash-can-outline"></i></a>';
    
     $printBtn = '<a class="btn btn-success btn-edit " href="'.base_url('salesQuotation/printQuotation/'.encodeURL(['trans_number'=>$data->trans_number])).'" target="_blank" datatip="Print" flow="down"><i class="fas fa-print" ></i></a>';
@@ -81,7 +82,9 @@ function getSalesQuotationData($data){
         $projectBtn = '<a class="btn btn-primary permission-modify" href="javascript:void(0)" datatip="Create Project" flow="down" onclick="modalAction('.$projectParam.');"><i class="mdi mdi-briefcase"></i></a>';   
     endif;
 
-    if($data->trans_status != 1):
+    if($data->trans_status == 2):
+        $confirmBtn = $editButton = $deleteButton = "";
+    elseif(in_array($data->trans_status, [3,4])):
         $confirmBtn = $rejectButton = $editButton = $deleteButton = "";
     endif;
 
@@ -140,7 +143,6 @@ function getServiceData($data){
     $CI = & get_instance();
 	$userRole = $CI->session->userdata('role');
     if($data->status == 1):
-        
         $approveParam = "{'postData':{'id' : ".$data->id.",'is_approve':1,'status' : 2,'msg':'Approved'},'fnsave':'approveService','message':'Are you sure want to Approve this Service?'}";
         $approveBtn = '<a class="btn btn-info permission-modify" href="javascript:void(0)" datatip="Approve Service" flow="down" onclick="confirmStore('.$approveParam.');"><i class="mdi mdi-check"></i></a>'; 
 
@@ -163,11 +165,14 @@ function getServiceData($data){
             $shortCloseParam = "{'postData':{'id' : ".$data->id.", 'status' : 6},'fnsave':'changeOrderStatus','message':'Are you sure want to Short Close this Service?'}";
             $shortClose = '<a class="btn btn-instagram permission-modify" href="javascript:void(0)" datatip="Short Close" flow="down" onclick="confirmStore('.$shortCloseParam.');"><i class="mdi mdi-close-circle-outline"></i></a>';
 
-        }elseif(in_array($userRole,[4])){
-            $startParam = "{'postData':{'id' : ".$data->id.",'technician_id' : ".$data->loginId.",'status' : 3,'start_date' : '".date('Y-m-d H:i:s')."'},'fnsave':'changeOrderStatus','message':'Are you sure want to Start this Service?'}";
-            $startBtn = '<a class="btn btn-warning permission-modify" href="javascript:void(0)" datatip="Start" flow="down" onclick="confirmStore('.$startParam.');"><i class="mdi mdi-play"></i></a>';
         }
     endif; 
+    if($data->status == 3){
+        if(in_array($userRole,[4])){
+            $startParam = "{'postData':{'id' : ".$data->id.",'technician_id' : ".$data->loginId.",'status' : 4,'start_date' : '".date('Y-m-d H:i:s')."'},'fnsave':'changeOrderStatus','message':'Are you sure want to Start this Service?'}";
+            $startBtn = '<a class="btn btn-warning permission-modify" href="javascript:void(0)" datatip="Start" flow="down" onclick="confirmStore('.$startParam.');"><i class="mdi mdi-play"></i></a>';
+        }
+    }
 
     if($data->status == 4 && $data->technician_id == $data->loginId):
         $shortCloseParam = "{'postData':{'id' : ".$data->id.", 'status' : 6},'fnsave':'changeOrderStatus','message':'Are you sure want to Short Close this Service?'}";
@@ -187,9 +192,25 @@ function getServiceData($data){
         $reopenBtn = '<a class="btn btn-info permission-modify " href="javascript:void(0)" datatip="Reopen" flow="down" onclick="confirmStore('.$reopenParam.')"><i class="mdi mdi-restart"></i></a>';
     endif;
 
-    $action = getActionButton($completeDetailBtn.$printBtn.$approveBtn.$rejectBtn.$shortClose.$editButton.$deleteButton.$acceptBtn.$assignTecBtn.$startBtn.$completeBtn.$reopenBtn);
 
-	return [$action,$data->sr_no,$data->trans_number,formatDate($data->trans_date,'d-m-Y H:i:s'),$data->project_name,$data->party_name,$data->problem,$data->emp_name,formatDate($data->start_date,'d-m-Y H:i:s'),formatDate($data->complete_date,'d-m-Y H:i:s')];
+    $download = '';
+    if(!empty($data->bfr_images)) { 
+        $downloadParam = "{'postData' :{'id' : ".$data->id." ,'bfr_images': '".$data->bfr_images."'}, 'modal_id' : 'modal-md', 'form_id' : 'downloadForm', 'title' : 'Service File', 'call_function' : 'serviceViewFile', 'button' : 'close'}";
+        $download = '<a class="btn btn-primary btn-edit permission-modify" href="javascript:void(0)" datatip="download" flow="down" onclick="modalAction('.$downloadParam.');"><i class="fa fa-download" ></i></a>';
+    }
+
+    $vnFile = '';
+    if(!empty($data->voice_notes)):
+        $vnPath = base_url('assets/uploads/voice_notes/'.$data->voice_notes);
+        $vnFile='<audio controls style="height: 35px;width:250px;">
+                    <source src="'.$vnPath.'" type="audio/mpeg">
+                    Your browser does not support the audio element.
+                </audio>';
+    endif;
+
+    $action = getActionButton($download.$completeDetailBtn.$printBtn.$approveBtn.$rejectBtn.$shortClose.$editButton.$deleteButton.$acceptBtn.$assignTecBtn.$startBtn.$completeBtn.$reopenBtn);
+
+	return [$action,$data->sr_no,$data->type,$data->trans_number,formatDate($data->trans_date,'d-m-Y H:i:s'),$data->project_name,$data->party_name,$data->problem,$data->emp_name,formatDate($data->start_date,'d-m-Y H:i:s'),formatDate($data->complete_date,'d-m-Y H:i:s'),$vnFile];//13-10-25
 }
 
 /* Work Progress Table data */
@@ -200,34 +221,43 @@ function getWorkProgressData($data){
 
     $action = getActionButton($updateButton);
 
-    return [$action,$data->sr_no,$data->project_name,($data->project_type),$data->party_name,$data->location,$data->other_info,$data->sq_no];
+    return [$action,$data->sr_no,$data->project_name,($data->project_type),$data->party_name,$data->location,$data->other_info,$data->sq_no,$data->amc];
 }
 
-
 /* Customer Complaints Table Data*/
-function getCustomerComplaintsData($data){ 
+function getCustomerComplaintsData($data){  
     
-    $editButton="";$deleteButton="";$solution="";  $download ='';
-
-	$editParam = "{'postData':{'id' : ".$data->id."},'modal_id' : 'bs-right-md-modal', 'form_id' : 'customerComplaints', 'title' : 'Update Customer Complaints','call_function':'edit'}";
-	$editButton = '<a class="btn btn-success btn-edit permission-modify" href="javascript:void(0)" datatip="Edit" flow="down" onclick="modalAction('.$editParam.');"><i class="mdi mdi-square-edit-outline"></i></a>';
-
-	$deleteParam = "{'postData':{'id' : ".$data->id." ,'complaint_file': '".$data->complaint_file."'},'message' : 'Delete Customer Complaints'}";
-	$deleteButton = '<a class="btn btn-danger btn-delete permission-remove" href="javascript:void(0)" onclick="trash('.$deleteParam.');" datatip="Remove" flow="down"><i class="mdi mdi-trash-can-outline"></i></a>';
-	
+    $editButton="";$deleteButton="";$solution="";  $download =''; $serviceBtn="";
     if(($data->status == 1)){
-    
+        $editParam = "{'postData':{'id' : ".$data->id."},'modal_id' : 'bs-right-md-modal', 'form_id' : 'customerComplaints', 'title' : 'Update Customer Complaints','call_function':'edit'}";
+        $editButton = '<a class="btn btn-success btn-edit permission-modify" href="javascript:void(0)" datatip="Edit" flow="down" onclick="modalAction('.$editParam.');"><i class="mdi mdi-square-edit-outline"></i></a>';
+
+        $deleteParam = "{'postData':{'id' : ".$data->id." ,'complaint_file': '".$data->complaint_file."'},'message' : 'Delete Customer Complaints'}";
+        $deleteButton = '<a class="btn btn-danger btn-delete permission-remove" href="javascript:void(0)" onclick="trash('.$deleteParam.');" datatip="Remove" flow="down"><i class="mdi mdi-trash-can-outline"></i></a>';
+        
         $solParam = "{'postData' :{'id' : ".$data->id."}, 'modal_id' : 'modal-md', 'form_id' : 'solutionForm', 'title' : 'Solution', 'call_function' : 'complaintSolution', 'fnsave' : 'save'}";
         $solution = '<a class="btn btn-info btn-edit permission-modify" href="javascript:void(0)" datatip="Solution" flow="down" onclick="modalAction('.$solParam.');"><i class="fas fa-check" ></i></a>';
+
+        $serviceParam = "{'postData' : {'id' : ".$data->id."},'modal_id' : 'bs-right-lg-modal', 'call_function':'addServiceRequest', 'form_id' : 'addService', 'title' : 'Add Service','fnsave':'saveServiceReq'}";
+        $serviceBtn = '<a class="btn btn-success btn-edit permission-modify" href="javascript:void(0)" datatip="Service Request" flow="down" onclick="modalAction('.$serviceParam.');"><i class="fa fa-bell"></i></a>';			
     }
-   
+    
     if(!empty($data->complaint_file)) { 
         $downloadParam = "{'postData' :{'id' : ".$data->id." ,'complaint_file': '".$data->complaint_file."'}, 'modal_id' : 'modal-md', 'form_id' : 'downloadForm', 'title' : 'Complaint File', 'call_function' : 'complaintViewFile', 'button' : 'close'}";
         $download = '<a class="btn btn-primary btn-edit permission-modify" href="javascript:void(0)" datatip="download" flow="down" onclick="modalAction('.$downloadParam.');"><i class="fa fa-download" ></i></a>';
     }
+
+	$vnFile = '';
+    if(!empty($data->voice_note)):
+        $vnPath = base_url('assets/uploads/voice_notes/'.$data->voice_note);
+        $vnFile='<audio controls style="height: 35px;width:250px;">
+                    <source src="'.$vnPath.'" type="audio/mpeg">
+                    Your browser does not support the audio element.
+                </audio>'; 
+    endif;
 	
-    $action = getActionButton($download.$solution.$editButton.$deleteButton);
-	return [$action,$data->sr_no,formatDate($data->date),$data->project_name,$data->voice_note,$data->remark];
+    $action = getActionButton($download. $serviceBtn.$solution.$editButton.$deleteButton);
+	return [$action,$data->sr_no,formatDate($data->date),$data->project_name,$data->remark,$vnFile];
 }
 
 ?>

@@ -10,6 +10,9 @@
                                 <button onclick="statusTab('customerComplaintsTable','1');" class="btn waves-effect waves-light btn-outline-danger active" id="pending_cc" style="outline:0px" data-bs-toggle="tab" aria-expanded="false">Pending</button>
                             </li>
                             <li class="nav-item">
+                                <button onclick="statusTab('customerComplaintsTable','3');" class="btn waves-effect waves-light btn-outline-info" id="service_cc" style="outline:0px" data-bs-toggle="tab" aria-expanded="false">Service Request</button>
+                            </li>
+                             <li class="nav-item">
                                 <button onclick="statusTab('customerComplaintsTable','2');" class="btn waves-effect waves-light btn-outline-success" id="completed_cc" style="outline:0px" data-bs-toggle="tab" aria-expanded="false">Completed</button>
                             </li>
                         </ul>

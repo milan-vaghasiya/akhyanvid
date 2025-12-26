@@ -66,6 +66,18 @@
                                                     <?=getItemListOption($itemList); ?>
                                                 </select>
                                             </div>
+                                             
+                                            <div class="col-md-2 form-group">
+                                                <label for="quot_option">Quotation Option</label>
+                                                <select id="quot_option" class="form-control basic-select2 itemFormInput req">
+                                                    <option value="">Select</option>
+                                                    <option value="Option-1">Option-1</option>
+                                                    <option value="Option-2">Option-2</option>
+                                                    <option value="Option-3">Option-3</option>
+                                                    <option value="Back End">Back End</option>
+                                                    
+                                                </select>
+                                            </div>
                                             <div class="col-md-2 form-group">
                                                 <label for="qty">QTY/Percentage</label>
                                                 <input type="text" id="qty" class="form-control floatOnly req itemFormInput" value="0">
@@ -75,7 +87,7 @@
                                                 <label for="price">Price</label>
                                                 <input type="text" id="price" class="form-control floatOnly  itemFormInput" value="0" />
                                             </div>
-                                            <div class="col-md-2 form-group">
+                                            <div class="col-md-1 form-group">
                                                 <label for="">&nbsp;</label>
                                                 <button type="button" class="btn btn-outline-success btn-block saveItem" style="line-height: 1.8;"><i class="fa fa-plus"></i> Add</button>
                                             </div>
@@ -92,6 +104,7 @@
                                                          <tr>
                                                             <th style="width:5%;">#</th>
                                                             <th>Item Name</th>
+                                                            <th>Quotation Option</th>
                                                             <th>Qty/Percentage</th>
                                                             <th>Price</th>
                                                             <th>Amount </th>
@@ -100,7 +113,7 @@
                                                     </thead>
                                                     <tbody id="tempItem" class="temp_item">
                                                         <tr id="noData">
-                                                            <td colspan="6" class="text-center">No data available in table</td>
+                                                            <td colspan="7" class="text-center">No data available in table</td>
                                                         </tr>
                                                     </tbody>
                                                 </table>

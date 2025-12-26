@@ -5,10 +5,10 @@
             <div class="col-12">
 			<div class="page-title-box">
                         <div class="row">
-                            <div class="col-md-4">
+                            <div class="col-md-7">
                                 <h4 class="card-title pageHeader"><?=$pageHeader?></h4>
                             </div>      
-                            <div class="col-md-3">
+                            <!-- <div class="col-md-3">
 								<select name="project_id" id="project_id" class="form-control basic-select2">
                                     <option value="">ALL Project</option>
                                     <?php 
@@ -19,7 +19,7 @@
                                     endif;
                                     ?>
                                 </select>
-							</div>
+							</div> -->
                             <div class="col-md-2">   
                                 <input type="date" name="from_date" id="from_date" class="form-control" max="<?=date('Y-m-d')?>" value="<?=date('Y-m-01')?>" />
                                 <div class="error fromDate"></div>
@@ -42,14 +42,14 @@
                             <table id='reportTable' class="table table-bordered">
 								<thead class="thead-info" id="theadData">
                                     <tr class="text-center">
-                                        <th colspan="10">Purchase Inward</th>
+                                        <th colspan="8">Purchase Inward</th>
                                     </tr>
 									<tr class="text-center">
 										<th>#</th>
 										<th style="min-width:100px;">G.I. No.</th>
 										<th style="min-width:80px;">G.I. Date</th>
-										<th style="min-width:80px;">P.O. No.</th>
-										<th style="min-width:80px;">P.O. Date</th>
+										<!-- <th style="min-width:80px;">P.O. No.</th>
+										<th style="min-width:80px;">P.O. Date</th> -->
 										<th style="min-width:100px;">Supplier Name</th>
 										<th style="min-width:100px;">Item Description</th>
 										<th style="min-width:50px;">Qty.</th>
@@ -60,7 +60,7 @@
 								<tbody id="tbodyData"> </tbody>
                                 <tfoot class="thead-info" id="tfootData">
                                     <tr>
-                                        <th colspan="7">Total</th>
+                                        <th colspan="5">Total</th>
                                         <th></th>
                                         <th></th>
                                         <th></th>
@@ -86,7 +86,7 @@ $(document).ready(function(){
 		e.stopImmediatePropagation();e.preventDefault();
 		$(".error").html("");
 		var valid = 1;
-		var project_id = $('#project_id').val();
+		// var project_id = $('#project_id').val();
 		var from_date = $('#from_date').val();
 		var to_date = $('#to_date').val();
 		if($("#from_date").val() == ""){$(".fromDate").html("From Date is required.");valid=0;}
@@ -97,7 +97,7 @@ $(document).ready(function(){
 		{
             $.ajax({
                 url: base_url + controller + '/getPurchaseInward',
-                data: { project_id:project_id, from_date:from_date, to_date:to_date },
+                data: { from_date:from_date, to_date:to_date },
 				type: "POST",
 				dataType:'json',
 				success:function(data){

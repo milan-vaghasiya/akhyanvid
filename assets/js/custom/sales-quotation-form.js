@@ -11,6 +11,10 @@ $(document).ready(function(){
         if (formData.item_id == "") {
 			$(".item_id").html("Item Name is required.");
 		}
+
+		if (formData.quot_option == "") {
+			$(".quot_option").html("Quotation Option is required.");
+		}
 		if(formData.item_class == "Goods"){
 			if (formData.qty == "" || parseFloat(formData.qty) == 0) {
 				$(".qty").html("Qty is required.");
@@ -64,7 +68,7 @@ $(document).ready(function(){
 });
 
 var itemCount = 0;
-function AddRow(data) { 
+function AddRow(data) { console.log(data);
     var tblName = "salesQuotationItems";
     //Remove blank line.
 	$('table#'+tblName+' tr#noData').remove();
@@ -90,6 +94,12 @@ function AddRow(data) {
     cell.html(data.item_name);
     cell.append(idInput);
     cell.append(itemIdInput);
+
+	 //05-11-25
+	var optionInput = $("<input/>", { type: "hidden", name: "itemData["+itemCount+"][quot_option]", class:"quot_option", value: data.quot_option });
+	cell = $(row.insertCell(-1));
+	cell.html(data.quot_option);
+	cell.append(optionInput);
 
 	var qtyInput = $("<input/>", { type: "hidden", name: "itemData["+itemCount+"][qty]", class:"item_qty", value: data.qty });
 	var qtyErrorDiv = $("<div></div>", { class: "error qty" + itemCount });
@@ -181,7 +191,8 @@ function resItemDetail(response = ""){
 
         $("#itemForm #item_name").val(itemDetail.item_name);
         $("#itemForm #item_code").val(itemDetail.item_code);
-		$("#itemForm #price").val(itemDetail.price);
+		//$("#itemForm #price").val(itemDetail.price);
+		$("#itemForm #price").val(Math.round(itemDetail.inc_price));
 		$("#itemForm #item_class").val(itemDetail.item_class);
 		if(itemDetail.item_class == "Service"){
 			$("#itemForm #qty").val(1);

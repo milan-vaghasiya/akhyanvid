@@ -69,6 +69,7 @@ class SalesQuotationModel extends MasterModel{
                     'price' => $item['price'],
                     'amount' => $item['amount'],
                     'conditions' => $data['conditions'],
+                    'quot_option' => $item['quot_option'], 
                     'is_delete' => 0,
                 ];
                 $result = $this->store($this->sqMaster, $sqData, 'Sales Quotation');
@@ -103,10 +104,15 @@ class SalesQuotationModel extends MasterModel{
         if(!empty($data['trans_number'])){
             $queryData['where']['sq_master.trans_number'] = $data['trans_number'];
         }
+        if(!empty($data['project_id'])){
+            $queryData['where']['sq_master.project_id'] = $data['project_id'];
+        }
         if(!empty($data['group_by'])){
             $queryData['group_by'][] = $data['group_by'];
         }
-        $queryData['order_by']['item_master.item_class'] = 'ASC';
+		
+		$queryData['order_by']['item_master.item_class'] = 'ASC';
+		
         if(!empty($data['single_row'])):
             $result = $this->row($queryData);
         else:

@@ -10,7 +10,6 @@
                                 <a href="<?= base_url($headData->controller) ?>" class="btn waves-effect waves-light btn-outline-primary  permission-write"> General Permission</a>
                                 <a href="<?= base_url($headData->controller . "/reportPermission/") ?>" class="btn waves-effect waves-light btn-outline-warning permission-write"> Report Permission</a>
                                 <a href="<?= base_url($headData->controller . "/dashboardPermission/") ?>" class="btn waves-effect waves-light btn-outline-info permission-write active"> Dashboard Permission</a>
-                                <!-- <button type="button" class="btn waves-effect waves-light btn-outline-success float-center permission-write" onclick="modalAction({'modal_id' : 'modal-md', 'form_id' : 'copyPermission','call_function':'copyPermission','fnsave':'saveCopyPermission', 'title' : 'Copy Permission','js_store_fn':'confirmStore'});">Copy Permission</button> -->
                                 <a href="<?= base_url($headData->controller . "/appPermission/") ?>" class="btn waves-effect waves-light btn-outline-warning permission-write"> App Permission</a>
                             </ul>
                         </div>

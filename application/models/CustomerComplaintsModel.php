@@ -2,7 +2,7 @@
 class CustomerComplaintsModel extends MasterModel{
     private $customerComplaint = "customer_complaint";
 
-    public function getDTRows($data){
+   public function getDTRows($data){
         $data['tableName'] = $this->customerComplaint;
         $data['select'] = "customer_complaint.*,project_info.project_name,";
         $data['leftJoin']['project_info'] = "customer_complaint.project_id = project_info.id";
@@ -12,16 +12,15 @@ class CustomerComplaintsModel extends MasterModel{
         $data['searchCol'][] = "";
         $data['searchCol'][] = "DATE_FORMAT(customer_complaint.trans_date,'%d-%m-%Y')";
         $data['searchCol'][] = "project_info.project_name";
-        $data['searchCol'][] = "customer_complaint.voice_note";
         $data['searchCol'][] = "customer_complaint.remark";
-
+        $data['searchCol'][] = "customer_complaint.voice_note";
+		
         $columns =array(); foreach($data['searchCol'] as $row): $columns[] = $row; endforeach;
         if(isset($data['order'])){$data['order_by'][$columns[$data['order'][0]['column']]] = $data['order'][0]['dir'];}
         return $this->pagingRows($data);
     }
 
-   
-    public function getCustomerComplaints($data){
+   public function getCustomerComplaints($data){
         $queryData['tableName'] = $this->customerComplaint;
         $queryData['where']['id'] = $data['id'];
         return $this->row($queryData);
@@ -55,7 +54,7 @@ class CustomerComplaintsModel extends MasterModel{
             if (!empty($data['complaint_file'])) {
                 $custFiles = explode(',',$data['complaint_file']);
                 foreach($custFiles as $key=>$val):
-                    $old_file_path = FCPATH."assets/uploads/cust_complaint/" . $val;
+                    $old_file_path = FCPATH."assets/uploads/service/" . $val;
                     if (file_exists($old_file_path)) {
                         unlink($old_file_path);
                     }
@@ -87,4 +86,5 @@ class CustomerComplaintsModel extends MasterModel{
         $result = $this->rows($queryData);
         return $result;
     }
+
 }

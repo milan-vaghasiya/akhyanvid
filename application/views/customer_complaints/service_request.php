@@ -2,12 +2,15 @@
     <div class="col-md-12">
         <div class="row">
 
-            <input type="hidden" name="id" id="id" value="<?=(!empty($dataRow->id))?$dataRow->id:""?>">
+            <input type="hidden" name="id" id="id" value="">
+            <input type="hidden" name="ref_id" id="ref_id" value="<?=(!empty($dataRow->id))?$dataRow->id:""?>">
             <input type="hidden" name="trans_prefix" id="trans_prefix" value="<?=(!empty($dataRow->trans_prefix))?$dataRow->trans_prefix:((!empty($trans_prefix))?$trans_prefix:"")?>">
             <input type="hidden" name="trans_no" id="trans_no" value="<?=(!empty($dataRow->trans_no))?$dataRow->trans_no:((!empty($trans_no))?$trans_no:"")?>">
             <input type="hidden" name="trans_number" id="trans_number" value="<?=(!empty($dataRow->trans_number))?$dataRow->trans_number:((!empty($trans_number))?$trans_number:"")?>">
-            <input type="hidden" name="type" id="type" value="<?=(!empty($dataRow->type))?$dataRow->type:"Regular Service"?>">
+            <input type="hidden" name="type" id="type" value="<?=(!empty($dataRow->type))?$dataRow->type:"Customer Complaints"?>">
             <input type="hidden" name="party_id">
+            <input type="hidden" name="bfr_images" id="bfr_images" value="<?=(!empty($dataRow->complaint_file))?$dataRow->complaint_file:""?>">
+            <input type="hidden" name="voice_notes" id="voice_notes" value="<?=(!empty($dataRow->voice_note))?$dataRow->voice_note:""?>">
 
             <div class="col-md-4 form-group">
                 <label for="trans_date">Date</label>
@@ -30,18 +33,14 @@
             <div class="col-md-4 form-group">
                 <label for="service_type">Service Type</label>
                 <select name="service_type" id="service_type" class="form-control basic-select2">
-                    <option value="FOC" <?=(!empty($dataRow) && $dataRow->service_type  == 'FOC') ? "selected" : "";?>>FOC</option>
-                    <option value="PAID" <?=(!empty($dataRow) && $dataRow->service_type  == 'PAID') ? "selected" : "";?>>PAID</option>
+                    <option value="FOC">FOC</option>
+                    <option value="PAID">PAID</option>
                 </select>
             </div>
             <div class="col-md-12 form-group">
                 <label for="problem">Problem</label>
-                <textarea name="problem" id="problem" class="form-control req" rows="3"><?=(!empty($dataRow->problem) ? $dataRow->problem : "")?></textarea>
+                <textarea name="problem" id="problem" class="form-control req" rows="3"><?=(!empty($dataRow->remark) ? $dataRow->remark : "")?></textarea>
             </div>
-            <div class="col-md-12 form-group">
-                <label for="bfr_images">Images</label>
-                <input type="file" name="bfr_images[]" id="bfr_images" class="form-control" multiple="multiple" >
-            </div> 
         </div>
     </div>
 </form>

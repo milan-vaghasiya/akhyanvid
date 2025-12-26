@@ -66,5 +66,6 @@ class DashboardModel extends MasterModel{
 
 		return $result;
 	}
+
 }
 ?>

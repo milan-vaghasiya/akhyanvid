@@ -158,7 +158,7 @@ class SalesReport extends MY_Controller
         $this->printJson(['status'=>1,'tbody'=>$tbody]);
     }
 
-     /*Project Tracking Report */
+    /*Project Tracking Report */
 	public function projectTracking(){
         $this->data['headData']->pageTitle = 'PROJECT TRACKING';
         $this->data['DT_TABLE'] = true;
@@ -167,8 +167,7 @@ class SalesReport extends MY_Controller
 
         $this->load->view("report/sales_report/project_tracking",$this->data);
     }
-	
-	
+		
     public function getProjectTrackingData(){
         $data = $this->input->post();
         $errorMessage = array();
@@ -191,7 +190,7 @@ class SalesReport extends MY_Controller
                     $link = ''; 
                     
                     $workIdCount = count(explode(',', $row->work_id));
-                    $workViewParam = "{'postData':{'work_id' : '".$row->work_id."','step_no' : ".$row->step_no."},'modal_id' : 'modal-md', 'form_id' : 'workDetail', 'title' : 'Work Detail View', 'call_function' : 'workDetailView', 'button' : 'close'}";
+					$workViewParam = "{'postData':{'work_id' : '".$row->work_id."','step_no' : '".$row->step_no."'},'modal_id' : 'modal-md', 'form_id' : 'workDetail', 'title' : 'Work Detail View', 'call_function' : 'workDetailView', 'button' : 'close'}";
 
                     $link = '<a class="text-warning" href="javascript:void(0)"  flow="down" onclick="modalAction('.$workViewParam.');"><span>[ TOTAL  ' . $workIdCount . ' Works Updated OutOf  '.$row->totalWork.' ]</span></a>';
                 
@@ -252,7 +251,7 @@ class SalesReport extends MY_Controller
     }
 
     // Task Manager Report
-     public function taskReport(){
+    public function taskReport(){
         $this->data['headData']->pageTitle = "Task Report";
 		$this->data['groupList'] = $this->taskManager->getGroupList();
         $this->data['empData'] = $this->employee->getEmployeeList();

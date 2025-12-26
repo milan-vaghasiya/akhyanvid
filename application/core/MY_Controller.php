@@ -4,7 +4,7 @@ class MY_Controller extends CI_Controller{
 
 	public $TERMS_TYPES = ["23" => "Sales Quotation", "24" => "Sales Order"];
 	public $gstPer = ['0'=>"NILL",'0.10'=>'0.10 %','0.25'=>"0.25 %",'1'=>"1 %",'3'=>"3%",'5'=>"5 %","6"=>"6 %","7.50"=>"7.50 %",'12'=>"12 %",'18'=>"18 %",'28'=>"28 %"];
-	public $empRole = ["1"=>"Management","2"=>"Employee","3"=>"Sales Executive","4"=>"Technician"];
+	public $empRole = ["1"=>"Management","2"=>"Office Staff","3"=>"Sales Executive","4"=>"Technician","5"=>"Site Manager"];
 
 	public $partyCategory = [1=>'Customer',2=>'Supplier',3=>'Vendor',4=>'Director',5=>'Ledger'];
 

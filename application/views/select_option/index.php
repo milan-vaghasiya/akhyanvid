@@ -11,8 +11,10 @@
                         <button type="button" id="addbtn" class="btn waves-effect waves-light btn-outline-dark permission-write float-right press-add-btn" onclick="modalAction(<?=$addParam?>);"><i class="fa fa-plus"></i> Add Option</button>
 					</div>
 					<ul class="nav nav-pills">
-						<li><button onclick="statusTab('selectOptionTable',1);" data-type="1" class="btn btn-outline-info statusTabChange active" data-bs-toggle="tab">Service Reason</button></li>
+						<li><button onclick="statusTab('selectOptionTable',1);" data-type="1" class="btn btn-outline-info statusTabChange active" data-bs-toggle="tab">Service Reason</button></li>						
+						<li><button onclick="statusTab('selectOptionTable',2);" data-type="2" class="btn btn-outline-info statusTabChange" data-bs-toggle="tab">Project Specification</button></li>
 					</ul>
+					
 				</div>
 			</div>
 		</div>

@@ -37,6 +37,7 @@ class Project extends MY_Controller{
         $this->data['sq_no'] = $data['trans_number'];
         $this->data['party_id'] = $data['party_id'];
         $this->data['project_type'] = $data['project_type'];
+        $this->data['partyData'] = $this->party->getPartyList(['id'=>$data['party_id'],'single_row'=>1]);
         $this->load->view($this->form,$this->data);
     }
 
@@ -194,24 +195,25 @@ class Project extends MY_Controller{
         $this->load->view($this->projectDetail,$this->data);
     }
 
-     /* Start  Project Specification Data*/ 
-    public function getSpecificationHtml(){
+    /* Start  Project Specification Data*/ 
+	public function getSpecificationHtml(){
         $data = $this->input->post();
+        $specDetail = $this->selectOption->getSelectOptionList(['type'=>'2']);
         $specificData = $this->project->getProjectSpecData(['project_id' => $data['project_id']]);
         $html = ""; $j=1; $specData = [];
         foreach($specificData as $row):
            $specData[$row->specification] = ['spec_desc' => $row->spec_desc,'id' => $row->id ];
         endforeach;
 
-        foreach ($this->specArray as $key=>$label) {
-            $value = isset($specData[$label]) ? $specData[$label]['spec_desc'] : '';
-            $id =  (isset($specData[$label]) ? $specData[$label]['id'] : '');
+        foreach ($specDetail as $row) {
+            $value = isset($specData[$row->label]) ? $specData[$row->label]['spec_desc'] : '';
+            $id =  (isset($specData[$row->label]) ? $specData[$row->label]['id'] : '');
 
             $html .= '<tr>
-                    <th class="text-left bg-grey" style="width:20%;">' . $label . '</th>
+                    <td  style="width:20%;"> <input type="text" name="specification[' . $j . ']" class="form-control bg-grey" style="font-weight:bold;" value="' . $row->label . '" readOnly/></td>
                     <td class="text-left">
-                        <input type="text" name="specData[' . $key . ']" class="form-control" value="' . htmlspecialchars($value) . '" />
-                        <input type="hidden" name="id['.$key.']" value="' . $id . '" />
+                        <input type="text" name="specData[' . $j . ']" class="form-control" value="' . htmlspecialchars($value) . '" />
+                        <input type="hidden" name="id['.$j.']" value="' . $id . '" />
                         <input type="hidden" name="project_id" value="' . $data['project_id'] . '" />
                     </td>
                 </tr>';
@@ -220,7 +222,7 @@ class Project extends MY_Controller{
 
         $this->printJson(['status' => 1, 'tbodyData' => $html]);
     }
-
+			
     public function saveSpecification(){
         $data = $this->input->post(); 
         $errorMessage = array();
@@ -319,18 +321,16 @@ class Project extends MY_Controller{
     /*End Project Incharge */
 
     /*Start Project Work Plan */
-
-    public function getWorkPlanHtml() {
+	public function getWorkPlanHtml() {
         $data = $this->input->post();
         $workProgressData = $this->workProgress->getWorkProgressData(['project_id' => $data['project_id']]);
         $workStepData = $this->workInstructions->getWorkInstructions(['work_type'=>3]);
-		
 
-         $wpData = [];
+        $wpData = [];
         foreach($workProgressData as $row):
            $wpData[$row->description] = ['work_step' => $row->work_step,'id' => $row->id ];
         endforeach;
-        
+       
         $workPlanData = $this->workInstructions->getWorkInstructions(['work_type'=>2]);
         $html = "";  $i = 1; $groupedData = [];
 
@@ -342,12 +342,15 @@ class Project extends MY_Controller{
                       </tr>';
 
             foreach ($workPlans as $row) {
-                $value = isset($wpData[$row->description]) ? $wpData[$row->description]['work_step'] : 0;
+                $value = isset($wpData[$row->description]) ? $wpData[$row->description]['work_step'] : 'N/A';
+                
                 $id = isset($wpData[$row->description]) ? $wpData[$row->description]['id'] : '';
 				
-				$work_step = '<option value="0" ' . (($value == 0) ? "selected" : "") . '>N/A</option>';
+				$work_step = '<option value="N/A" ' . (($value == 'N/A') ? "selected" : "") . '>N/A</option>'; 
 				if(!empty($workStepData)){
-					foreach ($workStepData as $step_row) { $work_step .= '<option value="'.$step_row->work_title.'" ' . (($value == 0) ? "selected" : "") . '>'.$step_row->work_title.'</option>'; }
+					foreach ($workStepData as $step_row) { 
+                        $work_step .= '<option value="'.$step_row->work_title.'" ' . (($value == $step_row->work_title) ? "selected" : "") . '>'.$step_row->work_title.'</option>'; 
+                    }
 				}
 
                 $html .= '<tr>
@@ -357,8 +360,6 @@ class Project extends MY_Controller{
                             </td>
                             <td>
                                 <select name="work_step[]" id="work_step_' . $i . '" class="form-control basic-select2">'.$work_step.'</select>
-                                    
-                                
                             </td>
                         </tr>';
                 $i++;
@@ -367,7 +368,7 @@ class Project extends MY_Controller{
 
         $this->printJson(['status' => 1, 'tbodyData' => $html]);
     }
-
+	
     public function saveWorkPlan(){
         $data = $this->input->post();
         $errorMessage = []; 

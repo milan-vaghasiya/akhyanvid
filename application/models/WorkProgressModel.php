@@ -13,7 +13,7 @@ class WorkProgressModel extends MasterModel{
         $data['searchCol'][] = "";
         $data['searchCol'][] = "";
         $data['searchCol'][] = "project_info.project_name";
-        $data['searchCol'][] = "work_progress.step_no";
+        $data['searchCol'][] = "work_progress.work_step";
         $data['searchCol'][] = "";
         $data['searchCol'][] = "";
 
@@ -56,7 +56,6 @@ class WorkProgressModel extends MasterModel{
         }
     }
 
-		
     public function getWorkProgressData($data){
         $queryData = array();
         $queryData['tableName'] = $this->work_progress;
@@ -72,7 +71,7 @@ class WorkProgressModel extends MasterModel{
         }
 
         if(!empty($data['step_no'])){
-            $queryData['where']['work_progress.step_no'] = $data['step_no'];
+            $queryData['where']['work_progress.work_step'] = $data['step_no'];
         }
         
         if(!empty($data['single_row'])):
@@ -83,32 +82,14 @@ class WorkProgressModel extends MasterModel{
         return $result;
     }
 
-    // public function delete($id){
-    //     try{
-    //         $this->db->trans_begin();
-
-    //          $this->edit($this->work_progress,['project_id'=>$id,'status'=> 1],['status'=>0]);
-    //         $result = $this->trash('work_logs',['project_id'=>$id],'Work Progress');
-
-    //         if ($this->db->trans_status() !== FALSE):
-    //             $this->db->trans_commit();
-    //             return $result;
-    //         endif;
-    //     }catch(\Throwable $e){
-    //         $this->db->trans_rollback();
-    //         return ['status'=>2,'message'=>"somthing is wrong. Error : ".$e->getMessage()];
-    //     }
-    // }
-
-
     // Work Logs Data 
-     public function getWorkLogsData($data){
+	public function getWorkLogsData($data){
         $queryData = array();
         $queryData['tableName'] = 'work_logs';
         $queryData['select'] = "work_logs.*,employee_master.emp_name as created_name,
                             (SELECT COUNT(*) FROM work_progress 
                                 WHERE work_progress.project_id = work_logs.project_id 
-                             AND work_progress.step_no = work_logs.step_no) as totalWork";
+                             AND work_progress.work_step = work_logs.step_no) as totalWork";
         $queryData['leftJoin']['employee_master'] = "employee_master.id = work_logs.created_by";
 
         if(!empty($data['id'])){

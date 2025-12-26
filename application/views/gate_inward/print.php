@@ -91,7 +91,7 @@
 						</tr>
 						<tr>
 							<th class="text-left" colspan="5">
-								Amount In Words : <?=numToWordEnglish(floatval($totalAmt))?>
+								Amount In Words : <?=numToWordEnglish(round($totalAmt))?>
 							</th>							
 						</tr>
 					</tbody>

@@ -35,8 +35,13 @@ class ProjectModel extends MasterModel{
 
     public function save($data){
         try{
-            $this->db->trans_begin();
-           
+			$this->db->trans_begin();
+				
+				if($this->checkDuplicate(['project_name'=>$data['project_name'],'id'=>$data['id']]) > 0):
+                    $errorMessage['project_name'] = "Project Name is duplicate.";
+                    return ['status'=>0,'message'=>$errorMessage];
+                endif;
+				
                 $result = $this->store($this->project_info, $data, 'Project Info');
 
                 if(!empty($data['sq_no'])):
@@ -61,6 +66,19 @@ class ProjectModel extends MasterModel{
             $this->db->trans_rollback();
             return ['status'=>2,'message'=>"somthing is wrong. Error : ".$e->getMessage()];
         }
+    }
+		
+	public function checkDuplicate($data){
+        $queryData['tableName'] = $this->project_info;
+
+        if(!empty($data['project_name']))
+            $queryData['where']['project_name'] = $data['project_name'];
+
+        if(!empty($data['id']))
+            $queryData['where']['id !='] = $data['id'];
+
+        $queryData['resultType'] = "numRows";
+        return $this->specificRow($queryData);
     }
 		
     public function getProjectData($data=[]){
@@ -171,12 +189,10 @@ class ProjectModel extends MasterModel{
             $this->db->trans_begin();
 
             foreach ($data['specData'] as $key => $value) { 
-                $spec_desc = str_replace('_', ' ', $this->specArray[$key]);
-
                 $specifications = [
                     'id'=> $data['id'][$key],
                     'project_id' => $data['project_id'],
-                    'specification' => $spec_desc,    
+                    'specification' => $data['specification'][$key],    
                     'spec_desc' => $value  
                 ];
                 $result = $this->store($this->project_spec,$specifications,'Project Specification');

@@ -172,6 +172,7 @@ class StoreModel extends MasterModel{
             $data['issue_number'] =  'ISU'.'/'.$this->shortYear.'/'.$data['issue_no'];
 			
             $result = $this->store('issue_register', $data, 'Issue Requisition');
+			
             $stockMinusQuery = [
                 'id' => "",
                 'trans_type' =>'SSI',
@@ -180,7 +181,7 @@ class StoreModel extends MasterModel{
                 'qty' => $data['issue_qty'],
                 'p_or_m' => -1,
                 'main_ref_id' => $result['insert_id'],
-                'ref_no' => $data['issue_number'],
+                'ref_no' => $data['issue_number']
             ];
             $issueTrans = $this->store('stock_trans', $stockMinusQuery);
 

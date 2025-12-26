@@ -5,7 +5,6 @@ class PartyModel extends MasterModel{
     private $states = "states";
     private $partyActivities = "party_activities";
 
-
     /* Start Party Data */
     public function getDTRows($data){
         $data['tableName'] = $this->partyMaster;
@@ -17,7 +16,6 @@ class PartyModel extends MasterModel{
       
         $data['searchCol'][] = "";
 		$data['searchCol'][] = "";
-        $data['searchCol'][] = "party_master.party_code";
         $data['searchCol'][] = "party_master.party_name";
         $data['searchCol'][] = "party_master.contact_person";
         $data['searchCol'][] = "party_master.party_phone";

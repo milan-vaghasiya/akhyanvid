@@ -82,8 +82,8 @@
                                             echo '<td class="text-center">' . $row->item_name . '</td>';
                                             echo '<td>' . $row->make_brand . '</td>';
                                             echo '<td class="text-center">' . $row->item_code . '</td>';
-                                            echo '<td class="text-center">' . sprintf('%.2f', $row->qty) . '</td>';
-                                            echo '<td class="text-right">' . sprintf('%.2f', $row->price) . '</td>';
+                                            echo '<td class="text-center">' . round($row->qty) . '</td>';
+                                            echo '<td class="text-right">' . round(row->price) . '</td>';
                                         }
                                         echo '<td class="text-right">' . moneyFormatIndia($amount) . '</td>';
                                         echo '</tr>';

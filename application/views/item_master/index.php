@@ -10,6 +10,12 @@
                         ?>
                         <button type="button" class="btn waves-effect waves-light btn-outline-dark float-right permission-write press-add-btn" onclick="modalAction(<?=$addParam?>);"><i class="fa fa-plus"></i> Add <?=$this->itemTypes[$item_type]?></button>
                     </div>
+                    <?php if($item_type == 1) { ?>
+						 <?php
+                            $addParam = "{'modal_id' : 'bs-right-lg-modal', 'call_function':'updatePrice', 'form_id' : 'updatePrice', 'title' : 'Update Price', 'fnsave' : 'saveUpdatePrice'}";
+                        ?>
+                        <button type="button" id="addbtn" class="btn waves-effect waves-light btn-outline-dark float-right permission-write press-add-btn" onclick="modalAction(<?=$addParam?>);"><i class="fa fa-plus"></i> Upload Price</button>
+					<?php }?>
                     <h4 class="card-title"><?=$this->itemTypes[$item_type]?></h4>
 				</div>
             </div>
@@ -68,5 +74,42 @@ $(document).ready(function() {
             $("#item_excel").val(null);
         });
     });
+
+    $(document).on('change','#category_id',function(){
+		$("#category_name").val("");
+		if($(this).val()){ $("#category_name").val($("#category_id :selected").data('category_name')); }
+	});
+
+    $(document).on('change','.calMRP',function(){ 
+        var gst_per = $("#gst_per").val() || 0; 
+        var price = $("#price").val() || 0;
+        var inc_price = $("#inc_price").val() || 0;
+        if(gst_per > 0){
+            if($(this).attr('id') == "price" && price > 0){
+                var tax_amt = parseFloat( (parseFloat(price) * parseFloat(gst_per) ) / 100 ).toFixed(2);
+                var new_mrp = parseFloat( parseFloat(price) + parseFloat(tax_amt) ).toFixed(2);
+                $("#inc_price").val(new_mrp);
+                return true;
+            }
+
+            if(($(this).attr('id') == "inc_price" || $(this).attr('id') == "gst_per") && inc_price > 0){
+                var gstReverse = parseFloat(( ( parseFloat(gst_per) + 100 ) / 100 )).toFixed(2);
+                var new_price = parseFloat( parseFloat(inc_price) / parseFloat(gstReverse) ).toFixed(2);
+    		    $("#price").val(new_price);
+                return true;
+            }
+        }else{
+            if($(this).attr('id') == "price" && price > 0){
+                $("#inc_price").val(price);
+                return true;
+            }
+
+            if(inc_price > 0){
+                $("#price").val(inc_price);
+                return true;
+            }
+        }
+    });
+    
 });
 </script>

@@ -6,11 +6,12 @@
             <div class="col-md-3 form-group">
                 <label for="step_no">Step</label>
                 <select name="step_no" id="step_no" class="form-control basic-select2"> 
-                <option value="">Select Step</option>
+                <option value="N/A" >N/A</option>
                     <?php
-                        for($i=1; $i<=10; $i++){
-
-                            echo '<option value="'.$i.'" >'.$i.' Step</option>';
+                        if(!empty($workStepData)){
+                            foreach ($workStepData as $row) { 
+                                echo '<option value="'.$row->work_title.'" >'.$row->work_title.'</option>'; 
+                            }
                         }
                     ?>
                 </select>
@@ -27,7 +28,6 @@
             <div class="table-responsive">
                 <table id='workTable' class="table table-bordered table-striped">
                     <tbody id="tbodyData">
-                   
                     </tbody>
                 </table>
             </div>
@@ -38,7 +38,9 @@
 
 <script>
 $(document).ready(function() {
-    
+
+    setTimeout(function(){$("#step_no").trigger('change');},500);
+
     $(document).on('click', '.workInstruction', function() {
         if ($(this).attr('id') == "masterSelect") {
             if ($(this).prop('checked') == true) {
@@ -74,8 +76,6 @@ $(document).ready(function() {
                         initTable();
                         $('#tbodyData').html('');
                         $('#tbodyData').html(data.tbodyData);
-				     
-
                     }
                 }
             });
@@ -83,9 +83,4 @@ $(document).ready(function() {
     });
     
 });
-
-
-
-
-
 </script>

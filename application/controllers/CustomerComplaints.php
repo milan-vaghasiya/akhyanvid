@@ -5,6 +5,7 @@ class CustomerComplaints extends MY_Controller
     private $formPage = "customer_complaints/form";
     private $solution_form = "customer_complaints/solution_form";
     private $complaint_view = "customer_complaints/complaint_view";
+    private $service_request = "customer_complaints/service_request";
    
     public function __construct(){
 		parent::__construct();
@@ -109,7 +110,6 @@ class CustomerComplaints extends MY_Controller
         endif;
     }
 
- 
     public function complaintSolution(){
         $data = $this->input->post();
         $this->data['dataRow'] = $dataRow = $this->customerComplaints->getCustomerComplaints(['id'=>$data['id']]);
@@ -123,6 +123,32 @@ class CustomerComplaints extends MY_Controller
         $this->load->view($this->complaint_view,$this->data);
     }
     
-
+	// Service Request 
+    public function addServiceRequest(){
+         $data = $this->input->post();
+        $this->data['trans_prefix'] = 'S'.n2y(date("Y")).n2m(date("m"));
+        $this->data['trans_no'] = $this->service->getNextServiceNo($this->data['trans_prefix']);
+        $this->data['trans_number'] = $this->data['trans_prefix'].lpad($this->data['trans_no'],3);
+        $this->data['projectList'] = $this->project->getProjectData();
+		$this->data['itemList'] = $this->item->getItemList(['item_type'=>1,'el_model'=>1]);
+        $this->data['dataRow'] = $dataRow = $this->customerComplaints->getCustomerComplaints(['id'=>$data['id']]);
+        $this->load->view($this->service_request,$this->data);
+    }
+    
+    public function saveServiceReq(){
+        $data = $this->input->post();
+        $errorMessage = array();
+        if(empty($data['trans_date']))
+            $errorMessage['trans_date'] = "Service Date is required.";
+        if(empty($data['project_id']))
+            $errorMessage['project_id'] = "Project is required.";  
+        if(!empty($errorMessage)):
+            $this->printJson(['status'=>0,'message'=>$errorMessage]);
+        else:
+            $this->printJson($this->service->save($data));
+        endif;
+    }
+    
+	
 }
 ?>

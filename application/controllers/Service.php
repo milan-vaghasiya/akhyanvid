@@ -5,6 +5,7 @@ class Service extends MY_Controller{
     private $partReplace = "service/part_replace";
     private $assignTechnician = "service/assign_technician";
     private $completeService = "service/complete_service";
+    private $service_view = "service/service_view";
 	    
 	public function __construct(){
 		parent::__construct();
@@ -266,7 +267,9 @@ class Service extends MY_Controller{
 	public function completeServiceDetail(){
         $data = $this->input->post();
         $result = $this->service->getService($data);
+        
         $afterImages = "";$beforeImages = "";$partySign = "";
+        
         if(!empty($result->aft_images)){
             $afrImage = explode(',',$result->aft_images); 
             foreach($afrImage as $row):
@@ -275,6 +278,7 @@ class Service extends MY_Controller{
 				}
             endforeach;
         }
+        
         if(!empty($result->bfr_images)){
             $bfrImage = explode(',',$result->bfr_images); 
             foreach($bfrImage as $row):
@@ -287,7 +291,7 @@ class Service extends MY_Controller{
         if(!empty($result->party_sign)){
             $partySign .= '<img src="'.base_url("assets/uploads/service/party_sign/".$result->party_sign).'" class="img-zoom m-t-10" alt="IMG">';
         }
-				
+        
         echo '<div class="table-responsive">
             <table class="table table-bordered">
                 <tr>
@@ -317,6 +321,12 @@ class Service extends MY_Controller{
             </table>
         </div>';
                    
+    }
+
+	public function serviceViewFile(){
+         $data = $this->input->post();
+        $this->data['bfr_images'] = $data['bfr_images'];
+        $this->load->view($this->service_view,$this->data);
     }
 
 }

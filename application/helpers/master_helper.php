@@ -6,7 +6,6 @@ function getMasterDtHeader($page){
     /* Lead Header */
     $data['lead'][] = ["name"=>"Action","class"=>"text-center no_filter noExport","sortable"=>FALSE,"style"=>""];
 	$data['lead'][] = ["name"=>"#","class"=>"text-center no_filter","sortable"=>FALSE,"style"=>""]; 
-	$data['lead'][] = ["name"=>"Party Code"];
 	$data['lead'][] = ["name"=>"Party Name"];
     $data['lead'][] = ["name"=>"Contact Person"];
     $data['lead'][] = ["name"=>"Contact No."];
@@ -16,7 +15,6 @@ function getMasterDtHeader($page){
     /* Supplier Header */
     $data['supplier'][] = ["name"=>"Action","class"=>"text-center no_filter noExport","sortable"=>FALSE,"style"=>""];
 	$data['supplier'][] = ["name"=>"#","class"=>"text-center no_filter","sortable"=>FALSE,"style"=>""]; 
-	$data['supplier'][] = ["name"=>"Party Code"];
 	$data['supplier'][] = ["name"=>"Party Name"];
     $data['supplier'][] = ["name"=>"Contact Person"];
     $data['supplier'][] = ["name"=>"Contact No."];
@@ -32,12 +30,13 @@ function getMasterDtHeader($page){
     $data['itemCategory'][] = ["name"=>"Remark"];
 
     /* Finish Goods Header */
-    $data['finish_goods'][] = ["name"=>"Action","class"=>"text-center no_filter noExport","sortable"=>FALSE,"style"=>""];
+	$data['finish_goods'][] = ["name"=>"Action","class"=>"text-center no_filter noExport","sortable"=>FALSE,"style"=>""];
 	$data['finish_goods'][] = ["name"=>"#","class"=>"text-center no_filter","sortable"=>FALSE,"style"=>""];
     $data['finish_goods'][] = ["name"=>"Item Code"];
-    $data['finish_goods'][] = ["name"=>"Item Name"];
     $data['finish_goods'][] = ["name"=>"Category Name"];
-    $data['finish_goods'][] = ["name"=>"Unit"];
+    $data['finish_goods'][] = ["name"=>"Make/Brand Name"];
+    $data['finish_goods'][] = ["name"=>"Full Item Name"];
+    $data['finish_goods'][] = ["name"=>"Unit"];	
 
     return tableHeader($data[$page]);
 }
@@ -54,7 +53,7 @@ function getPartyData($data){
     $deleteButton = '<a class="btn btn-danger btn-delete permission-remove" href="javascript:void(0)" onclick="trash('.$deleteParam.');" datatip="Remove" flow="down"><i class="mdi mdi-trash-can-outline"></i></a>';
 
     $action = getActionButton($editButton.$deleteButton);
-    $responseData = [$action,$data->sr_no,$data->party_code,$data->party_name,$data->contact_person,$data->party_phone,$data->business_type,$data->executive_name];
+	$responseData = [$action,$data->sr_no,$data->party_name,$data->contact_person,$data->party_phone,$data->business_type,$data->executive_name];
     return $responseData;
 }
 
@@ -89,7 +88,7 @@ function getProductData($data){
 
     $action = getActionButton($editButton.$deleteButton);
 
-    return [$action,$data->sr_no,$data->item_code,$data->item_name,$data->category_name,$data->uom];
+    return [$action,$data->sr_no,$data->item_code,$data->category_name,$data->make_brand,$data->item_name,$data->uom];
 }
 
 // Lead Data
@@ -128,7 +127,7 @@ function getLeadData($data){
    
 
     $action = getActionButton($lostStageBtn.$qualifiedBtn.$reOpenBtn.$reminderBtn.$editButton.$deleteButton);
-    $responseData = [$action,$data->sr_no,$data->party_code,$activityBtn,$data->contact_person,$data->party_phone,$data->business_type,$data->executive_name];
+    $responseData = [$action,$data->sr_no,$activityBtn,$data->contact_person,$data->party_phone,$data->business_type,$data->executive_name];
     return $responseData;
 }
 

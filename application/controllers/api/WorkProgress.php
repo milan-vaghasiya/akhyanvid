@@ -33,6 +33,11 @@ class WorkProgress extends MY_ApiController{
 		}
     }
 
+	public function getStepList(){
+		$workStepList = $this->workInstructions->getWorkInstructions(['work_type'=>3]);
+		$this->printJson(['status' => 1, 'data' => $workStepList]);
+	}
+      
 	public function save(){
         $data = $this->input->post(); 
 		$data['work_id'] = json_decode($data['work_id'],true);		
@@ -67,5 +72,6 @@ class WorkProgress extends MY_ApiController{
             $this->printJson($this->workProgress->save($data));
         }
     }
+
 }
 ?>

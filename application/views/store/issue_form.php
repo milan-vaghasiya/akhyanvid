@@ -2,6 +2,7 @@
     <div class="col-md-12">
         <div class="row">
             <div class="row">
+
                 <div class="col-md-3 form-group">
                     <label for="challan_no">Issue No.</label>
                     <div class="input-group">
@@ -10,30 +11,49 @@
                         <input type="hidden" name="id" value="" />
                     </div>
                 </div>
+
                 <div class="col-md-3 form-group">
                     <label for="issue_date">Issue Date</label>
                     <input type="date" name="issue_date" id="issue_date" class="form-control" max="<?=date('Y-m-d')?>" value="<?=date("Y-m-d")?>">
                 </div>
 
                 <div class="col-md-6 form-group">
-                    <label for="item_id">Items</label>
-                    <div class="float-right"><a class="text-primary font-bold " href="javascript:void(0)" id="stock_qty">Stock</a></div>
-                    <select name="item_id" id="item_id" class="form-control basic-select2 req getStock">
-                        <option value="">Select Item</option>
+                    <label for="project_id">Project</label>
+                    <select name="project_id" id="project_id" class="form-control basic-select2">
+                        <option value="">Select Project</option>
                         <?php
-                            if(!empty($itemList)){
-                                foreach ($itemList as $row) {
-									echo "<option value='".$row->id."'  >".$row->item_name."</option>";
+                            if(!empty($projectList)){
+                                foreach ($projectList as $row) {
+									echo "<option value='".$row->id."'  >".$row->project_name."</option>";
                                 }
 							}                            
                         ?>
                     </select>
+                </div>
+
+                <div class="col-md-4 form-group">
+                    <label for="product_type">Product Type</label>
+                    <select name="product_type" id="product_type" class="form-control basic-select2">
+                        <option value="">Select Product Type</option>
+                        <option value="1">Quote Wise</option>
+                        <option value="2">Other</option>
+                    </select>
+                </div>
+
+                <div class="col-md-8 form-group">
+                    <label for="item_id">Product</label>
+                    <div class="float-right"><a class="text-primary font-bold " href="javascript:void(0)" id="stock_qty">Stock</a></div>
+                    <select name="item_id" id="item_id" class="form-control basic-select2 req getStock">
+                        <option value="">Select Item Name</option>
+                    </select>
                     <div class="error item_err"></div>
                 </div>
+
                 <div class="col-md-4 form-group">
                     <label for="issue_qty">Issue Qty</label>
                     <input type="text" name="issue_qty" id="issue_qty" class="form-control floatOnly req" >
                 </div>
+
 				<div class="col-md-4 form-group">
                     <label for="issued_to">Issued To</label>
                     <select name="issued_to" id="issued_to" class="form-control basic-select2">
@@ -46,8 +66,9 @@
                             }
                         ?>
                     </select>
-                    <div class="error item_err"></div>
+                    <div class="error issued_to"></div>
                 </div>
+
                 <div class="col-md-12 form-group">
                     <label for="remark">Remark</label>
                     <textarea name="remark" id="remark" class="form-control"></textarea>
@@ -58,6 +79,33 @@
 </form>
 <script>
     $(document).ready(function(){
+
+        $(document).on('change', '#product_type', function (e) {
+            e.stopImmediatePropagation();e.preventDefault();
+
+            var product_type = $("#product_type").val();
+            var project_id = $("#project_id").val();
+
+            if(product_type !== "" && project_id !== ""){
+                $.ajax({
+                    url: base_url + controller + "/getItemListDetail",
+                    type: 'post',
+                    data: { product_type: product_type, project_id:project_id},
+                    dataType: 'json',
+                    success: function(data) {
+                        $("#item_id").html(data.options);
+                        initSelect2();
+                    }
+                });
+            }else{
+                $("#item_id").html("");
+            }
+        });
+
+        $(document).on('change', '#project_id', function () {
+            $("#item_id").html("");  
+            $("#product_type").val("").trigger('change');
+        });
 
         $(document).on('change', '.getStock', function (e) {
             e.stopImmediatePropagation();
