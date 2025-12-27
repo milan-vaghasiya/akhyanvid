@@ -114,5 +114,56 @@ class GateInward extends MY_Controller{
 		$mpdf->WriteHTML($pdfData);
 		$mpdf->Output($pdfFileName,'I');
 	}
+
+    public function ir_print($id){
+        $grnTransData = $this->gateInward->getInwardItem(['id'=>$id,'single_row' => 1]);    
+        $companyData = $this->masterModel->getCompanyInfo();  
+		
+        $logo = (!empty($companyData->print_header))?base_url("assets/uploads/company_logo/".$companyData->company_logo):base_url('assets/images/logo.png');
+       
+        $mpdf = new \Mpdf\Mpdf(['mode' => 'utf-8', 'format' => [100, 68]]);
+		$pdfFileName = 'IR_PRINT.pdf';
+		$stylesheet = file_get_contents(base_url('assets/css/pdf_style.css'));
+        $mpdf->WriteHTML($stylesheet, 1);
+
+        if(!empty($grnTransData)){            
+            $qrIMG = base_url('assets/uploads/iir_qr/'.$grnTransData->id.'.png');
+            if(!file_exists($qrIMG)){
+                $qrText = $grnTransData->item_id.'~'.$grnTransData->batch_no;
+                $file_name = $grnTransData->id;
+                $qrIMG = base_url().$this->getQRCode($qrText,'assets/uploads/iir_qr/',$file_name);
+            }
+            
+            $itemList ='<table class="table">
+                <tr>
+                    <td><img src="'.$logo.'" style="max-height:40px;"></td>
+                    <td class="text-right"></td>
+                </tr>
+            </table>
+            <table class="table top-table-border">
+                <tr>
+                    <td>GRN No. <br><b>'.(!empty($grnTransData->trans_number)?$grnTransData->trans_number:'-').'</b></td>
+                    <td>Date <br><b>'.(!empty($grnTransData->trans_date)?formatDate($grnTransData->trans_date):'-').'</b></td>
+                </tr>
+                <tr>
+                    <td colspan="2">'.(!empty($grnTransData->party_name)?$grnTransData->party_name:'-').'<br> <b>'.(!empty($grnTransData->item_name)?$grnTransData->item_name:'-').'</b></td>
+                </tr>
+                <tr>
+                    <td>Qty<br><b>'.$grnTransData->qty.' ('.$grnTransData->unit_name.')</b></td>
+                    <td>Serial No <br><b>'.(!empty($grnTransData->batch_no)?$grnTransData->batch_no:'-').'</b></td>
+                </tr>
+                <tr>
+                    <td colspan="2" class="text-center"><img src="'.$qrIMG.'" style="height:30mm;"></td>
+                </tr>
+            </table>';
+            
+            $pdfData = '<div style="text-align:center;float:left;padding:1mm 1mm;rotate: -90;position: absolute;bottom:1mm;width:65mm;height:95mm;">' . $itemList . '</div>';
+
+            $mpdf->AddPage('P','','','','',1,1,1,1,1,1);
+            $mpdf->WriteHTML($pdfData);
+        }  
+        
+		$mpdf->Output($pdfFileName, 'I');
+    }
 }
 ?>

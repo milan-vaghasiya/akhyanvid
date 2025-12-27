@@ -96,6 +96,10 @@ function AddBatchRow(data){
 	cell.html(data.price);
     cell.append(priceInput);
 
+    var batchNoInput = $("<input/>",{type:"hidden",name:"item_data["+itemCount+"][batch_no]",value:data.batch_no});   
+    cell = $(row.insertCell(-1));
+	cell.html(data.batch_no);
+    cell.append(batchNoInput);
 
     var remarkInput = $("<input/>",{type:"hidden",name:"item_data["+itemCount+"][item_remark]",value:data.item_remark}); 
     cell = $(row.insertCell(-1));

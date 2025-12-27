@@ -100,6 +100,7 @@ class GateInwardModel extends masterModel{
 						$grnTransData['qty'] = $row->qty;
 						$grnTransData['grn_id'] = (!empty($data['id']) ? $data['id'] : $result['insert_id']);
 						$grnTransData['price'] = (!empty($row->price) ? $row->price : 0);
+						$grnTransData['batch_no'] = (!empty($row->batch_no) ? $row->batch_no : '');
 						$grnTransData['item_remark'] = (!empty($row->item_remark) ? $row->item_remark : "");
                         $grnTransData['is_delete'] = 0;
 						
@@ -115,7 +116,8 @@ class GateInwardModel extends masterModel{
 							'p_or_m' => 1,
 							'child_ref_id' =>(!empty($row->id) ? $row->id : $resultTrans['insert_id']),
                             'main_ref_id' => (!empty($row->id) ? $row->id : $result['insert_id']),
-							'ref_no'=>$data['trans_number']
+							'ref_no'=>$data['trans_number'],
+							'batch_no' => !empty($row->batch_no) ? $row->batch_no : '' 
 						];
 						$this->store('stock_trans', $stockPlusQuery);
 					}
@@ -134,9 +136,12 @@ class GateInwardModel extends masterModel{
 	
     public function getInwardItem($param){
         $queryData['tableName'] = 'grn_trans';
-        $queryData['select'] = "grn_trans.id, grn_trans.item_id, grn_trans.qty, grn_trans.price, item_master.item_code,item_master.item_name,grn_trans.grn_id,grn_trans.item_remark,stock_trans.main_ref_id,item_master.uom";
+        $queryData['select'] = "grn_trans.*,item_master.item_code,item_master.item_name,grn_master.trans_number as po_no,grn_master.trans_number,grn_master.trans_date,party_master.party_name,grn_master.trans_prefix,grn_master.trans_no,item_master.uom as unit_name";
+
         $queryData['leftJoin']['item_master'] = "item_master.id = grn_trans.item_id";
         $queryData['leftJoin']['stock_trans'] = "stock_trans.child_ref_id = grn_trans.id";
+        $queryData['leftJoin']['grn_master'] = "grn_master.id = grn_trans.grn_id";
+        $queryData['leftJoin']['party_master'] = "party_master.id = grn_master.party_id";
 				
         if(!empty($param['id'])):
             $queryData['where']['grn_trans.id'] = $param['id'];
@@ -216,7 +221,8 @@ class GateInwardModel extends masterModel{
                     'p_or_m' => 1,
                     'main_ref_id' => $itemData['grn_id'], 
                     'child_ref_id' => $itemData['id'],
-                    'ref_no' => $data['trans_number']
+                    'ref_no' => $data['trans_number'],
+                    'batch_no' => $itemData['batch_no'],
                 ];
                 $this->store('stock_trans', $stockPlusQuery);
             }

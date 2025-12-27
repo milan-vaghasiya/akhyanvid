@@ -7,8 +7,38 @@
                     <div class="row">
                         <div class="col-md-6">
                             <h4 class="card-title pageHeader"><?=$pageHeader?></h4>
-                        </div>       
-                        <div class="col-md-6 float-right">  
+                        </div>    
+                        <div class="col-md-6"> 
+                            <div class="float-right" style="width:90%;">
+                                <div class="input-group">
+                                    <div class="input-group-append" style="width:40%;">
+                                        <select id="item_id" class="form-control basic-select2">
+                                            <option value="">All Item</option>
+                                            <?php
+                                            if (!empty($itemList)) :
+                                                foreach ($itemList as $row) :
+                                                    echo '<option value="'.$row->id.'">'.(!empty($row->item_code) ? '[ '.$row->item_code.' ] ' : '').$row->item_name.'</option>';
+                                                endforeach;
+                                            endif;
+                                            ?>
+                                        </select>
+                                    </div>
+                                    <div class="input-group-append" style="width:40%;">
+                                        <select id="stock_type" class="form-control basic-select2">
+                                            <option value="0">ALL</option>
+                                            <option value="1">With Stock</option>
+                                            <option value="2">Without Stock</option>
+                                        </select>
+                                    </div>
+                                    <div class="input-group-append">
+                                        <button type="button" class="btn waves-effect waves-light btn-success float-right loadData" title="Load Data">
+                                            <i class="fas fa-sync-alt"></i> Load
+                                        </button>
+                                    </div>
+                                </div> 
+                            </div>  
+                        </div>  
+                        <!-- <div class="col-md-6 float-right">  
                             <div class="input-group">
                                 <div class="input-group-append" style="width:40%;">
                                     <select id="item_id" class="form-control basic-select2">
@@ -22,13 +52,20 @@
                                         ?>
                                     </select>
                                 </div>
+                                <div class="input-group-append" style="width:40%;">
+                                    <select id="stock_type" class="form-control select2" >
+                                        <option value="0">ALL</option>
+                                        <option value="1">With Stock</option>
+                                        <option value="2">Without Stock</option>
+                                    </select>
+                                </div>
                                 <div class="input-group-append">
                                     <button type="button" class="btn waves-effect waves-light btn-success refreshReportData loadData" title="Load Data">
                                         <i class="fas fa-sync-alt"></i> Load
                                     </button>
                                 </div>
                             </div>
-                        </div>                  
+                        </div>                   -->
                     </div>                                         
                 </div>
                 <div class="row">
@@ -69,10 +106,11 @@ $(document).ready(function(){
     $(document).on('click','.loadData',function(e){
 		e.stopImmediatePropagation();e.preventDefault();
 		var item_id = $('#item_id').val();
+        var stock_type = $('#stock_type').val();
 
         $.ajax({
             url: base_url + controller + '/getStockRegisterData',
-            data: { item_id:item_id },
+            data: { item_id:item_id,stock_type:stock_type },
             type: "POST",
             dataType:'json',
             success:function(data){

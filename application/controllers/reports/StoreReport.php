@@ -22,12 +22,18 @@ class StoreReport extends MY_Controller{
         $tbody=''; $i=1;
         if (!empty($stockData)) {
             foreach ($stockData as $row) {
+                $batch_qty = floatVal($row->stock_qty);
+                if(floatVal($row->stock_qty) > 0){                
+                    $locationId = (isset($data['item_type']) && $data['item_type'] == 0) ? "/".$this->CUT_STORE->id : '';
+                    $batch_qty = '<a href="'.base_url("reports/storeReport/batchStockHistory/".$row->item_id.$locationId).'" target="_blank" datatip="Ledger" flow="left">'.floatVal($row->stock_qty).'</a>';
+                }
+                
                 $itemName = '<a href="'.base_url("reports/storeReport/itemHistory/".encodeURL($row->item_id)).'" target="_blank" datatip="History" flow="left">'.$row->item_name.'</a>';
                 $tbody .= '<tr>
                     <td class="text-center">'.$i++.'</td>
                     <td class="text-left">'.$itemName.'</td>
                     <td class="text-center">'.$row->uom.'</td>
-                    <td class="text-right">'.floatval($row->stock_qty).'</td>
+                    <td class="text-right">'.$batch_qty.'</td>
                 </tr>';
             }
         }		
@@ -91,6 +97,35 @@ class StoreReport extends MY_Controller{
         </tr>';
 
         $this->printJson(['status'=>1,'thead'=>$thead,'tbody'=>$tbody,'tfoot'=>$tfoot]);
+    }
+
+    public function batchStockHistory($item_id="",$location_id=""){
+        $this->data['headData']->pageTitle = "Stock Ledger";
+        $this->data['pageHeader'] = 'STOCK LEDGER';
+        $this->data['itemData'] = $this->item->getItem(['id'=>$item_id]);
+        $this->data['location_id'] = $location_id;
+        $this->load->view('report/store_report/stock_history',$this->data);
+    }
+
+    public function getBatchStockHistory(){
+        $data = $this->input->post();
+        $data['stock_required'] = 1;
+        $data['group_by'] = "stock_trans.location_id,stock_trans.batch_no";
+        $data['supplier'] = 1;
+        $stockHistory = $this->itemStock->getItemStockBatchWise($data);
+        
+        $i=1; $tbody =""; 
+        foreach($stockHistory as $row):  
+			$tbody .= '<tr>
+                <td>' . $i++ . '</td>
+                <td>'.$row->store_name.' - '.$row->location.'</td>
+                <td>'.$row->batch_no.'</td>
+                <td>'.$row->party_name.'<br>'.$row->item_name.'</td>
+                <td>'.$row->qty.' ('.$row->uom.')</td>
+            </tr>';
+        endforeach;
+
+        $this->printJson(['status'=>1,'tbody'=>$tbody]);
     }
 }
 ?>

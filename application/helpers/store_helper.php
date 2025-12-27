@@ -66,7 +66,8 @@ function getStoreLocationData($data){
 /* GateInward Data Data  */
 function getGateInwardData($data){
     $deleteButton = $editButton = '';
-	
+    $iirTagPrint = '<a href="'.base_url('gateInward/ir_print/'.$data->id).'" type="button" class="btn btn-primary" datatip="Pending QC Tag" flow="down" target="_blank"><i class="fas fa-print"></i></a>';
+
     $deleteParam = "{'postData':{'id' : ".$data->id.", 'grn_id' : '".$data->grn_id."'},'message' : 'Gate Inward'}";
     $deleteButton = '<a class="btn btn-danger btn-delete permission-remove" href="javascript:void(0)" onclick="trash('.$deleteParam.');" datatip="Remove" flow="down"><i class="mdi mdi-trash-can-outline"></i></a>';
 
@@ -75,7 +76,7 @@ function getGateInwardData($data){
 
     $printBtn = '<a class="btn btn-dribbble" href="'.base_url('gateInward/printGateInward/'.$data->grn_id).'" target="_blank" datatip="Print" flow="down"><i class="fas fa-print"></i></a>';
 
-    $action = getActionButton($printBtn.$editButton.$deleteButton);
+    $action = getActionButton($iirTagPrint.$printBtn.$editButton.$deleteButton);
 
     return [$action,$data->sr_no,$data->trans_number,formatDate($data->trans_date),$data->party_name,$data->item_name,$data->qty];
 }

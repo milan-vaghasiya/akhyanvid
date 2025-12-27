@@ -66,14 +66,19 @@
                 </select>
             </div>
 
-            <div class="col-md-3 form-group">
+            <div class="col-md-2 form-group">
                 <label for="qty">Qty.</label>
                 <input type="text" id="qty" name="itemData[qty]" class="form-control floatOnly calculateQty req itemFormInput" value="<?=(!empty($grnTransData->qty)?$grnTransData->qty:"")?>" readonly>
             </div>
 
-            <div class="col-md-3 form-group">
+            <div class="col-md-2 form-group">
                 <label for="price">Price</label>
                 <input type="text" id="price" name="itemData[price]" class="form-control floatVal itemFormInput" value="<?=(!empty($grnTransData->price)?$grnTransData->price:"")?>">
+            </div>
+
+            <div class="col-md-2 form-group">
+                <label for="batch_no">Serial No. </label>
+                <input type="text" id="batch_no" name="itemData[batch_no]" class="form-control itemFormInput" value="<?=(!empty($grnTransData->batch_no)?$grnTransData->batch_no:"")?>">
             </div>
 
             <div class="col-md-12 form-group">

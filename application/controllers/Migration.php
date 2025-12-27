@@ -753,5 +753,30 @@ class Migration extends CI_Controller{
             echo $e->getMessage();exit;
         }
     }
+
+    public function updateItemMaster(){
+        try{
+            $this->db->trans_begin();
+
+            $this->db->select("item_master.id,item_master.item_name,item_master.category_name,item_category.id as category_id");
+            $this->db->join("item_category","item_category.category_name = item_master.category_name","left");
+            $this->db->order_by('id','asc');
+            $result = $this->db->get('item_master')->result();
+            $i=1;
+            foreach($result as $row):
+                $this->db->where('id',$row->id)->update('item_master',['category_id'=>$row->category_id]);
+                $i++;
+            endforeach;
+
+            if($this->db->trans_status() !== FALSE):
+                $this->db->trans_commit();
+                
+                echo "Category updated Successfully. no. of items : ".$i;
+            endif;
+        }catch(\Throwable $e){
+            $this->db->trans_rollback();
+            echo $e->getMessage();exit;
+        }
+    }
 }
 ?>

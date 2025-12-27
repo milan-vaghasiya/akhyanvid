@@ -30,6 +30,7 @@ class MY_Controller extends CI_Controller{
 		$this->load->model('DashboardModel','dashboard');
 		$this->load->model('PermissionModel','permission');
 		$this->load->model('TermsModel','terms');
+		$this->load->model('StockTransModel','itemStock');
 		
 		/* Store Models */
 		$this->load->model("GateInwardModel","gateInward");

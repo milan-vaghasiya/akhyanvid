@@ -25,7 +25,7 @@
             </div>
             <div class="col-md-4 form-group">
                 <label for="party_id">Party Name</label>
-                <select name="party_id" id="party_id" class="form-control basic-select2">
+                <select name="party_id" id="party_id" class="form-control basic-select2 req">
                     <option value="">Select Party Name</option>
                     <?=getPartyListOption($partyList,((!empty($gateInwardData->party_id))?$gateInwardData->party_id:((!empty($gateEntryData->party_id))?$gateEntryData->party_id:"")))?>
                 </select>                
@@ -44,13 +44,17 @@
                     <?=getItemListOption($itemList)?>
                 </select>
             </div>
-            <div class="col-md-3 form-group">
+            <div class="col-md-2 form-group">
                 <label for="qty">Qty.</label>
                 <input type="text" id="qty" class="form-control floatOnly calculateQty req itemFormInput" value="0">
             </div>
-            <div class="col-md-3 form-group">
+            <div class="col-md-2 form-group">
                 <label for="price">Price</label>
                 <input type="text" id="price" class="form-control floatVal itemFormInput" value="">
+            </div>
+            <div class="col-md-2 form-group">
+                <label for="batch_no">Serial No. </label>
+                <input type="text" id="batch_no" class="form-control itemFormInput" value="">
             </div>
             <div class="col-md-12 form-group">
                 <label for="item_remark">Remark</label>
@@ -73,6 +77,7 @@
                             <th style="width:25%;">Item Name</th>
                             <th style="width:10%;">Qty</th>
                             <th style="width:10%;">Price</th>
+                            <th style="width:10%;">Serial No</th>
                             <th>Remark</th>
                             <th>Action</th>
                         </tr>
