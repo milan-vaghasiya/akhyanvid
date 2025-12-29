@@ -120,7 +120,7 @@ class StoreReport extends MY_Controller{
                 <td>' . $i++ . '</td>
                 <td>'.$row->store_name.' - '.$row->location.'</td>
                 <td>'.$row->batch_no.'</td>
-                <td>'.$row->party_name.'<br>'.$row->item_name.'</td>
+                <td>'.($row->party_name ?? '').'<br>'.$row->hsn_code.'</td>
                 <td>'.$row->qty.' ('.$row->uom.')</td>
             </tr>';
         endforeach;

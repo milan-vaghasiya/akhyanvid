@@ -17,6 +17,7 @@ function getStoreDtHeader($page){
     $data['gateInward'][] = ["name" => "GRN Date", "textAlign" => "center"];
     $data['gateInward'][] = ["name" => "Supplier"];
     $data['gateInward'][] = ["name" => "Item Name"];
+    $data['gateInward'][] = ["name" => "Serial No"];
     $data['gateInward'][] = ["name" => "Qty"]; 
 
     /* Material Issue Table Header */
@@ -78,7 +79,7 @@ function getGateInwardData($data){
 
     $action = getActionButton($iirTagPrint.$printBtn.$editButton.$deleteButton);
 
-    return [$action,$data->sr_no,$data->trans_number,formatDate($data->trans_date),$data->party_name,$data->item_name,$data->qty];
+    return [$action,$data->sr_no,$data->trans_number,formatDate($data->trans_date),$data->party_name,$data->item_name,$data->batch_no,$data->qty];
 }
 
 /* Material Issue Table Data */

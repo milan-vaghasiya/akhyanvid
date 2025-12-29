@@ -170,6 +170,7 @@ class StoreModel extends MasterModel{
 
             $data['issue_no'] = $this->getNextIssueNo();
             $data['issue_number'] =  'ISU'.'/'.$this->shortYear.'/'.$data['issue_no'];
+            $data['batch_no'] = !empty($data['batch_no']) ? $data['batch_no'] : 'GENERAL';
 			
             $result = $this->store('issue_register', $data, 'Issue Requisition');
 			
@@ -181,7 +182,8 @@ class StoreModel extends MasterModel{
                 'qty' => $data['issue_qty'],
                 'p_or_m' => -1,
                 'main_ref_id' => $result['insert_id'],
-                'ref_no' => $data['issue_number']
+                'ref_no' => $data['issue_number'],
+                'batch_no' => !empty($data['batch_no']) ? $data['batch_no'] : 'GENERAL'
             ];
             $issueTrans = $this->store('stock_trans', $stockMinusQuery);
 

@@ -146,7 +146,10 @@ class GateInward extends MY_Controller{
                     <td>Date <br><b>'.(!empty($grnTransData->trans_date)?formatDate($grnTransData->trans_date):'-').'</b></td>
                 </tr>
                 <tr>
-                    <td colspan="2">'.(!empty($grnTransData->party_name)?$grnTransData->party_name:'-').'<br> <b>'.(!empty($grnTransData->item_name)?$grnTransData->item_name:'-').'</b></td>
+                    <td colspan="2">Party Name <br><b>'.(!empty($grnTransData->party_name)?$grnTransData->party_name:'-').'</b></td>
+                </tr>
+                <tr>
+                    <td colspan="2">Item Name'.'<br> <b>'.(!empty($grnTransData->item_name)?$grnTransData->item_name:'-').'</b></td>
                 </tr>
                 <tr>
                     <td>Qty<br><b>'.$grnTransData->qty.' ('.$grnTransData->unit_name.')</b></td>

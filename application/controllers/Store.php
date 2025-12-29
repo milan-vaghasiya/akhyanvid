@@ -62,7 +62,15 @@ class Store extends MY_Controller
         $stockData = $this->store->getItemStockBatchWise(['item_id'=>$data['item_id'],'stock_required'=>1,'single_row'=>1]);
 
         $stock_qty = (!empty($stockData->qty)?floatval($stockData->qty).' <small>'.$stockData->uom.'</small>':0);
-        $this->printJson(['status'=>1,'stock_qty'=>$stock_qty]);
+
+        //Get batch details
+        $batchoption = '<option value="">Select Batch</option>';		
+        $batchList = $this->itemStock->getItemStockBatchWise(['item_id'=>$data['item_id'],'group_by'=>'item_id,batch_no','stock_required'=>1]);
+        foreach($batchList as $row){
+            $selected = (!empty($data['item_id']) && $data['item_id'] == $row->item_id)?'selected':'';
+            $batchoption .= '<option value="'.$row->batch_no.'" '.$selected.'>'.$row->batch_no .' (Stock Qty : '.$row->qty.')</option>';
+        }
+        $this->printJson(['status'=>1,'stock_qty'=>$stock_qty,'batchNo'=>$batchoption]);
     }
 
     public function saveIssuedMaterial() {
@@ -73,6 +81,8 @@ class Store extends MY_Controller
         if(empty($data['item_id'])) {  $errorMessage['item_id'] = "Item is required";  }
 		
         if(empty($data['project_id'])) {  $errorMessage['project_id'] = "Project is required";  }
+
+        if(empty($data['batch_no'])) {  $errorMessage['batch_no'] = "Batch No is required";  }
 		
 		if(empty($data['issue_qty']) OR $data['issue_qty']<=0){ 
 			$errorMessage['issue_qty'] = "Issue Qty is required."; 
@@ -87,7 +97,7 @@ class Store extends MY_Controller
         if (!empty($errorMessage)) :
             $this->printJson(['status' => 0, 'message' => $errorMessage]);
         else :
-			 unset($data['product_type']);
+			unset($data['product_type']);
 			$this->printJson($this->store->saveIssuedMaterial($data));
         endif;
     }

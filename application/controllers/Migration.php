@@ -764,7 +764,7 @@ class Migration extends CI_Controller{
             $result = $this->db->get('item_master')->result();
             $i=1;
             foreach($result as $row):
-                $this->db->where('id',$row->id)->update('item_master',['category_id'=>$row->category_id]);
+                $this->db->where('id',$row->id)->update('item_master',['item_type' => 1,'category_id'=>$row->category_id]);
                 $i++;
             endforeach;
 

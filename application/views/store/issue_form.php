@@ -50,6 +50,14 @@
                 </div>
 
                 <div class="col-md-4 form-group">
+                    <label for="batch_no">Batch No</label>
+                    <select id="batch_no" name="batch_no" class="form-control select2 req">
+                        <option value="">Select Batch</option>
+                        <?php echo (!empty($batchNo)? $batchNo :'')?>
+                    </select>
+                </div> 
+
+                <div class="col-md-4 form-group">
                     <label for="issue_qty">Issue Qty</label>
                     <input type="text" name="issue_qty" id="issue_qty" class="form-control floatOnly req" >
                 </div>
@@ -123,6 +131,7 @@
                     dataType: 'json',
                     success: function(data) {
                         $("#stock_qty").html('Stock : ' + data.stock_qty);
+                        $("#batch_no").html(data.batchNo);
                     }
                 });
             }

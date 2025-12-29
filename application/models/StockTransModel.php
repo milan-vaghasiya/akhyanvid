@@ -4,16 +4,11 @@ class StockTransModel extends MasterModel{
 
     public function getItemStockBatchWise($data){
         $queryData['tableName'] = $this->stockTrans;
-        $queryData['select'] = "stock_trans.id,stock_trans.trans_date,stock_trans.item_id, item_master.item_code, item_master.item_name, SUM(stock_trans.qty * stock_trans.p_or_m) as qty,stock_trans.batch_no,stock_trans.location_id, lm.location, lm.store_name,stock_trans.remark,item_master.uom";
+        $queryData['select'] = "stock_trans.id,stock_trans.trans_date,stock_trans.item_id, item_master.item_code, item_master.item_name, SUM(stock_trans.qty * stock_trans.p_or_m) as qty,stock_trans.batch_no,stock_trans.location_id, lm.location, lm.store_name,stock_trans.remark,item_master.uom,item_master.hsn_code";
         
         $queryData['leftJoin']['location_master as lm'] = "lm.id=stock_trans.location_id";
         $queryData['leftJoin']['item_master'] = "stock_trans.item_id = item_master.id";
 
-        if(!empty($data['supplier'])){
-			$queryData['select'] .= ",party_master.party_name,batch_history.heat_no,batch_history.party_id";
-			$queryData['leftJoin']['batch_history'] = "stock_trans.item_id = batch_history.item_id AND stock_trans.batch_no = batch_history.batch_no AND batch_history.is_delete = 0";
-			$queryData['leftJoin']['party_master'] = "batch_history.party_id = party_master.id";	
-		}
         if(!empty($data['item_id'])): 
             $queryData['where']['stock_trans.item_id'] = $data['item_id'];           
         endif;
@@ -79,8 +74,7 @@ class StockTransModel extends MasterModel{
         }
         if(isset($data['semi_stock']) && $data['semi_stock'] ==1):
             $queryData['where']['stock_trans.location_id !='] = $this->RTD_STORE->id;
-        endif;
-    
+        endif;    
       
         $queryData['order_by']['lm.location'] = "ASC";
 

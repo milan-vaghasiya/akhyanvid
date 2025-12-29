@@ -17,7 +17,7 @@ class GateInwardModel extends masterModel{
 
     public function getDTRows($data){
         $data['tableName'] = 'grn_trans';
-        $data['select'] = "grn_trans.id,grn_master.trans_number,DATE_FORMAT(grn_master.trans_date,'%d-%m-%Y') as trans_date,grn_trans.qty,party_master.party_name,item_master.item_name,grn_master.doc_no,ifnull(DATE_FORMAT(grn_master.doc_date,'%d-%m-%Y'),'') as doc_date,grn_trans.trans_status,grn_master.id as grn_id";
+        $data['select'] = "grn_trans.id,grn_master.trans_number,DATE_FORMAT(grn_master.trans_date,'%d-%m-%Y') as trans_date,grn_trans.qty,party_master.party_name,item_master.item_name,grn_master.doc_no,ifnull(DATE_FORMAT(grn_master.doc_date,'%d-%m-%Y'),'') as doc_date,grn_trans.trans_status,grn_master.id as grn_id,grn_trans.batch_no";
         $data['leftJoin']['grn_master'] = "grn_master.id = grn_trans.grn_id";
         $data['leftJoin']['item_master'] = "item_master.id = grn_trans.item_id";
         $data['leftJoin']['party_master'] = "party_master.id = grn_master.party_id";
@@ -30,6 +30,7 @@ class GateInwardModel extends masterModel{
         $data['searchCol'][] = "DATE_FORMAT(grn_master.trans_date,'%d-%m-%Y')";
         $data['searchCol'][] = "party_master.party_name";
         $data['searchCol'][] = "item_master.item_name";
+        $data['searchCol'][] = "grn_trans.batch_no";
         $data['searchCol'][] = "grn_trans.qty";
 
         $columns =array(); foreach($data['searchCol'] as $row): $columns[] = $row; endforeach;
