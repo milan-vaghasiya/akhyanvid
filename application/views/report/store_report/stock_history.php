@@ -30,9 +30,7 @@
                                     </tr>
 									<tr>
 										<th style="min-width:25px;">#</th>
-										<th style="min-width:100px;">Location</th>
 										<th style="min-width:100px;">Batch No</th>
-										<th style="min-width:100px;">HSN Code</th>
 										<th style="min-width:50px;">Qty</th>
 									</tr>
 								</thead>

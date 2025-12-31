@@ -101,7 +101,7 @@ class GateInwardModel extends masterModel{
 						$grnTransData['qty'] = $row->qty;
 						$grnTransData['grn_id'] = (!empty($data['id']) ? $data['id'] : $result['insert_id']);
 						$grnTransData['price'] = (!empty($row->price) ? $row->price : 0);
-						$grnTransData['batch_no'] = (!empty($row->batch_no) ? $row->batch_no : '');
+						$grnTransData['batch_no'] = (!empty($row->batch_no) ? $row->batch_no : 'GENERAL');
 						$grnTransData['item_remark'] = (!empty($row->item_remark) ? $row->item_remark : "");
                         $grnTransData['is_delete'] = 0;
 						
@@ -118,7 +118,7 @@ class GateInwardModel extends masterModel{
 							'child_ref_id' =>(!empty($row->id) ? $row->id : $resultTrans['insert_id']),
                             'main_ref_id' => (!empty($row->id) ? $row->id : $result['insert_id']),
 							'ref_no'=>$data['trans_number'],
-							'batch_no' => !empty($row->batch_no) ? $row->batch_no : '' 
+							'batch_no' => !empty($row->batch_no) ? $row->batch_no : 'GENERAL' 
 						];
 						$this->store('stock_trans', $stockPlusQuery);
 					}

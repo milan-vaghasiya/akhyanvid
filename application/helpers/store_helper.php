@@ -67,7 +67,7 @@ function getStoreLocationData($data){
 /* GateInward Data Data  */
 function getGateInwardData($data){
     $deleteButton = $editButton = '';
-    $iirTagPrint = '<a href="'.base_url('gateInward/ir_print/'.$data->id).'" type="button" class="btn btn-primary" datatip="Pending QC Tag" flow="down" target="_blank"><i class="fas fa-print"></i></a>';
+    $iirTagPrint = '<a href="'.base_url('gateInward/ir_print/'.$data->id).'" type="button" class="btn btn-primary" datatip="QC Tag" flow="down" target="_blank"><i class="fas fa-print"></i></a>';
 
     $deleteParam = "{'postData':{'id' : ".$data->id.", 'grn_id' : '".$data->grn_id."'},'message' : 'Gate Inward'}";
     $deleteButton = '<a class="btn btn-danger btn-delete permission-remove" href="javascript:void(0)" onclick="trash('.$deleteParam.');" datatip="Remove" flow="down"><i class="mdi mdi-trash-can-outline"></i></a>';

@@ -82,7 +82,7 @@ class Store extends MY_Controller
 		
         if(empty($data['project_id'])) {  $errorMessage['project_id'] = "Project is required";  }
 
-        if(empty($data['batch_no'])) {  $errorMessage['batch_no'] = "Batch No is required";  }
+        if(empty($data['batch_no'])) {  $errorMessage['batch_no'] = "Serial No is required";  }
 		
 		if(empty($data['issue_qty']) OR $data['issue_qty']<=0){ 
 			$errorMessage['issue_qty'] = "Issue Qty is required."; 
@@ -196,5 +196,40 @@ class Store extends MY_Controller
         endif;
     }
     /* Opening Stock End */
+
+    public function getScanedItemStock(){
+        $data = $this->input->post();
+        $errorMessage = array();
+        $scanData = decodeURL($data['scan_id']);
+        $scanData = (array) $scanData;
+
+        if(empty($data['project_id'])){
+            $errorMessage['project_id'] = 'Project is required';    
+        }
+        if(empty($data['product_type'])){
+            $errorMessage['product_type'] = 'Product type is required';    
+        }
+        if(empty($scanData['batch_no']) && empty($scanData['item_id'])){
+            $errorMessage['scan_qr_item'] = 'In Valid QR Code Scan';
+        }
+        if(!empty($errorMessage)){
+            $this->printJson(['status'=>0,'message'=>$errorMessage]);
+
+        }else{
+            //Check exist product
+            if($data['product_type'] == 1){
+                $itemList = $this->salesQuotation->getSalesQuotation(['project_id' => $data['project_id'],'item_id' => $scanData['item_id'], 'single_row' => 1]);
+            }
+            if($data['product_type'] == 2){
+                $itemList = $this->item->getItemList(['item_type'=>"1"]);
+            }
+
+            if(empty($itemList)){
+                $errorMessage['item_id'] = 'Product not available';
+                $this->printJson(['status'=>0,'message'=>$errorMessage]);
+            }
+            $this->printJson(['status' => 1, 'item_id' => $scanData['item_id'], 'batch_no' => $scanData['batch_no']]);
+        }    
+	}
 }
 ?>

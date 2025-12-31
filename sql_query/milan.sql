@@ -6,3 +6,6 @@ ALTER TABLE stock_trans CONVERT TO CHARACTER SET latin1 COLLATE latin1_general_c
 
 -- 29-12-2025 --
 ALTER TABLE `issue_register` ADD `batch_no` VARCHAR(20) NULL DEFAULT NULL AFTER `issue_number`;
+
+-- 31-12-2025 --
+ALTER TABLE `grn_trans` CHANGE `batch_no` `batch_no` VARCHAR(100) CHARACTER SET latin1 COLLATE latin1_swedish_ci NULL DEFAULT 'GENERAL';

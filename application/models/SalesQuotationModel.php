@@ -107,6 +107,9 @@ class SalesQuotationModel extends MasterModel{
         if(!empty($data['project_id'])){
             $queryData['where']['sq_master.project_id'] = $data['project_id'];
         }
+        if(!empty($data['item_id'])){
+            $queryData['where']['sq_master.item_id'] = $data['item_id'];
+        }
         if(!empty($data['group_by'])){
             $queryData['group_by'][] = $data['group_by'];
         }

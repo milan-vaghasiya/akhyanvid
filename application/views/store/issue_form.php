@@ -2,7 +2,12 @@
     <div class="col-md-12">
         <div class="row">
             <div class="row">
-
+                <div class="col-md-12 form-group">													
+                    <label><i class="fa fa-qrcode text-primary"></i> SCAN QR CODE</label>
+                    
+                    <input type="text" id="scan_qr_item" value="" class="form-control"  style="background:#93d2ff;color:#000000;font-weight:bold;" placeholder="SCAN QR CODE" autocomplete="off">
+                </div>
+                
                 <div class="col-md-3 form-group">
                     <label for="challan_no">Issue No.</label>
                     <div class="input-group">
@@ -19,7 +24,7 @@
 
                 <div class="col-md-6 form-group">
                     <label for="project_id">Project</label>
-                    <select name="project_id" id="project_id" class="form-control basic-select2">
+                    <select name="project_id" id="project_id" class="form-control basic-select2 req">
                         <option value="">Select Project</option>
                         <?php
                             if(!empty($projectList)){
@@ -50,9 +55,9 @@
                 </div>
 
                 <div class="col-md-4 form-group">
-                    <label for="batch_no">Batch No</label>
+                    <label for="batch_no">Serial No</label>
                     <select id="batch_no" name="batch_no" class="form-control select2 req">
-                        <option value="">Select Batch</option>
+                        <option value="">Select Serial No</option>
                         <?php echo (!empty($batchNo)? $batchNo :'')?>
                     </select>
                 </div> 
@@ -87,6 +92,44 @@
 </form>
 <script>
     $(document).ready(function(){
+        setTimeout(function(){ $('#scan_qr_item').focus(); }, 1000);
+
+        /** LOAD SCANNED(QR) ITEM ON ENTER KEY */
+        $(document).on('keypress','#scan_qr_item',function(e){ 
+            if(e.which == 13) {
+                $("#tbodyData").html("");
+                var scan_id = $("#scan_qr_item").val();
+                var project_id = $("#project_id").val();
+                var product_type = $("#product_type").val();
+                
+                $(".error").html("");
+                if(scan_id){
+                    $.ajax({
+                        type: "POST",
+                        url: base_url + 'store/getScanedItemStock',
+                        data:{scan_id:scan_id,project_id:project_id,product_type:product_type},
+                        dataType:'json'
+                    }).done(function (response) {
+                        if(response.status == 1){  
+                            $(".error").html("");
+                            setTimeout(() => {
+                                $("#item_id").val(response.item_id).trigger('change');
+                                $("#item_id").select2();
+                            }, 400);
+
+                            setTimeout(() => {
+                                $("#batch_no").val(response.batch_no).trigger('change');
+                                $("#batch_no").select2();
+                            }, 1000);
+                        }else{
+                            $(".error").html("");
+                            $.each( response.message, function( key, value ) {$("."+key).html(value);});
+                        }                        
+                    })
+                    $('#scan_qr_item').val('');
+                }
+            }
+        });  
 
         $(document).on('change', '#product_type', function (e) {
             e.stopImmediatePropagation();e.preventDefault();
@@ -136,6 +179,5 @@
                 });
             }
         });
-
     });
 </script>

@@ -129,7 +129,7 @@ class GateInward extends MY_Controller{
         if(!empty($grnTransData)){            
             $qrIMG = base_url('assets/uploads/iir_qr/'.$grnTransData->id.'.png');
             if(!file_exists($qrIMG)){
-                $qrText = $grnTransData->item_id.'~'.$grnTransData->batch_no;
+                $qrText = encodeURL(['item_id' => $grnTransData->item_id,'batch_no' => $grnTransData->batch_no]);
                 $file_name = $grnTransData->id;
                 $qrIMG = base_url().$this->getQRCode($qrText,'assets/uploads/iir_qr/',$file_name);
             }
