@@ -2,27 +2,7 @@
     <div class="col-md-12">
         <div class="row">
             <div class="row">
-                <div class="col-md-12 form-group">													
-                    <label><i class="fa fa-qrcode text-primary"></i> SCAN QR CODE</label>
-                    
-                    <input type="text" id="scan_qr_item" value="" class="form-control"  style="background:#93d2ff;color:#000000;font-weight:bold;" placeholder="SCAN QR CODE" autocomplete="off">
-                </div>
-                
-                <div class="col-md-3 form-group">
-                    <label for="challan_no">Issue No.</label>
-                    <div class="input-group">
-                        <input type="text" name="issue_number" class="form-control" value="<?= $issue_number ?>" readOnly />
-                        <input type="hidden" name="issue_no" value="<?= $issue_no ?>" readOnly />
-                        <input type="hidden" name="id" value="" />
-                    </div>
-                </div>
-
-                <div class="col-md-3 form-group">
-                    <label for="issue_date">Issue Date</label>
-                    <input type="date" name="issue_date" id="issue_date" class="form-control" max="<?=date('Y-m-d')?>" value="<?=date("Y-m-d")?>">
-                </div>
-
-                <div class="col-md-6 form-group">
+                <div class="col-md-4 form-group">
                     <label for="project_id">Project</label>
                     <select name="project_id" id="project_id" class="form-control basic-select2 req">
                         <option value="">Select Project</option>
@@ -45,7 +25,27 @@
                     </select>
                 </div>
 
-                <div class="col-md-8 form-group">
+                <div class="col-md-4 form-group">													
+                    <label><i class="fa fa-qrcode text-primary"></i> SCAN QR CODE</label>
+                    
+                    <input type="text" id="scan_qr_item" value="" class="form-control"  style="background:#93d2ff;color:#000000;font-weight:bold;" placeholder="SCAN QR CODE" autocomplete="off">
+                </div>
+                
+                <div class="col-md-3 form-group">
+                    <label for="challan_no">Issue No.</label>
+                    <div class="input-group">
+                        <input type="text" name="issue_number" class="form-control" value="<?= $issue_number ?>" readOnly />
+                        <input type="hidden" name="issue_no" value="<?= $issue_no ?>" readOnly />
+                        <input type="hidden" name="id" value="" />
+                    </div>
+                </div>
+
+                <div class="col-md-3 form-group">
+                    <label for="issue_date">Issue Date</label>
+                    <input type="date" name="issue_date" id="issue_date" class="form-control" max="<?=date('Y-m-d')?>" value="<?=date("Y-m-d")?>">
+                </div>                
+
+                <div class="col-md-6 form-group">
                     <label for="item_id">Product</label>
                     <div class="float-right"><a class="text-primary font-bold " href="javascript:void(0)" id="stock_qty">Stock</a></div>
                     <select name="item_id" id="item_id" class="form-control basic-select2 req getStock">
